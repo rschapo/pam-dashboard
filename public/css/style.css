@@ -1,0 +1,312 @@
+/* ============================================================
+   AgroCore PAM Dashboard — Stylesheet
+   Brand: Gold #C9960C / Dark Green #2D5A1B
+   ============================================================ */
+
+:root {
+  /* AgroCore brand */
+  --gold:       #C9960C;
+  --gold-lt:    #E5B030;
+  --gold-dk:    #9A720A;
+  --gold-bg:    #FEF9EC;
+
+  --green:      #2D5A1B;
+  --green-lt:   #3D7526;
+  --green-dk:   #1A3A0E;
+  --green-bg:   #EBF3E5;
+  --green-mid:  #4A7A35;
+
+  /* Neutral */
+  --sidebar:    268px;
+  --hdr:        58px;
+  --text:       #1C2319;
+  --text-lt:    #6B7C64;
+  --border:     #D8E4D0;
+  --border-lt:  #EBF0E7;
+  --white:      #FFFFFF;
+  --bg:         #F2F6EE;
+  --shadow:     0 1px 4px rgba(29,58,14,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* ── Tab-aware sidebar visibility ── */
+body[data-tab="municipio"] .hide-municipio  { display: none !important; }
+body:not([data-tab="municipio"]) .only-municipio { display: none !important; }
+
+/* ── Loading overlay ── */
+#loading-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--green);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 20px; color: #fff;
+  transition: opacity .4s;
+}
+#loading-overlay.hidden { opacity: 0; pointer-events: none; }
+#loading-overlay .logo-area { display: flex; align-items: center; gap: 16px; }
+#loading-overlay .loader-title {
+  font-size: 17px; font-weight: 600; opacity: .95; text-align: center; line-height: 1.5;
+  max-width: 360px;
+}
+#loading-overlay .loader-bar-wrap {
+  width: 260px; height: 4px; background: rgba(255,255,255,.25); border-radius: 4px; overflow: hidden;
+}
+#loading-overlay .loader-bar {
+  height: 100%; background: var(--gold-lt); border-radius: 4px;
+  animation: loadpulse 1.6s ease-in-out infinite;
+}
+@keyframes loadpulse {
+  0%   { width: 0%; }
+  60%  { width: 85%; }
+  100% { width: 100%; }
+}
+#loading-overlay .loader-msg {
+  font-size: 12px; opacity: .75; letter-spacing: .3px;
+}
+
+/* ── Header ── */
+#hdr {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--hdr);
+  background: linear-gradient(135deg, var(--green-dk) 0%, var(--green) 100%);
+  color: #fff;
+  display: flex; align-items: center;
+  padding: 0 16px; z-index: 1000; gap: 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+#hdr .logo-wrap { display: flex; align-items: center; flex-shrink: 0; }
+#hdr .hdr-divider {
+  width: 1px; height: 32px; background: rgba(255,255,255,.25); margin: 0 12px;
+}
+#hdr .hdr-title { flex: 1; }
+#hdr .hdr-title h1 {
+  font-size: 14px; font-weight: 700; letter-spacing: .2px;
+  line-height: 1.3; color: #fff;
+}
+#hdr .hdr-title .hdr-sub {
+  font-size: 11px; opacity: .75; margin-top: 1px;
+}
+#hdr .hdr-badge {
+  background: rgba(201,150,12,.25);
+  border: 1px solid rgba(201,150,12,.5);
+  color: var(--gold-lt);
+  padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ── Layout ── */
+#wrap { display: flex; height: 100vh; padding-top: var(--hdr); }
+#sidebar {
+  width: var(--sidebar); flex-shrink: 0;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 14px 12px;
+}
+#main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── Sidebar ── */
+.sidebar-section-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; color: var(--green); margin: 14px 0 8px;
+  padding-bottom: 4px; border-bottom: 2px solid var(--green-bg);
+}
+.sidebar-section-title:first-child { margin-top: 0; }
+
+.filter-block { margin-bottom: 12px; }
+.filter-block label {
+  display: block; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; color: var(--text-lt);
+  margin-bottom: 5px; letter-spacing: .4px;
+}
+.filter-block select, .filter-block input[type=range] {
+  width: 100%;
+}
+.filter-block select {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px; font-size: 13px;
+  background: var(--white); color: var(--text);
+  cursor: pointer;
+}
+.filter-block select:focus {
+  outline: 2px solid var(--gold); border-color: transparent;
+}
+input[type=range] {
+  accent-color: var(--gold);
+}
+
+/* Grupo buttons */
+.grp-btns {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+}
+.grp-btn {
+  padding: 6px 4px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--white);
+  font-size: 12px; cursor: pointer; text-align: center;
+  transition: all .15s; line-height: 1.4; color: var(--text);
+}
+.grp-btn.active {
+  background: var(--green); color: #fff;
+  border-color: var(--green-dk);
+  box-shadow: 0 2px 6px rgba(29,58,14,.2);
+}
+.grp-btn:hover:not(.active) {
+  background: var(--green-bg); border-color: var(--green-lt);
+}
+
+/* Export buttons */
+.export-btns { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.export-btns button {
+  padding: 7px 10px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--white);
+  font-size: 12px; cursor: pointer; text-align: left; color: var(--text);
+  transition: background .12s;
+}
+.export-btns button:hover { background: var(--green-bg); border-color: var(--green-lt); }
+
+hr.sidebar-sep {
+  border: none; border-top: 1px solid var(--border-lt); margin: 12px 0;
+}
+
+/* ── Tabs ── */
+#tab-nav {
+  display: flex; background: var(--white);
+  border-bottom: 2px solid var(--border);
+  padding: 0 12px; flex-shrink: 0; overflow-x: auto;
+  gap: 2px;
+}
+.tab-btn {
+  padding: 10px 14px; border: none; background: transparent;
+  font-size: 13px; cursor: pointer;
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  color: var(--text-lt); white-space: nowrap; transition: all .15s;
+  border-radius: 4px 4px 0 0;
+}
+.tab-btn.active {
+  border-bottom-color: var(--gold);
+  color: var(--green); font-weight: 700;
+  background: var(--gold-bg);
+}
+.tab-btn:hover:not(.active) { background: var(--green-bg); color: var(--green); }
+
+/* ── Tab panes ── */
+#tab-area { flex: 1; overflow: auto; }
+.tab-pane { display: none; height: 100%; padding: 16px; }
+.tab-pane.active { display: block; }
+
+/* ── KPI Cards ── */
+#kpi-row {
+  display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.kpi-card {
+  flex: 1; min-width: 140px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px;
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--gold);
+}
+.kpi-card h3 {
+  font-size: 10px; text-transform: uppercase; color: var(--text-lt);
+  margin-bottom: 5px; letter-spacing: .5px; font-weight: 700;
+}
+.kpi-card .val { font-size: 22px; font-weight: 800; color: var(--green); }
+.kpi-card .sub { font-size: 11px; color: var(--text-lt); margin-top: 2px; }
+
+/* ── Maps ── */
+.map-box {
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+#map-br { height: calc(100vh - var(--hdr) - 120px); min-height: 400px; }
+#map-est { height: 480px; }
+#map-mun { height: 300px; }
+.leaflet-container { background: #D4E8F2; }
+.map-legend {
+  background: rgba(255,255,255,.92); padding: 8px 10px;
+  border-radius: 6px; font-size: 11px; line-height: 1.9;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.map-legend b { color: var(--green); display: block; margin-bottom: 2px; }
+.leg-swatch {
+  display: inline-block; width: 14px; height: 14px;
+  border-radius: 2px; vertical-align: middle; margin-right: 5px;
+}
+
+/* ── Chart containers ── */
+.chart-wrap {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+.chart-wrap h3 {
+  font-size: 13px; font-weight: 700; color: var(--green);
+  margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+}
+.chart-container { position: relative; }
+
+/* ── Data tables ── */
+.data-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-tbl th {
+  background: var(--green-bg); padding: 8px 10px;
+  text-align: left; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; color: var(--green);
+  border-bottom: 2px solid var(--border);
+  position: sticky; top: 0; z-index: 1; letter-spacing: .4px;
+}
+.data-tbl td { padding: 7px 10px; border-bottom: 1px solid var(--border-lt); }
+.data-tbl tr:hover td { background: var(--gold-bg); }
+.data-tbl tr.selected-row td { background: var(--green-bg) !important; }
+.tbl-scroll {
+  overflow-y: auto; max-height: calc(100vh - 240px);
+  border-radius: 10px; border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* ── Layout grids ── */
+.split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.sel-label { font-weight: 700; color: var(--green); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.rank-pos { width: 32px; font-weight: 700; color: var(--gold); }
+
+/* ── Município tab ── */
+.mun-top-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+#mun-hint { font-size: 12px; color: var(--text-lt); margin-bottom: 8px; font-style: italic; }
+.mun-chart-title {
+  font-size: 13px; font-weight: 700; margin-bottom: 8px;
+  color: var(--green); display: flex; align-items: center; gap: 6px;
+}
+.mun-tbl-scroll {
+  overflow-y: auto; max-height: 300px;
+  border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+
+/* ── Estado label bar ── */
+.estado-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 14px; margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.estado-bar span { flex: 1; }
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--green-mid); }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+  .split-layout, .mun-top-row { grid-template-columns: 1fr; }
+  #hdr .hdr-badge { display: none; }
+}

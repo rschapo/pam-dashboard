@@ -1,0 +1,16 @@
+[build]
+  publish = "public"
+  # The generator is a local pre-deploy step; it is NOT run by Netlify.
+  # Run `py generator/process_pam.py` locally before pushing.
+
+[[headers]]
+  for = "/data/*.json"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

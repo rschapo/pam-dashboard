@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard PAM — AgroCore Gestão do Agronegócio</title>
+<meta name="description" content="Dashboard dos Dados de Produção Agrícola Municipal com base no estudo do IBGE. Dados disponíveis dos anos 2004 até 2024.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-tab="brasil">
+
+<!-- ══ LOADING OVERLAY ══ -->
+<div id="loading-overlay">
+  <div class="logo-area">
+    <!-- AgroCore SVG Logo (white version for dark background) -->
+    <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+      <!-- Stalk -->
+      <line x1="26" y1="50" x2="26" y2="22" stroke="#E5B030" stroke-width="2"/>
+      <!-- Wheat grains center -->
+      <ellipse cx="26" cy="18" rx="6.5" ry="9" fill="#E5B030"/>
+      <!-- Left grains -->
+      <ellipse cx="18.5" cy="23" rx="5.5" ry="7.5" fill="#E5B030" transform="rotate(-28 18.5 23)"/>
+      <ellipse cx="15" cy="31" rx="4.5" ry="6.5" fill="#E5B030" transform="rotate(-18 15 31)"/>
+      <!-- Right grains -->
+      <ellipse cx="33.5" cy="23" rx="5.5" ry="7.5" fill="#E5B030" transform="rotate(28 33.5 23)"/>
+      <ellipse cx="37" cy="31" rx="4.5" ry="6.5" fill="#E5B030" transform="rotate(18 37 31)"/>
+      <!-- Leaves -->
+      <path d="M26 50 Q12 44 10 31 Q18 38 26 40" fill="rgba(255,255,255,0.7)"/>
+      <path d="M26 50 Q40 44 42 31 Q34 38 26 40" fill="rgba(255,255,255,0.7)"/>
+    </svg>
+    <div>
+      <div style="font-size:24px;font-weight:800;letter-spacing:-.5px">
+        <span style="color:#E5B030">Agro</span><span style="color:#fff">Core</span>
+      </div>
+      <div style="font-size:10px;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase">
+        Gestão do Agronegócio
+      </div>
+    </div>
+  </div>
+  <div class="loader-title">
+    Dashboard dos Dados de Produção Agrícola Municipal<br>
+    <small style="font-weight:400;opacity:.8">Carregando dados do IBGE (2004–2024)…</small>
+  </div>
+  <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+  <div class="loader-msg" id="loading-msg">Inicializando…</div>
+</div>
+
+<!-- ══ HEADER ══ -->
+<header id="hdr">
+  <div class="logo-wrap">
+    <!-- AgroCore SVG Logo -->
+    <svg width="38" height="38" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+      <line x1="26" y1="50" x2="26" y2="22" stroke="#C9960C" stroke-width="2"/>
+      <ellipse cx="26" cy="18" rx="6.5" ry="9" fill="#C9960C"/>
+      <ellipse cx="18.5" cy="23" rx="5.5" ry="7.5" fill="#C9960C" transform="rotate(-28 18.5 23)"/>
+      <ellipse cx="15" cy="31" rx="4.5" ry="6.5" fill="#C9960C" transform="rotate(-18 15 31)"/>
+      <ellipse cx="33.5" cy="23" rx="5.5" ry="7.5" fill="#C9960C" transform="rotate(28 33.5 23)"/>
+      <ellipse cx="37" cy="31" rx="4.5" ry="6.5" fill="#C9960C" transform="rotate(18 37 31)"/>
+      <path d="M26 50 Q12 44 10 31 Q18 38 26 40" fill="rgba(255,255,255,0.55)"/>
+      <path d="M26 50 Q40 44 42 31 Q34 38 26 40" fill="rgba(255,255,255,0.55)"/>
+    </svg>
+    <div style="margin-left:10px;line-height:1">
+      <div style="font-size:18px;font-weight:800;letter-spacing:-.3px">
+        <span style="color:#C9960C">Agro</span><span style="color:#fff">Core</span>
+      </div>
+      <div style="font-size:8.5px;color:rgba(255,255,255,.6);letter-spacing:1.2px;text-transform:uppercase">
+        Gestão do Agronegócio
+      </div>
+    </div>
+  </div>
+
+  <div class="hdr-divider"></div>
+
+  <div class="hdr-title">
+    <h1>Dashboard dos Dados de Produção Agrícola Municipal</h1>
+    <div class="hdr-sub">Estudo IBGE — Pesquisa Agrícola Municipal (PAM)</div>
+  </div>
+
+  <div class="hdr-badge" id="hdr-anos-badge">2004–2024</div>
+</header>
+
+<!-- ══ MAIN WRAP ══ -->
+<div id="wrap">
+
+  <!-- ══ SIDEBAR ══ -->
+  <nav id="sidebar">
+
+    <div class="sidebar-section-title">Indicadores</div>
+
+    <div class="filter-block">
+      <label>Métrica</label>
+      <select id="f-metrica">
+        <option value="p" selected>Produção (ton)</option>
+        <option value="a">Área Colhida (ha)</option>
+        <option value="v">Valor (mil R$)</option>
+        <option value="r">Rendimento (kg/ha)</option>
+      </select>
+    </div>
+
+    <div class="filter-block">
+      <label>Ano — <span id="ano-label" style="color:var(--gold);font-weight:700">2024</span></label>
+      <input type="range" id="f-ano" min="0" max="20" value="20">
+    </div>
+
+    <div class="sidebar-section-title">Grupo de Culturas</div>
+
+    <div class="filter-block">
+      <div class="grp-btns">
+        <button class="grp-btn active" data-grp="ALL" style="grid-column:1/-1">🌱 Todas as Culturas</button>
+        <button class="grp-btn" data-grp="TEM">🌿 Temporárias</button>
+        <button class="grp-btn" data-grp="PER">🌳 Permanentes</button>
+        <button class="grp-btn" data-grp="COL" style="grid-column:1/-1">🌾 Grãos / Colheitadeiras</button>
+      </div>
+    </div>
+
+    <div class="filter-block">
+      <label>Cultura Específica</label>
+      <select id="f-cultura">
+        <option value="">Todas do grupo</option>
+      </select>
+    </div>
+
+    <div class="sidebar-section-title">Localização</div>
+
+    <div class="filter-block">
+      <label>Estado (UF)</label>
+      <select id="f-estado">
+        <option value="">Todos os estados</option>
+      </select>
+    </div>
+
+    <div class="filter-block hide-municipio">
+      <label>Microrregião</label>
+      <select id="f-micro">
+        <option value="">Todas as microrregiões</option>
+      </select>
+    </div>
+
+    <div class="filter-block only-municipio">
+      <label>Município</label>
+      <select id="f-municipio">
+        <option value="">Todos os municípios</option>
+      </select>
+    </div>
+
+    <hr class="sidebar-sep">
+
+    <div class="export-btns hide-municipio">
+      <button onclick="exportCSV()">⬇ Exportar CSV</button>
+      <button onclick="exportJSON()">⬇ Exportar JSON</button>
+    </div>
+
+  </nav>
+
+  <!-- ══ CONTENT ══ -->
+  <div id="main">
+    <div id="tab-nav">
+      <button class="tab-btn active" data-tab="brasil">🗺️ Mapa Brasil</button>
+      <button class="tab-btn" data-tab="estados">📍 Estado / Micro</button>
+      <button class="tab-btn" data-tab="municipio">🏘️ Municípios</button>
+      <button class="tab-btn" data-tab="historico">📈 Série Histórica</button>
+      <button class="tab-btn" data-tab="ranking">🏆 Rankings</button>
+    </div>
+
+    <div id="tab-area">
+
+      <!-- ═══ BRASIL TAB ═══ -->
+      <div class="tab-pane active" id="tab-brasil">
+        <div id="kpi-row">
+          <div class="kpi-card">
+            <h3>Produção Total</h3>
+            <div class="val" id="kpi-prod">—</div>
+            <div class="sub" id="kpi-prod-sub"></div>
+          </div>
+          <div class="kpi-card">
+            <h3>Área Colhida</h3>
+            <div class="val" id="kpi-area">—</div>
+            <div class="sub" id="kpi-area-sub">ha colhidos</div>
+          </div>
+          <div class="kpi-card">
+            <h3>Valor da Produção</h3>
+            <div class="val" id="kpi-val">—</div>
+            <div class="sub" id="kpi-val-sub">mil R$</div>
+          </div>
+          <div class="kpi-card">
+            <h3>Culturas</h3>
+            <div class="val" id="kpi-cult">—</div>
+            <div class="sub" id="kpi-cult-sub">culturas com dados</div>
+          </div>
+        </div>
+        <div class="map-box"><div id="map-br"></div></div>
+      </div>
+
+      <!-- ═══ ESTADOS TAB ═══ -->
+      <div class="tab-pane" id="tab-estados">
+        <div class="estado-bar">
+          <span id="est-label" class="sel-label">Selecione um estado no filtro à esquerda</span>
+        </div>
+        <div class="split-layout">
+          <div class="map-box"><div id="map-est"></div></div>
+          <div>
+            <div class="chart-wrap">
+              <h3 id="chart-est-title">📊 Microrregiões</h3>
+              <div class="chart-container" style="height:220px"><canvas id="chart-est"></canvas></div>
+            </div>
+            <div class="chart-wrap">
+              <h3 id="chart-micro-title">📈 Série Histórica da Microrregião</h3>
+              <div class="chart-container" style="height:180px"><canvas id="chart-micro"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ MUNICÍPIO TAB ═══ -->
+      <div class="tab-pane" id="tab-municipio">
+        <div id="mun-hint">Selecione um estado no filtro à esquerda</div>
+        <div class="mun-top-row">
+          <div>
+            <div class="mun-chart-title" id="mun-map-title">🗺️ Mapa do Estado</div>
+            <div class="map-box"><div id="map-mun"></div></div>
+          </div>
+          <div>
+            <div class="mun-chart-title" id="mun-tbl-title">🏆 Ranking de Municípios</div>
+            <div class="mun-tbl-scroll">
+              <table class="data-tbl" id="table-mun">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Município</th>
+                    <th>Microrregião</th>
+                    <th>Produção (ton)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="4" style="text-align:center;padding:24px;color:var(--text-lt)">
+                      Selecione um estado para visualizar
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="split-layout">
+          <div class="chart-wrap">
+            <h3 id="mun-chart-top-title">📊 Top 15 Municípios</h3>
+            <div class="chart-container" style="height:280px"><canvas id="chart-mun-top"></canvas></div>
+          </div>
+          <div class="chart-wrap">
+            <h3 id="mun-chart-hist-title">📈 Série Histórica</h3>
+            <div class="chart-container" style="height:280px"><canvas id="chart-mun-hist"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ HISTÓRICO TAB ═══ -->
+      <div class="tab-pane" id="tab-historico">
+        <div class="chart-wrap">
+          <h3 id="chart-hist-title">📈 Série Histórica — Brasil</h3>
+          <div class="chart-container" style="height:300px"><canvas id="chart-hist"></canvas></div>
+        </div>
+        <div class="chart-wrap">
+          <h3 id="chart-top-title">🌾 Top Culturas</h3>
+          <div class="chart-container" style="height:260px"><canvas id="chart-top"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ═══ RANKING TAB ═══ -->
+      <div class="tab-pane" id="tab-ranking">
+        <div class="split-layout">
+          <div class="chart-wrap">
+            <h3 id="rank-uf-title">🏆 Top Estados</h3>
+            <div class="chart-container" style="height:300px"><canvas id="chart-rank-uf"></canvas></div>
+          </div>
+          <div class="chart-wrap">
+            <h3 id="rank-cult-title">🌱 Top Culturas</h3>
+            <div class="chart-container" style="height:300px"><canvas id="chart-rank-cult"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <h3 id="rank-mic-title">📍 Top 20 Microrregiões</h3>
+          <div class="chart-container" style="height:260px"><canvas id="chart-rank-mic"></canvas></div>
+        </div>
+      </div>
+
+    </div><!-- end tab-area -->
+  </div><!-- end main -->
+</div><!-- end wrap -->
+
+<!-- ══ SCRIPTS ══ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Load all 3 JSON files, then init the dashboard
+(function(){
+  const msg = document.getElementById('loading-msg');
+  const overlay = document.getElementById('loading-overlay');
+  let loaded = 0;
+
+  function tryInit(pkg, geoUF, geoMic) {
+    loaded++;
+    if (loaded === 3) {
+      msg.textContent = 'Inicializando mapa…';
+      setTimeout(() => {
+        window.PAM_PKG    = pkg;
+        window.PAM_GEO_UF  = geoUF;
+        window.PAM_GEO_MIC = geoMic;
+        overlay.classList.add('hidden');
+        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        window.initDashboard(pkg, geoUF, geoMic);
+      }, 80);
+    }
+  }
+
+  let _pkg, _geoUF, _geoMic;
+
+  msg.textContent = 'Carregando dados agrícolas…';
+  fetch('data/pkg.json')
+    .then(r => r.json())
+    .then(d => { _pkg = d; msg.textContent = 'Carregando mapa UF…'; tryInit(_pkg, _geoUF, _geoMic); })
+    .catch(e => { msg.textContent = 'Erro ao carregar pkg.json — rode process_pam.py primeiro.'; console.error(e); });
+
+  fetch('data/geo_uf.json')
+    .then(r => r.json())
+    .then(d => { _geoUF = d; tryInit(_pkg, _geoUF, _geoMic); })
+    .catch(e => { msg.textContent = 'Erro ao carregar geo_uf.json'; console.error(e); });
+
+  fetch('data/geo_mic.json')
+    .then(r => r.json())
+    .then(d => { _geoMic = d; tryInit(_pkg, _geoUF, _geoMic); })
+    .catch(e => { msg.textContent = 'Erro ao carregar geo_mic.json'; console.error(e); });
+})();
+</script>
+<script src="js/main.js"></script>
+</body>
+</html>
