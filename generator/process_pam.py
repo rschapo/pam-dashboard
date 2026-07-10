@@ -27,6 +27,7 @@ OUT_DIR  = Path(__file__).parent.parent / "public" / "data"
 OUT_PKG  = OUT_DIR / "pkg.json"
 OUT_GEO_UF  = OUT_DIR / "geo_uf.json"
 OUT_GEO_MIC = OUT_DIR / "geo_mic.json"
+CROP_GROUPS_CSV = Path(__file__).parent / "crop_groups.csv"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -69,7 +70,7 @@ PERMANENTES_KEYWORDS = [
     "figo","caju","acerola","graviola","pitanga","açaí","acai","cupuaçu","cupuacu",
     "borracha","seringueira","sisal","abacaxi","mamão","mamao",
     "noz-pecã","pecan","macadamia","macadâmia","castanha-do-para","castanha do pará",
-    "urucum","erva-mate","mate","carnauba","carnaúba"
+    "urucum","erva-mate","carnauba","carnaúba"
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -95,45 +96,76 @@ if MUN_COL is None:
     MUN_COL = "_Municipio"
 print(f"  Municipality column: {MUN_COL}")
 
-TIPO_COL = None
-for candidate in ["Tipo_Lavoura","tipo_lavoura","Tipo","tipo","Tabela","tabela"]:
-    if candidate in df.columns:
-        TIPO_COL = candidate
-        break
-
-if TIPO_COL:
-    tipo_map = {}
-    for v in df[TIPO_COL].dropna().unique():
-        vs = str(v).lower()
-        tipo_map[v] = "PER" if ("perm" in vs or "1613" in vs) else "TEM"
-    df["_tipo"] = df[TIPO_COL].map(tipo_map).fillna("TEM")
-else:
-    perm_kw = [k.lower() for k in PERMANENTES_KEYWORDS]
-    df["_tipo"] = df["Cultura"].apply(
-        lambda c: "PER" if any(k in str(c).lower() for k in perm_kw) else "TEM")
-
-perm_culturas = sorted(df.loc[df["_tipo"]=="PER","Cultura"].unique().tolist())
-temp_culturas = sorted(df.loc[df["_tipo"]=="TEM","Cultura"].unique().tolist())
-print(f"  Permanentes: {len(perm_culturas)} | Temporárias: {len(temp_culturas)}")
-
 anos = sorted(df["Ano"].dropna().unique().astype(int).tolist())
 culturas = sorted(df["Cultura"].dropna().unique().tolist())
 N_ANOS = len(anos)
 ano_idx = {a: i for i, a in enumerate(anos)}
 print(f"  Anos: {anos[0]}–{anos[-1]} ({N_ANOS})  |  Culturas: {len(culturas)}")
 
-col_set = set()
-for target in COLHEITADEIRAS_APPROX:
-    tl = target.lower().replace("(","").replace(")","").strip()
-    for c in culturas:
-        cl = c.lower().replace("(","").replace(")","").strip()
-        if tl == cl or tl in cl or cl in tl:
-            col_set.add(c)
-            break
-    else:
-        col_set.add(target)
+# ─────────────────────────────────────────────────────────────────────────────
+# 1b. CROP GROUPS — maintainable table (generator/crop_groups.csv)
+#
+# tipo (TEM/PER) and COL (0/1, "Grãos/Colheitadeiras") live in this CSV so they
+# can be edited without touching code. On first run (file missing) it is
+# bootstrapped from the legacy keyword/fuzzy rules below, preserving today's
+# classification as the starting point for future manual maintenance.
+# ─────────────────────────────────────────────────────────────────────────────
+def _bootstrap_group_table(culturas_all):
+    perm_kw = [k.lower() for k in PERMANENTES_KEYWORDS]
+    col_set_boot = set()
+    for target in COLHEITADEIRAS_APPROX:
+        tl = target.lower().replace("(","").replace(")","").strip()
+        for c in culturas_all:
+            cl = c.lower().replace("(","").replace(")","").strip()
+            if tl == cl or tl in cl or cl in tl:
+                col_set_boot.add(c)
+                break
+    rows = []
+    for c in culturas_all:
+        tipo = "PER" if any(k in c.lower() for k in perm_kw) else "TEM"
+        rows.append({"cultura": c, "tipo": tipo, "COL": 1 if c in col_set_boot else 0})
+    out = pd.DataFrame(rows).sort_values("cultura")
+    out.to_csv(CROP_GROUPS_CSV, index=False, encoding="utf-8-sig")
+    print(f"  crop_groups.csv criado com {len(out)} culturas (bootstrap) -> {CROP_GROUPS_CSV}")
+    return out
+
+if CROP_GROUPS_CSV.exists():
+    print(f"Carregando agrupamentos de {CROP_GROUPS_CSV.name} ...")
+    grp_df = pd.read_csv(CROP_GROUPS_CSV, encoding="utf-8-sig", dtype={"tipo": str})
+else:
+    print("crop_groups.csv não encontrado — gerando pela primeira vez ...")
+    grp_df = _bootstrap_group_table(culturas)
+
+GROUP_COLS = [c for c in grp_df.columns if c not in ("cultura","tipo")]
+for g in GROUP_COLS:
+    grp_df[g] = grp_df[g].fillna(0).astype(int)
+
+known = set(grp_df["cultura"])
+novas = [c for c in culturas if c not in known]
+if novas:
+    print(f"  [AVISO] {len(novas)} cultura(s) nova(s) sem entrada em crop_groups.csv "
+          f"— adicionadas com default TEM/{'=0, '.join(GROUP_COLS)}=0, revise manualmente:")
+    for c in novas:
+        print(f"    - {c}")
+    extra = pd.DataFrame([{"cultura": c, "tipo": "TEM", **{g: 0 for g in GROUP_COLS}} for c in novas])
+    grp_df = pd.concat([grp_df, extra], ignore_index=True)
+    grp_df.to_csv(CROP_GROUPS_CSV, index=False, encoding="utf-8-sig")
+
+TIPO_MAP = dict(zip(grp_df["cultura"], grp_df["tipo"]))
+df["_tipo"] = df["Cultura"].map(TIPO_MAP).fillna("TEM")
+
+perm_culturas = sorted(df.loc[df["_tipo"]=="PER","Cultura"].unique().tolist())
+temp_culturas = sorted(df.loc[df["_tipo"]=="TEM","Cultura"].unique().tolist())
+print(f"  Permanentes: {len(perm_culturas)} | Temporárias: {len(temp_culturas)}")
+
+col_set = set(grp_df.loc[grp_df["COL"]==1, "cultura"])
 colheitadeiras = sorted([c for c in col_set if c in set(culturas)])
-print(f"  Colheitadeiras matched: {len(colheitadeiras)}")
+
+# "Tratores": temporárias que NÃO são colhidas por colheitadeira (regra automática,
+# não é coluna do arquivo — culturas que dependem de trator p/ plantio/trato mas
+# são colhidas manualmente ou por outro processo, ex: cana, mandioca, algodão).
+tratores = sorted([c for c in temp_culturas if c not in col_set])
+print(f"  Colheitadeiras: {len(colheitadeiras)}  |  Tratores: {len(tratores)}")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. EST_DATA
@@ -164,34 +196,37 @@ print(f"  States in EST_DATA: {len(EST_DATA)}")
 # 3. MIC_DATA
 # ─────────────────────────────────────────────────────────────────────────────
 print("Building MIC_DATA …")
-perm_set = set(perm_culturas)
+tra_set = set(tratores)
 
 def _mic_grupo(c):
     if c in col_set: return "COL"
-    if c in perm_set: return "PER"
-    return "TEM"
+    if c in tra_set: return "TRA"
+    return "PER"  # every cultura is TEM (COL or TRA) or PER — see partition above
 
 df["_grupo"] = df["Cultura"].apply(_mic_grupo)
+
+GROUP_MASKS = {
+    "TEM": df["_tipo"] == "TEM",
+    "PER": df["_tipo"] == "PER",
+    "COL": df["_grupo"] == "COL",
+    "TRA": df["_grupo"] == "TRA",
+}
 
 mic_all = df.groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
     a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
 mic_all["grupo"] = "ALL"
 
-mic_tem = df[df["_tipo"]=="TEM"].groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
-    a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
-mic_tem["grupo"] = "TEM"
-
-mic_per = df[df["_tipo"]=="PER"].groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
-    a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
-mic_per["grupo"] = "PER"
-
-mic_col = df[df["_grupo"]=="COL"].groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
-    a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
-mic_col["grupo"] = "COL"
+mic_group_tables = [mic_all]
+for grp, mask in GROUP_MASKS.items():
+    t = df[mask].groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
+        a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
+    t["grupo"] = grp
+    mic_group_tables.append(t)
 
 mic_each = df[df["_grupo"]=="COL"].groupby(["Cod_Microrregiao","Cultura","Ano"], as_index=False, sort=False).agg(
     a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
 mic_each = mic_each.rename(columns={"Cultura":"grupo"})
+mic_group_tables.append(mic_each)
 
 MIC_DATA = {}
 
@@ -209,7 +244,7 @@ def _fill_mic(sub):
         d["p"][ai] = round(float(row.p or 0),1)
         d["v"][ai] = round(float(row.v or 0),1)
 
-for tbl in [mic_all, mic_tem, mic_per, mic_col, mic_each]:
+for tbl in mic_group_tables:
     _fill_mic(tbl)
 print(f"  Microregiões in MIC_DATA: {len(MIC_DATA)}")
 
@@ -237,11 +272,7 @@ print(f"  Municípios in MUN_DATA: {len(MUN_DATA)}")
 # 4b. MUN_GRP_DATA
 print("Building MUN_GRP_DATA …")
 MUN_GRP_DATA = {}
-for grp, mask in [
-    ("TEM", df["_tipo"] == "TEM"),
-    ("PER", df["_tipo"] == "PER"),
-    ("COL", df["_grupo"] == "COL"),
-]:
+for grp, mask in GROUP_MASKS.items():
     sub = df[mask]
     gagg = sub.groupby(["Cod_Municipio","Ano"], as_index=False, sort=False).agg(
         a=("Area_Colhida_ha","sum"),
@@ -332,6 +363,7 @@ PKG = {
     "anos":           anos,
     "culturas":       culturas,
     "colheitadeiras": colheitadeiras,
+    "tratores":       tratores,
     "permanentes":    perm_culturas,
     "temporarias":    temp_culturas,
     "ufs_info":       UFS_INFO,

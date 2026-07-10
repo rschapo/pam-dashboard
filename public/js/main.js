@@ -21,7 +21,7 @@ Chart.defaults.color       = '#6B7C64';
 
 // ─── Module-level variables ───────────────────────────────────────────────
 let PKG, GEO_UF, GEO_MIC;
-let anos, culturas, colheitadeiras, permanentes, temporarias;
+let anos, culturas, colheitadeiras, tratores, permanentes, temporarias;
 let ufs_info, mic_info, mun_info, est_data, mic_data, mun_data, mun_grp_data;
 let N_ANOS;
 
@@ -38,7 +38,7 @@ window.initDashboard = function(pkg, geoUF, geoMic) {
   GEO_UF   = geoUF;
   GEO_MIC  = geoMic;
 
-  ({ anos, culturas, colheitadeiras, permanentes, temporarias,
+  ({ anos, culturas, colheitadeiras, tratores, permanentes, temporarias,
      ufs_info, mic_info, mun_info, est_data, mic_data, mun_data, mun_grp_data } = PKG);
 
   N_ANOS = anos.length;
@@ -73,6 +73,7 @@ function getAno()    { return anos[state.anoIdx]; }
 function getActiveCulturas() {
   if (state.cultura) return [state.cultura];
   if (state.grupoId === 'COL') return colheitadeiras;
+  if (state.grupoId === 'TRA') return tratores;
   if (state.grupoId === 'TEM') return temporarias;
   if (state.grupoId === 'PER') return permanentes;
   return culturas;
@@ -693,6 +694,7 @@ function updateKPIs() {
 function populateCulturas() {
   const sel = document.getElementById('f-cultura'); if (!sel) return;
   const list = (state.grupoId === 'COL') ? colheitadeiras
+    : state.grupoId === 'TRA' ? tratores
     : state.grupoId === 'TEM' ? temporarias
     : state.grupoId === 'PER' ? permanentes
     : culturas;
