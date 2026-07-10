@@ -13,30 +13,7 @@
 <!-- ══ LOADING OVERLAY ══ -->
 <div id="loading-overlay">
   <div class="logo-area">
-    <!-- AgroCore SVG Logo (white version for dark background) -->
-    <svg width="52" height="52" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-      <!-- Stalk -->
-      <line x1="26" y1="50" x2="26" y2="22" stroke="#E5B030" stroke-width="2"/>
-      <!-- Wheat grains center -->
-      <ellipse cx="26" cy="18" rx="6.5" ry="9" fill="#E5B030"/>
-      <!-- Left grains -->
-      <ellipse cx="18.5" cy="23" rx="5.5" ry="7.5" fill="#E5B030" transform="rotate(-28 18.5 23)"/>
-      <ellipse cx="15" cy="31" rx="4.5" ry="6.5" fill="#E5B030" transform="rotate(-18 15 31)"/>
-      <!-- Right grains -->
-      <ellipse cx="33.5" cy="23" rx="5.5" ry="7.5" fill="#E5B030" transform="rotate(28 33.5 23)"/>
-      <ellipse cx="37" cy="31" rx="4.5" ry="6.5" fill="#E5B030" transform="rotate(18 37 31)"/>
-      <!-- Leaves -->
-      <path d="M26 50 Q12 44 10 31 Q18 38 26 40" fill="rgba(255,255,255,0.7)"/>
-      <path d="M26 50 Q40 44 42 31 Q34 38 26 40" fill="rgba(255,255,255,0.7)"/>
-    </svg>
-    <div>
-      <div style="font-size:24px;font-weight:800;letter-spacing:-.5px">
-        <span style="color:#E5B030">Agro</span><span style="color:#fff">Core</span>
-      </div>
-      <div style="font-size:10px;color:rgba(255,255,255,.7);letter-spacing:1.5px;text-transform:uppercase">
-        Gestão do Agronegócio
-      </div>
-    </div>
+    <div class="logo-badge logo-badge-lg"><img src="assets/logo.png" alt="AgroCore — Gestão do Agronegócio" class="logo-img logo-img-lg"></div>
   </div>
   <div class="loader-title">
     Dashboard dos Dados de Produção Agrícola Municipal<br>
@@ -49,25 +26,7 @@
 <!-- ══ HEADER ══ -->
 <header id="hdr">
   <div class="logo-wrap">
-    <!-- AgroCore SVG Logo -->
-    <svg width="38" height="38" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
-      <line x1="26" y1="50" x2="26" y2="22" stroke="#C9960C" stroke-width="2"/>
-      <ellipse cx="26" cy="18" rx="6.5" ry="9" fill="#C9960C"/>
-      <ellipse cx="18.5" cy="23" rx="5.5" ry="7.5" fill="#C9960C" transform="rotate(-28 18.5 23)"/>
-      <ellipse cx="15" cy="31" rx="4.5" ry="6.5" fill="#C9960C" transform="rotate(-18 15 31)"/>
-      <ellipse cx="33.5" cy="23" rx="5.5" ry="7.5" fill="#C9960C" transform="rotate(28 33.5 23)"/>
-      <ellipse cx="37" cy="31" rx="4.5" ry="6.5" fill="#C9960C" transform="rotate(18 37 31)"/>
-      <path d="M26 50 Q12 44 10 31 Q18 38 26 40" fill="rgba(255,255,255,0.55)"/>
-      <path d="M26 50 Q40 44 42 31 Q34 38 26 40" fill="rgba(255,255,255,0.55)"/>
-    </svg>
-    <div style="margin-left:10px;line-height:1">
-      <div style="font-size:18px;font-weight:800;letter-spacing:-.3px">
-        <span style="color:#C9960C">Agro</span><span style="color:#fff">Core</span>
-      </div>
-      <div style="font-size:8.5px;color:rgba(255,255,255,.6);letter-spacing:1.2px;text-transform:uppercase">
-        Gestão do Agronegócio
-      </div>
-    </div>
+    <div class="logo-badge"><img src="assets/logo.png" alt="AgroCore — Gestão do Agronegócio" class="logo-img"></div>
   </div>
 
   <div class="hdr-divider"></div>
@@ -86,9 +45,14 @@
   <!-- ══ SIDEBAR ══ -->
   <nav id="sidebar">
 
+    <div class="domain-switch">
+      <button class="dom-btn active" data-dom="agricola">🌾 Agrícola</button>
+      <button class="dom-btn" data-dom="pecuaria">🐄 Pecuária</button>
+    </div>
+
     <div class="sidebar-section-title">Indicadores</div>
 
-    <div class="filter-block">
+    <div class="filter-block dom-agricola">
       <label>Métrica</label>
       <select id="f-metrica">
         <option value="p" selected>Produção (ton)</option>
@@ -98,14 +62,22 @@
       </select>
     </div>
 
+    <div class="filter-block dom-pecuaria">
+      <label>Métrica</label>
+      <select id="f-metrica-pec">
+        <option value="q" selected>Quantidade</option>
+        <option value="v">Valor (mil R$)</option>
+      </select>
+    </div>
+
     <div class="filter-block">
       <label>Ano — <span id="ano-label" style="color:var(--gold);font-weight:700">2024</span></label>
       <input type="range" id="f-ano" min="0" max="20" value="20">
     </div>
 
-    <div class="sidebar-section-title">Grupo de Culturas</div>
+    <div class="sidebar-section-title dom-agricola">Grupo de Culturas</div>
 
-    <div class="filter-block">
+    <div class="filter-block dom-agricola">
       <div class="grp-btns">
         <button class="grp-btn active" data-grp="ALL" style="grid-column:1/-1">🌱 Todas as Culturas</button>
         <button class="grp-btn" data-grp="TEM">🌿 Temporárias</button>
@@ -115,11 +87,25 @@
       </div>
     </div>
 
-    <div class="filter-block">
+    <div class="filter-block dom-agricola">
       <label>Cultura Específica</label>
       <select id="f-cultura">
         <option value="">Todas do grupo</option>
       </select>
+    </div>
+
+    <div class="sidebar-section-title dom-pecuaria">Tipo</div>
+
+    <div class="filter-block dom-pecuaria">
+      <div class="grp-btns">
+        <button class="tipo-pec-btn active" data-tipo="Rebanho" style="grid-column:1/-1">🐮 Rebanho</button>
+        <button class="tipo-pec-btn" data-tipo="Producao" style="grid-column:1/-1">🥛 Produção Animal</button>
+      </div>
+    </div>
+
+    <div class="filter-block dom-pecuaria">
+      <label>Categoria</label>
+      <select id="f-categoria-pec"></select>
     </div>
 
     <div class="sidebar-section-title">Localização</div>
@@ -168,7 +154,7 @@
 
       <!-- ═══ BRASIL TAB ═══ -->
       <div class="tab-pane active" id="tab-brasil">
-        <div id="kpi-row">
+        <div id="kpi-row-agro" class="dom-agricola" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
           <div class="kpi-card">
             <h3>Produção Total</h3>
             <div class="val" id="kpi-prod">—</div>
@@ -188,6 +174,28 @@
             <h3>Culturas</h3>
             <div class="val" id="kpi-cult">—</div>
             <div class="sub" id="kpi-cult-sub">culturas com dados</div>
+          </div>
+        </div>
+        <div id="kpi-row-pec" class="dom-pecuaria" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <div class="kpi-card">
+            <h3 id="kpi-pec-qtd-title">Efetivo Total</h3>
+            <div class="val" id="kpi-pec-qtd">—</div>
+            <div class="sub" id="kpi-pec-qtd-sub"></div>
+          </div>
+          <div class="kpi-card">
+            <h3>Valor da Produção</h3>
+            <div class="val" id="kpi-pec-val">—</div>
+            <div class="sub" id="kpi-pec-val-sub">mil R$</div>
+          </div>
+          <div class="kpi-card">
+            <h3>Categoria Selecionada</h3>
+            <div class="val" id="kpi-pec-cat" style="font-size:16px">—</div>
+            <div class="sub" id="kpi-pec-cat-sub"></div>
+          </div>
+          <div class="kpi-card">
+            <h3>Municípios</h3>
+            <div class="val" id="kpi-pec-mun">—</div>
+            <div class="sub" id="kpi-pec-mun-sub">com dados</div>
           </div>
         </div>
         <div class="map-box"><div id="map-br"></div></div>

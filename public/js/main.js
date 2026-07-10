@@ -25,10 +25,28 @@ let anos, culturas, colheitadeiras, tratores, permanentes, temporarias;
 let ufs_info, mic_info, mun_info, est_data, mic_data, mun_data, mun_grp_data;
 let N_ANOS;
 
+// PPM (Pecuária) — carregado sob demanda na primeira troca para o domínio Pecuária
+let PPM = null, ppmLoaded = false, ppmLoading = false;
+let rebanho_categorias, producao_categorias, ppm_est_data, ppm_mic_data, ppm_mun_data;
+
+// Unidade de cada categoria pecuária (rebanho = sempre cabeças; produção varia)
+const PEC_UNITS = {
+  'Bovino': 'cab.', 'Bubalino': 'cab.', 'Caprino': 'cab.', 'Codornas': 'cab.', 'Equino': 'cab.',
+  'Galináceos - galinhas': 'cab.', 'Galináceos - total': 'cab.', 'Ovino': 'cab.',
+  'Suíno - matrizes de suínos': 'cab.', 'Suíno - total': 'cab.',
+  'Leite': 'mil L', 'Ovos de galinha': 'mil dz', 'Ovos de codorna': 'mil dz',
+  'Mel de abelha': 'kg', 'Casulos do bicho-da-seda': 'kg', 'Lã': 'kg'
+};
+
 let state = {
-  tab: 'brasil', metrica: 'p', grupoId: 'ALL', cultura: '',
+  tab: 'brasil', domain: 'agricola',
+  metricaAgro: 'p', grupoId: 'ALL', cultura: '',
+  metricaPec: 'q', tipoPec: 'Rebanho', categoriaPec: '',
   ufSel: '', microSel: '', munSel: '', anoIdx: 0
 };
+
+function curMetrica() { return state.domain === 'pecuaria' ? state.metricaPec : state.metricaAgro; }
+function getActiveCategoriasPec() { return state.tipoPec === 'Rebanho' ? rebanho_categorias : producao_categorias; }
 
 // ═══════════════════════════════════════════════════════════
 // ENTRY POINT — called from index.html after fetch()
@@ -53,10 +71,12 @@ window.initDashboard = function(pkg, geoUF, geoMic) {
   if (slider) { slider.max = N_ANOS - 1; slider.value = N_ANOS - 1; }
 
   document.body.dataset.tab = state.tab;
+  document.body.dataset.domain = state.domain;
   populateEstados();
   populateCulturas();
   populateMicros();
   populateMunicipios();
+  populateMetricaPecOptions();
   initMapBR();
   initMapEst();
   initMapMun();
@@ -85,18 +105,30 @@ function getMicKey() {
 }
 
 function calcEst(uf, m) {
+  if (state.domain === 'pecuaria') {
+    const d = ppm_est_data?.[uf]?.[state.categoriaPec]; if (!d) return 0;
+    return d[m]?.[getAnoIdx()] || 0;
+  }
   const d = est_data[uf]; if (!d) return 0;
   const ai = getAnoIdx();
   return getActiveCulturas().reduce((s, c) => s + (d[c]?.[m]?.[ai] || 0), 0);
 }
 
 function calcMic(mid, m) {
+  if (state.domain === 'pecuaria') {
+    const d = ppm_mic_data?.[mid]?.[state.categoriaPec]; if (!d) return 0;
+    return d[m]?.[getAnoIdx()] || 0;
+  }
   const key = getMicKey();
   const d = mic_data[mid]; if (!d) return 0;
   return d[key]?.[m]?.[getAnoIdx()] || 0;
 }
 
 function calcMunVal(munId, m, ai) {
+  if (state.domain === 'pecuaria') {
+    const d = ppm_mun_data?.[munId]?.[state.categoriaPec]; if (!d) return 0;
+    return d[m]?.[ai] || 0;
+  }
   if (state.grupoId && state.grupoId !== 'ALL') {
     const grp = state.grupoId;
     const gd = mun_grp_data[grp];
@@ -106,7 +138,13 @@ function calcMunVal(munId, m, ai) {
 }
 
 function metLabel() {
-  const M = state.metrica;
+  const M = curMetrica();
+  if (state.domain === 'pecuaria') {
+    const cat = state.categoriaPec, unit = PEC_UNITS[cat] || '';
+    if (!cat) return 'Selecione uma categoria';
+    if (M === 'v') return cat + ' — Valor (mil R$)';
+    return cat + ' — ' + (state.tipoPec === 'Rebanho' ? 'Efetivo' : 'Quantidade') + (unit ? ' (' + unit + ')' : '');
+  }
   if (M === 'p') return 'Produção (ton)';
   if (M === 'a') return 'Área Colhida (ha)';
   if (M === 'v') return 'Valor (mil R$)';
@@ -147,7 +185,7 @@ function initMapBR() {
 
 function updateMapBR() {
   if (!mapBR) return;
-  const M = state.metrica;
+  const M = curMetrica();
   const vals = {};
   Object.keys(ufs_info).forEach(uf => { vals[uf] = calcEst(uf, M); });
   const max = Math.max(...Object.values(vals), 1);
@@ -198,7 +236,7 @@ function initMapEst() {
 
 function updateMapEst() {
   if (!mapEst) return;
-  const M = state.metrica, uf = state.ufSel;
+  const M = curMetrica(), uf = state.ufSel;
   const mids = Object.keys(mic_info).filter(m => !uf || mic_info[m].uf === uf);
   const vals = {};
   mids.forEach(m => { vals[m] = calcMic(m, M); });
@@ -237,7 +275,7 @@ function initMapMun() {
 
 function updateMapMun() {
   if (!mapMun) return;
-  const M = state.metrica, uf = state.ufSel;
+  const M = curMetrica(), uf = state.ufSel;
   if (!uf) {
     document.getElementById('mun-map-title').textContent = '🗺️ Mapa do Estado';
     return;
@@ -296,9 +334,12 @@ function updateChartEst(vals, max, M) {
 
 function updateChartMicro() {
   const ctx = document.getElementById('chart-micro')?.getContext('2d'); if (!ctx) return;
-  const mid = state.microSel, M = state.metrica, key = getMicKey();
+  const mid = state.microSel, M = curMetrica();
   if (!mid) { if (chMicro) { chMicro.destroy(); chMicro = null; } return; }
-  const d = mic_data[mid]?.[key];
+  const series = anos.map((_, ai) => {
+    const tmp = state.anoIdx; state.anoIdx = ai;
+    const v = calcMic(mid, M); state.anoIdx = tmp; return v;
+  });
   if (chMicro) chMicro.destroy();
   chMicro = new Chart(ctx, {
     type: 'line',
@@ -306,7 +347,7 @@ function updateChartMicro() {
       labels: anos,
       datasets: [{
         label: mic_info[mid]?.n || mid,
-        data: d ? d[M] || Array(N_ANOS).fill(0) : Array(N_ANOS).fill(0),
+        data: series,
         borderColor: BRAND_GOLD, backgroundColor: 'rgba(201,150,12,.12)',
         fill: true, tension: .35, pointRadius: 3,
         pointBackgroundColor: BRAND_GOLD
@@ -343,7 +384,7 @@ function populateMunicipios() {
 }
 
 function updateMunicipio() {
-  const M = state.metrica, ai = getAnoIdx(), uf = state.ufSel;
+  const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel;
   const hint     = document.getElementById('mun-hint');
   const tbl      = document.getElementById('table-mun');
   const tblTitle = document.getElementById('mun-tbl-title');
@@ -388,7 +429,7 @@ function updateMunicipio() {
   updateMunChartTop(muns.slice(0, 15));
 
   const histEl = document.getElementById('mun-chart-hist-title');
-  if (state.munSel && mun_data[state.munSel]) {
+  if (state.munSel && hasMunData(state.munSel)) {
     if (histEl) histEl.textContent = '📈 Série Histórica — ' + (mun_info[state.munSel]?.n || state.munSel);
     updateMunChartHist(state.munSel);
   } else {
@@ -406,7 +447,7 @@ function toggleMunicipio(id) {
 
 function updateMunChartTop(muns) {
   const ctx = document.getElementById('chart-mun-top')?.getContext('2d'); if (!ctx) return;
-  const M = state.metrica;
+  const M = curMetrica();
   if (chMunTop) chMunTop.destroy();
   chMunTop = new Chart(ctx, {
     type: 'bar',
@@ -425,9 +466,15 @@ function updateMunChartTop(muns) {
   });
 }
 
+function hasMunData(munId) {
+  if (state.domain === 'pecuaria') return !!ppm_mun_data?.[munId]?.[state.categoriaPec];
+  return !!mun_data[munId];
+}
+
 function updateMunChartHist(munId) {
   const ctx = document.getElementById('chart-mun-hist')?.getContext('2d'); if (!ctx) return;
-  const M = state.metrica, d = mun_data[munId]; if (!d) return;
+  const M = curMetrica();
+  const series = anos.map((_, ai) => calcMunVal(munId, M, ai));
   if (chMunHist) chMunHist.destroy();
   chMunHist = new Chart(ctx, {
     type: 'line',
@@ -435,7 +482,7 @@ function updateMunChartHist(munId) {
       labels: anos,
       datasets: [{
         label: mun_info[munId]?.n || munId,
-        data: d[M] || Array(N_ANOS).fill(0),
+        data: series,
         borderColor: BRAND_GOLD, backgroundColor: 'rgba(201,150,12,.12)',
         fill: true, tension: .35, pointRadius: 3, pointBackgroundColor: BRAND_GOLD
       }]
@@ -488,12 +535,14 @@ let chHist = null, chTop = null;
 
 function updateHistorico() {
   const ctx = document.getElementById('chart-hist')?.getContext('2d'); if (!ctx) return;
-  const M = state.metrica, uf = state.ufSel, mid = state.microSel, key = getMicKey();
+  const M = curMetrica(), uf = state.ufSel, mid = state.microSel;
   let series, label;
 
-  if (mid && mic_data[mid]) {
-    const d = mic_data[mid][key];
-    series = d ? d[M] || Array(N_ANOS).fill(0) : Array(N_ANOS).fill(0);
+  if (mid) {
+    series = anos.map((_, ai) => {
+      const tmp = state.anoIdx; state.anoIdx = ai;
+      const v = calcMic(mid, M); state.anoIdx = tmp; return v;
+    });
     label  = mic_info[mid]?.n || mid;
   } else if (uf) {
     series = anos.map((_, ai) => {
@@ -536,15 +585,23 @@ function updateHistorico() {
     (mid ? (mic_info[mid]?.n || mid) : uf ? (ufs_info[uf]?.n || uf) : 'Brasil') +
     ' — ' + metLabel();
 
-  // Top culturas
+  // Top culturas / categorias
   const ctx2 = document.getElementById('chart-top')?.getContext('2d'); if (!ctx2) return;
   const ai = getAnoIdx();
-  const cultVals = getActiveCulturas().map(c => {
-    const v = uf
-      ? (est_data[uf]?.[c]?.[M]?.[ai] || 0)
-      : Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
-    return { c, v };
-  }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  const isPec = state.domain === 'pecuaria';
+  const cultVals = isPec
+    ? getActiveCategoriasPec().map(c => {
+        const v = uf
+          ? (ppm_est_data?.[uf]?.[c]?.[M]?.[ai] || 0)
+          : Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[ai] || 0), 0);
+        return { c, v };
+      }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15)
+    : getActiveCulturas().map(c => {
+        const v = uf
+          ? (est_data[uf]?.[c]?.[M]?.[ai] || 0)
+          : Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
+        return { c, v };
+      }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
 
   if (chTop) chTop.destroy();
   chTop = new Chart(ctx2, {
@@ -562,7 +619,8 @@ function updateHistorico() {
       }
     }
   });
-  document.getElementById('chart-top-title').textContent = '🌾 Top Culturas — ' + getAno();
+  document.getElementById('chart-top-title').textContent =
+    (isPec ? '🐄 Top Categorias — ' : '🌾 Top Culturas — ') + getAno();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -571,7 +629,7 @@ function updateHistorico() {
 let chRankUF = null, chRankCult = null, chRankMic = null;
 
 function updateRanking() {
-  const M = state.metrica, ai = getAnoIdx();
+  const M = curMetrica(), ai = getAnoIdx();
 
   // Top UFs
   const ufVals = Object.keys(ufs_info)
@@ -599,11 +657,17 @@ function updateRanking() {
     document.getElementById('rank-uf-title').textContent = `🏆 Top Estados — ${metLabel()} (${getAno()})`;
   }
 
-  // Top culturas
-  const cultVals = getActiveCulturas().map(c => {
-    const v = Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
-    return { c, v };
-  }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  // Top culturas / categorias
+  const isPec = state.domain === 'pecuaria';
+  const cultVals = isPec
+    ? getActiveCategoriasPec().map(c => {
+        const v = Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[ai] || 0), 0);
+        return { c, v };
+      }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15)
+    : getActiveCulturas().map(c => {
+        const v = Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
+        return { c, v };
+      }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
 
   const ctx2 = document.getElementById('chart-rank-cult')?.getContext('2d');
   if (ctx2) {
@@ -623,7 +687,8 @@ function updateRanking() {
         }
       }
     });
-    document.getElementById('rank-cult-title').textContent = `🌱 Top Culturas — ${metLabel()} (${getAno()})`;
+    document.getElementById('rank-cult-title').textContent =
+      (isPec ? '🐄 Top Categorias' : '🌱 Top Culturas') + ` — ${metLabel()} (${getAno()})`;
   }
 
   // Top microrregiões
@@ -662,6 +727,7 @@ function updateRanking() {
 // KPIs
 // ═══════════════════════════════════════════════════════════
 function updateKPIs() {
+  if (state.domain === 'pecuaria') { updateKPIsPec(); return; }
   const ai = getAnoIdx(), uf = state.ufSel;
   const ufs  = uf ? [uf] : Object.keys(ufs_info);
   const agg  = { a: 0, p: 0, v: 0 };
@@ -688,6 +754,36 @@ function updateKPIs() {
   document.getElementById('kpi-cult-sub').textContent = 'culturas com dados';
 }
 
+function updateKPIsPec() {
+  if (!ppmLoaded) return;
+  const ai = getAnoIdx(), uf = state.ufSel, cat = state.categoriaPec;
+  const ufs = uf ? [uf] : Object.keys(ufs_info);
+  let qtd = 0, val = 0, munCount = 0;
+  ufs.forEach(u => {
+    const d = ppm_est_data[u]?.[cat]; if (!d) return;
+    qtd += d.q?.[ai] || 0; val += d.v?.[ai] || 0;
+  });
+  Object.keys(mun_info).forEach(mid => {
+    if (uf && mun_info[mid].uf !== uf) return;
+    const d = ppm_mun_data[mid]?.[cat]; if (!d) return;
+    if ((d.q?.[ai] || 0) > 0) munCount++;
+  });
+  const year  = getAno();
+  const scope = uf ? (ufs_info[uf]?.n || uf) : 'Brasil';
+  const unit  = PEC_UNITS[cat] || '';
+  const isRebanho = state.tipoPec === 'Rebanho';
+
+  document.getElementById('kpi-pec-qtd-title').textContent = isRebanho ? 'Efetivo Total' : 'Quantidade Total';
+  document.getElementById('kpi-pec-qtd').textContent     = fmt(qtd, 'q') + (unit ? ' ' + unit : '');
+  document.getElementById('kpi-pec-qtd-sub').textContent = `${scope} · ${year}`;
+  document.getElementById('kpi-pec-val').textContent     = isRebanho ? '—' : fmt(val, 'v');
+  document.getElementById('kpi-pec-val-sub').textContent = isRebanho ? 'não se aplica' : 'mil R$';
+  document.getElementById('kpi-pec-cat').textContent     = cat || '—';
+  document.getElementById('kpi-pec-cat-sub').textContent = isRebanho ? 'Rebanho' : 'Produção Animal';
+  document.getElementById('kpi-pec-mun').textContent     = munCount.toLocaleString('pt-BR');
+  document.getElementById('kpi-pec-mun-sub').textContent = `com dados · ${year}`;
+}
+
 // ═══════════════════════════════════════════════════════════
 // POPULATE SELECTS
 // ═══════════════════════════════════════════════════════════
@@ -701,6 +797,23 @@ function populateCulturas() {
   sel.innerHTML = '<option value="">Todas do grupo</option>' +
     list.map(c => `<option value="${c}">${c}</option>`).join('');
   sel.value = state.cultura || '';
+}
+
+function populateCategoriaPec() {
+  const sel = document.getElementById('f-categoria-pec'); if (!sel) return;
+  const list = getActiveCategoriasPec() || [];
+  sel.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (!list.includes(state.categoriaPec)) state.categoriaPec = list[0] || '';
+  sel.value = state.categoriaPec;
+}
+
+function populateMetricaPecOptions() {
+  const sel = document.getElementById('f-metrica-pec'); if (!sel) return;
+  const isRebanho = state.tipoPec === 'Rebanho';
+  sel.innerHTML = isRebanho
+    ? '<option value="q" selected>Quantidade (Efetivo)</option>'
+    : '<option value="q">Quantidade</option><option value="v">Valor (mil R$)</option>';
+  sel.value = state.metricaPec;
 }
 
 function populateEstados() {
@@ -741,6 +854,52 @@ function selectMicro(mid) {
 }
 
 // ═══════════════════════════════════════════════════════════
+// DOMAIN (Agrícola / Pecuária) — ppm.json é carregado sob demanda
+// na primeira troca para Pecuária, mantendo o load inicial leve.
+// ═══════════════════════════════════════════════════════════
+function loadPPM() {
+  if (ppmLoaded) return Promise.resolve();
+  if (ppmLoading) return ppmLoading;
+  const btn = document.querySelector('.dom-btn[data-dom="pecuaria"]');
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
+  ppmLoading = fetch('data/ppm.json')
+    .then(r => r.json())
+    .then(d => {
+      PPM = d;
+      ({ rebanho_categorias, producao_categorias,
+         est_data: ppm_est_data, mic_data: ppm_mic_data, mun_data: ppm_mun_data } = PPM);
+      ppmLoaded = true;
+    })
+    .catch(e => {
+      console.error('Erro ao carregar ppm.json', e);
+      alert('Não foi possível carregar os dados de pecuária.');
+    })
+    .finally(() => {
+      if (btn) { btn.textContent = original; btn.disabled = false; }
+      ppmLoading = null;
+    });
+  return ppmLoading;
+}
+
+function switchDomain(dom) {
+  if (dom === state.domain) return;
+  const proceed = () => {
+    if (dom === 'pecuaria' && !ppmLoaded) return; // load falhou, permanece no domínio atual
+    state.domain = dom;
+    document.body.dataset.domain = dom;
+    document.querySelectorAll('.dom-btn').forEach(b => b.classList.toggle('active', b.dataset.dom === dom));
+    if (dom === 'pecuaria') {
+      populateMetricaPecOptions();
+      populateCategoriaPec();
+    }
+    refreshAll();
+  };
+  if (dom === 'pecuaria' && !ppmLoaded) loadPPM().then(proceed);
+  else proceed();
+}
+
+// ═══════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════
 function showTab(name) {
@@ -762,6 +921,7 @@ function showTab(name) {
 // REFRESH
 // ═══════════════════════════════════════════════════════════
 function refreshAll() {
+  if (state.domain === 'pecuaria' && !ppmLoaded) return;
   updateKPIs();
   const t = state.tab;
   if (t === 'brasil')    updateMapBR();
@@ -777,10 +937,16 @@ function refreshAll() {
 // EXPORT
 // ═══════════════════════════════════════════════════════════
 function exportCSV() {
-  const M = state.metrica, ai = getAnoIdx(), uf = state.ufSel;
+  const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel;
   const ufs = uf ? [uf] : Object.keys(ufs_info);
-  const rows = [['UF', 'Estado', 'Cultura', metLabel()]];
+  const isPec = state.domain === 'pecuaria';
+  const rows = [['UF', 'Estado', isPec ? 'Categoria' : 'Cultura', metLabel()]];
   ufs.forEach(u => {
+    if (isPec) {
+      const v = ppm_est_data?.[u]?.[state.categoriaPec]?.[M]?.[ai];
+      if (v) rows.push([u, ufs_info[u]?.n || u, state.categoriaPec, v]);
+      return;
+    }
     const d = est_data[u]; if (!d) return;
     getActiveCulturas().forEach(c => {
       const v = d[c]?.[M]?.[ai]; if (v) rows.push([u, ufs_info[u]?.n || u, c, v]);
@@ -789,14 +955,20 @@ function exportCSV() {
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,﻿' +
     encodeURIComponent(rows.map(r => r.join(';')).join('\n'));
-  a.download = `PAM_${getAno()}_${uf || 'Brasil'}.csv`;
+  a.download = `${isPec ? 'PPM' : 'PAM'}_${getAno()}_${uf || 'Brasil'}.csv`;
   a.click();
 }
 
 function exportJSON() {
-  const M = state.metrica, ai = getAnoIdx(), uf = state.ufSel;
+  const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel;
+  const isPec = state.domain === 'pecuaria';
   const out = { ano: getAno(), metrica: M, uf: uf || 'BR', data: {} };
   (uf ? [uf] : Object.keys(ufs_info)).forEach(u => {
+    if (isPec) {
+      const v = ppm_est_data?.[u]?.[state.categoriaPec]?.[M]?.[ai];
+      if (v) out.data[u] = { [state.categoriaPec]: v };
+      return;
+    }
     const d = est_data[u]; if (!d) return; out.data[u] = {};
     getActiveCulturas().forEach(c => {
       const v = d[c]?.[M]?.[ai]; if (v) out.data[u][c] = v;
@@ -804,7 +976,7 @@ function exportJSON() {
   });
   const a = document.createElement('a');
   a.href = 'data:application/json,' + encodeURIComponent(JSON.stringify(out));
-  a.download = `PAM_${getAno()}.json`;
+  a.download = `${isPec ? 'PPM' : 'PAM'}_${getAno()}.json`;
   a.click();
 }
 
@@ -813,8 +985,11 @@ function exportJSON() {
 // ═══════════════════════════════════════════════════════════
 function bindEvents() {
   document.getElementById('f-metrica').addEventListener('change', e => {
-    state.metrica = e.target.value; state.cultura = '';
+    state.metricaAgro = e.target.value; state.cultura = '';
     populateCulturas(); refreshAll();
+  });
+  document.getElementById('f-metrica-pec').addEventListener('change', e => {
+    state.metricaPec = e.target.value; refreshAll();
   });
   document.getElementById('f-ano').addEventListener('input', e => {
     state.anoIdx = +e.target.value; refreshAll();
@@ -824,9 +999,24 @@ function bindEvents() {
     document.querySelectorAll('.grp-btn').forEach(b => b.classList.toggle('active', b === btn));
     populateCulturas(); refreshAll();
   }));
+  document.querySelectorAll('.tipo-pec-btn').forEach(btn => btn.addEventListener('click', () => {
+    state.tipoPec = btn.dataset.tipo;
+    document.querySelectorAll('.tipo-pec-btn').forEach(b => b.classList.toggle('active', b === btn));
+    // "Valor" só existe para Produção — força Quantidade ao entrar em Rebanho
+    if (state.tipoPec === 'Rebanho') state.metricaPec = 'q';
+    populateMetricaPecOptions();
+    populateCategoriaPec();
+    refreshAll();
+  }));
   document.getElementById('f-cultura').addEventListener('change', e => {
     state.cultura = e.target.value; refreshAll();
   });
+  document.getElementById('f-categoria-pec').addEventListener('change', e => {
+    state.categoriaPec = e.target.value; refreshAll();
+  });
+  document.querySelectorAll('.dom-btn').forEach(btn => btn.addEventListener('click', () => {
+    switchDomain(btn.dataset.dom);
+  }));
   document.getElementById('f-estado').addEventListener('change', e => {
     state.ufSel = e.target.value; state.microSel = ''; state.munSel = '';
     populateMicros(); populateMunicipios(); refreshAll();
