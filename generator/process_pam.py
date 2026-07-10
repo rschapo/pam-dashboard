@@ -21,6 +21,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 import pandas as pd
 import requests
 
+from ibge_common import IBGE2UF, build_ufs_info, build_mic_info, build_mun_info
+
 # ── Paths ────────────────────────────────────────────────────────────────────
 CSV      = r"C:\Users\schap\Downloads\IBGE\dados_pam\PAM_municipios_completo.csv"
 OUT_DIR  = Path(__file__).parent.parent / "public" / "data"
@@ -30,31 +32,6 @@ OUT_GEO_MIC = OUT_DIR / "geo_mic.json"
 CROP_GROUPS_CSV = Path(__file__).parent / "crop_groups.csv"
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-# ── IBGE state code → 2-letter abbreviation ──────────────────────────────────
-IBGE2UF = {
-    "11":"RO","12":"AC","13":"AM","14":"RR","15":"PA","16":"AP","17":"TO",
-    "21":"MA","22":"PI","23":"CE","24":"RN","25":"PB","26":"PE","27":"AL","28":"SE","29":"BA",
-    "31":"MG","32":"ES","33":"RJ","35":"SP",
-    "41":"PR","42":"SC","43":"RS","50":"MS","51":"MT","52":"GO","53":"DF"
-}
-
-UF_NAMES = {
-    "RO":"Rondônia","AC":"Acre","AM":"Amazonas","RR":"Roraima","PA":"Pará","AP":"Amapá","TO":"Tocantins",
-    "MA":"Maranhão","PI":"Piauí","CE":"Ceará","RN":"Rio Grande do Norte","PB":"Paraíba",
-    "PE":"Pernambuco","AL":"Alagoas","SE":"Sergipe","BA":"Bahia",
-    "MG":"Minas Gerais","ES":"Espírito Santo","RJ":"Rio de Janeiro","SP":"São Paulo",
-    "PR":"Paraná","SC":"Santa Catarina","RS":"Rio Grande do Sul",
-    "MS":"Mato Grosso do Sul","MT":"Mato Grosso","GO":"Goiás","DF":"Distrito Federal"
-}
-
-UF_REGION = {
-    "RO":"N","AC":"N","AM":"N","RR":"N","PA":"N","AP":"N","TO":"N",
-    "MA":"NE","PI":"NE","CE":"NE","RN":"NE","PB":"NE","PE":"NE","AL":"NE","SE":"NE","BA":"NE",
-    "MG":"SE","ES":"SE","RJ":"SE","SP":"SE",
-    "PR":"S","SC":"S","RS":"S",
-    "MS":"CO","MT":"CO","GO":"CO","DF":"CO"
-}
 
 COLHEITADEIRAS_APPROX = [
     "Arroz (em casca)", "Aveia (em grão)", "Centeio (em grão)", "Cevada (em grão)",
@@ -295,24 +272,9 @@ for grp, mask in GROUP_MASKS.items():
 # ─────────────────────────────────────────────────────────────────────────────
 # 5. INFO DICTS
 # ─────────────────────────────────────────────────────────────────────────────
-mic_info_df = df[["Cod_Microrregiao","Microrregiao","UF","Mesorregiao"]].drop_duplicates()
-MIC_INFO = {}
-for _, row in mic_info_df.iterrows():
-    MIC_INFO[str(row["Cod_Microrregiao"])] = {
-        "n": str(row["Microrregiao"]), "uf": str(row["UF"]), "ms": str(row["Mesorregiao"])
-    }
-
-UFS_INFO = {uf: {"n": UF_NAMES.get(uf, uf), "r": UF_REGION.get(uf,"")}
-            for uf in sorted(df["UF"].unique())}
-
-mun_info_df = df[[MUN_COL,"Cod_Municipio","UF","Cod_Microrregiao"]].drop_duplicates("Cod_Municipio")
-MUN_INFO = {}
-for _, row in mun_info_df.iterrows():
-    MUN_INFO[str(row["Cod_Municipio"])] = {
-        "n": str(row[MUN_COL]),
-        "uf": str(row["UF"]),
-        "mid": str(row["Cod_Microrregiao"])
-    }
+MIC_INFO = build_mic_info(df)
+UFS_INFO = build_ufs_info(df)
+MUN_INFO = build_mun_info(df, MUN_COL)
 print(f"  States: {len(UFS_INFO)}  |  Micros: {len(MIC_INFO)}  |  Municípios: {len(MUN_INFO)}")
 
 # ─────────────────────────────────────────────────────────────────────────────
