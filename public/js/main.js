@@ -29,6 +29,11 @@ let N_ANOS;
 let PPM = null, ppmLoaded = false, ppmLoading = false;
 let rebanho_categorias, producao_categorias, ppm_est_data, ppm_mic_data, ppm_mun_data;
 
+// PEVS (Silvicultura/Extração) — carregado sob demanda ao abrir o domínio Silvicultura
+let PEVS = null, pevsLoaded = false, pevsLoading = false;
+let sil_tipos, sil_cats, sil_metricas, sil_unidades = {}, sil_sep = '||';
+let pevs_est_data, pevs_mic_data, pevs_mun_data;
+
 // Unidade de cada categoria pecuária (rebanho = sempre cabeças; produção varia)
 const PEC_UNITS = {
   'Bovino': 'cab.', 'Bubalino': 'cab.', 'Caprino': 'cab.', 'Codornas': 'cab.', 'Equino': 'cab.',
@@ -42,11 +47,18 @@ let state = {
   tab: 'brasil', domain: 'agricola',
   metricaAgro: 'p', grupoId: 'ALL', cultura: '',
   metricaPec: 'q', tipoPec: 'Rebanho', categoriaPec: '',
+  metricaSil: 'v', tipoSil: 'Silvicultura', categoriaSil: '',
   ufSel: '', microSel: '', munSel: '', anoIdx: 0
 };
 
-function curMetrica() { return state.domain === 'pecuaria' ? state.metricaPec : state.metricaAgro; }
+function curMetrica() {
+  if (state.domain === 'pecuaria') return state.metricaPec;
+  if (state.domain === 'silvicultura') return state.metricaSil;
+  return state.metricaAgro;
+}
 function getActiveCategoriasPec() { return state.tipoPec === 'Rebanho' ? rebanho_categorias : producao_categorias; }
+function getActiveCategoriasSil() { return (sil_cats && sil_cats[state.tipoSil]) || []; }
+function silKey() { return state.tipoSil + sil_sep + state.categoriaSil; }
 
 // ═══════════════════════════════════════════════════════════
 // ENTRY POINT — called from index.html after fetch()
@@ -109,6 +121,10 @@ function calcEst(uf, m) {
     const d = ppm_est_data?.[uf]?.[state.categoriaPec]; if (!d) return 0;
     return d[m]?.[getAnoIdx()] || 0;
   }
+  if (state.domain === 'silvicultura') {
+    const d = pevs_est_data?.[uf]?.[silKey()]; if (!d) return 0;
+    return d[m]?.[getAnoIdx()] || 0;
+  }
   const d = est_data[uf]; if (!d) return 0;
   const ai = getAnoIdx();
   return getActiveCulturas().reduce((s, c) => s + (d[c]?.[m]?.[ai] || 0), 0);
@@ -119,6 +135,10 @@ function calcMic(mid, m) {
     const d = ppm_mic_data?.[mid]?.[state.categoriaPec]; if (!d) return 0;
     return d[m]?.[getAnoIdx()] || 0;
   }
+  if (state.domain === 'silvicultura') {
+    const d = pevs_mic_data?.[mid]?.[silKey()]; if (!d) return 0;
+    return d[m]?.[getAnoIdx()] || 0;
+  }
   const key = getMicKey();
   const d = mic_data[mid]; if (!d) return 0;
   return d[key]?.[m]?.[getAnoIdx()] || 0;
@@ -127,6 +147,10 @@ function calcMic(mid, m) {
 function calcMunVal(munId, m, ai) {
   if (state.domain === 'pecuaria') {
     const d = ppm_mun_data?.[munId]?.[state.categoriaPec]; if (!d) return 0;
+    return d[m]?.[ai] || 0;
+  }
+  if (state.domain === 'silvicultura') {
+    const d = pevs_mun_data?.[munId]?.[silKey()]; if (!d) return 0;
     return d[m]?.[ai] || 0;
   }
   if (state.grupoId && state.grupoId !== 'ALL') {
@@ -144,6 +168,13 @@ function metLabel() {
     if (!cat) return 'Selecione uma categoria';
     if (M === 'v') return cat + ' — Valor (mil R$)';
     return cat + ' — ' + (state.tipoPec === 'Rebanho' ? 'Efetivo' : 'Quantidade') + (unit ? ' (' + unit + ')' : '');
+  }
+  if (state.domain === 'silvicultura') {
+    const cat = state.categoriaSil, unit = sil_unidades?.[cat] || '';
+    if (!cat) return 'Selecione um item';
+    if (M === 'v') return cat + ' — Valor (mil R$)';
+    if (M === 'a') return cat + ' — Área (ha)';
+    return cat + ' — Quantidade' + (unit ? ' (' + unit + ')' : '');
   }
   if (M === 'p') return 'Produção (ton)';
   if (M === 'a') return 'Área Colhida (ha)';
@@ -468,6 +499,7 @@ function updateMunChartTop(muns) {
 
 function hasMunData(munId) {
   if (state.domain === 'pecuaria') return !!ppm_mun_data?.[munId]?.[state.categoriaPec];
+  if (state.domain === 'silvicultura') return !!pevs_mun_data?.[munId]?.[silKey()];
   return !!mun_data[munId];
 }
 
@@ -588,20 +620,31 @@ function updateHistorico() {
   // Top culturas / categorias
   const ctx2 = document.getElementById('chart-top')?.getContext('2d'); if (!ctx2) return;
   const ai = getAnoIdx();
-  const isPec = state.domain === 'pecuaria';
-  const cultVals = isPec
-    ? getActiveCategoriasPec().map(c => {
-        const v = uf
-          ? (ppm_est_data?.[uf]?.[c]?.[M]?.[ai] || 0)
-          : Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[ai] || 0), 0);
-        return { c, v };
-      }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15)
-    : getActiveCulturas().map(c => {
-        const v = uf
-          ? (est_data[uf]?.[c]?.[M]?.[ai] || 0)
-          : Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
-        return { c, v };
-      }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  const dom = state.domain;
+  let cultVals;
+  if (dom === 'pecuaria') {
+    cultVals = getActiveCategoriasPec().map(c => {
+      const v = uf
+        ? (ppm_est_data?.[uf]?.[c]?.[M]?.[ai] || 0)
+        : Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[ai] || 0), 0);
+      return { c, v };
+    }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  } else if (dom === 'silvicultura') {
+    cultVals = getActiveCategoriasSil().map(c => {
+      const k = state.tipoSil + sil_sep + c;
+      const v = uf
+        ? (pevs_est_data?.[uf]?.[k]?.[M]?.[ai] || 0)
+        : Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[ai] || 0), 0);
+      return { c, v };
+    }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  } else {
+    cultVals = getActiveCulturas().map(c => {
+      const v = uf
+        ? (est_data[uf]?.[c]?.[M]?.[ai] || 0)
+        : Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
+      return { c, v };
+    }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  }
 
   if (chTop) chTop.destroy();
   chTop = new Chart(ctx2, {
@@ -620,7 +663,9 @@ function updateHistorico() {
     }
   });
   document.getElementById('chart-top-title').textContent =
-    (isPec ? '🐄 Top Categorias — ' : '🌾 Top Culturas — ') + getAno();
+    (dom === 'pecuaria' ? '🐄 Top Categorias — '
+      : dom === 'silvicultura' ? '🌲 Top Produtos — '
+      : '🌾 Top Culturas — ') + getAno();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -658,16 +703,25 @@ function updateRanking() {
   }
 
   // Top culturas / categorias
-  const isPec = state.domain === 'pecuaria';
-  const cultVals = isPec
-    ? getActiveCategoriasPec().map(c => {
-        const v = Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[ai] || 0), 0);
-        return { c, v };
-      }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15)
-    : getActiveCulturas().map(c => {
-        const v = Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
-        return { c, v };
-      }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  const dom = state.domain;
+  let cultVals;
+  if (dom === 'pecuaria') {
+    cultVals = getActiveCategoriasPec().map(c => {
+      const v = Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[ai] || 0), 0);
+      return { c, v };
+    }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  } else if (dom === 'silvicultura') {
+    cultVals = getActiveCategoriasSil().map(c => {
+      const k = state.tipoSil + sil_sep + c;
+      const v = Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[ai] || 0), 0);
+      return { c, v };
+    }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  } else {
+    cultVals = getActiveCulturas().map(c => {
+      const v = Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
+      return { c, v };
+    }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  }
 
   const ctx2 = document.getElementById('chart-rank-cult')?.getContext('2d');
   if (ctx2) {
@@ -688,7 +742,9 @@ function updateRanking() {
       }
     });
     document.getElementById('rank-cult-title').textContent =
-      (isPec ? '🐄 Top Categorias' : '🌱 Top Culturas') + ` — ${metLabel()} (${getAno()})`;
+      (dom === 'pecuaria' ? '🐄 Top Categorias'
+        : dom === 'silvicultura' ? '🌲 Top Produtos'
+        : '🌱 Top Culturas') + ` — ${metLabel()} (${getAno()})`;
   }
 
   // Top microrregiões
@@ -728,6 +784,7 @@ function updateRanking() {
 // ═══════════════════════════════════════════════════════════
 function updateKPIs() {
   if (state.domain === 'pecuaria') { updateKPIsPec(); return; }
+  if (state.domain === 'silvicultura') { updateKPIsSil(); return; }
   const ai = getAnoIdx(), uf = state.ufSel;
   const ufs  = uf ? [uf] : Object.keys(ufs_info);
   const agg  = { a: 0, p: 0, v: 0 };
@@ -784,6 +841,38 @@ function updateKPIsPec() {
   document.getElementById('kpi-pec-mun-sub').textContent = `com dados · ${year}`;
 }
 
+function updateKPIsSil() {
+  if (!pevsLoaded) return;
+  const ai = getAnoIdx(), uf = state.ufSel, key = silKey(), cat = state.categoriaSil;
+  const isArea = state.tipoSil === 'Área plantada';
+  const ufs = uf ? [uf] : Object.keys(ufs_info);
+  let qtd = 0, val = 0, munCount = 0;
+  ufs.forEach(u => {
+    const d = pevs_est_data[u]?.[key]; if (!d) return;
+    qtd += (isArea ? (d.a?.[ai] || 0) : (d.q?.[ai] || 0));
+    val += d.v?.[ai] || 0;
+  });
+  Object.keys(mun_info).forEach(mid => {
+    if (uf && mun_info[mid].uf !== uf) return;
+    const d = pevs_mun_data[mid]?.[key]; if (!d) return;
+    const mv = isArea ? (d.a?.[ai] || 0) : (d.q?.[ai] || 0);
+    if (mv > 0) munCount++;
+  });
+  const year  = getAno();
+  const scope = uf ? (ufs_info[uf]?.n || uf) : 'Brasil';
+  const unit  = sil_unidades?.[cat] || (isArea ? 'ha' : '');
+
+  document.getElementById('kpi-sil-qtd-title').textContent = isArea ? 'Área Total' : 'Quantidade Total';
+  document.getElementById('kpi-sil-qtd').textContent     = fmt(qtd, 'q') + (unit ? ' ' + unit : '');
+  document.getElementById('kpi-sil-qtd-sub').textContent = `${scope} · ${year}`;
+  document.getElementById('kpi-sil-val').textContent     = isArea ? '—' : fmt(val, 'v');
+  document.getElementById('kpi-sil-val-sub').textContent = isArea ? 'não se aplica' : 'mil R$';
+  document.getElementById('kpi-sil-cat').textContent     = cat || '—';
+  document.getElementById('kpi-sil-cat-sub').textContent = state.tipoSil;
+  document.getElementById('kpi-sil-mun').textContent     = munCount.toLocaleString('pt-BR');
+  document.getElementById('kpi-sil-mun-sub').textContent = `com dados · ${year}`;
+}
+
 // ═══════════════════════════════════════════════════════════
 // POPULATE SELECTS
 // ═══════════════════════════════════════════════════════════
@@ -814,6 +903,23 @@ function populateMetricaPecOptions() {
     ? '<option value="q" selected>Quantidade (Efetivo)</option>'
     : '<option value="q">Quantidade</option><option value="v">Valor (mil R$)</option>';
   sel.value = state.metricaPec;
+}
+
+function populateCategoriaSil() {
+  const sel = document.getElementById('f-categoria-sil'); if (!sel) return;
+  const list = getActiveCategoriasSil();
+  sel.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (!list.includes(state.categoriaSil)) state.categoriaSil = list[0] || '';
+  sel.value = state.categoriaSil;
+}
+
+function populateMetricaSilOptions() {
+  const sel = document.getElementById('f-metrica-sil'); if (!sel) return;
+  const mets = (sil_metricas && sil_metricas[state.tipoSil]) || ['v'];
+  const LAB = { v: 'Valor (mil R$)', q: 'Quantidade', a: 'Área (ha)' };
+  sel.innerHTML = mets.map(m => `<option value="${m}">${LAB[m] || m}</option>`).join('');
+  if (!mets.includes(state.metricaSil)) state.metricaSil = mets.includes('v') ? 'v' : mets[0];
+  sel.value = state.metricaSil;
 }
 
 function populateEstados() {
@@ -882,10 +988,41 @@ function loadPPM() {
   return ppmLoading;
 }
 
+function loadPEVS() {
+  if (pevsLoaded) return Promise.resolve();
+  if (pevsLoading) return pevsLoading;
+  const btn = document.querySelector('.dom-btn[data-dom="silvicultura"]');
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
+  pevsLoading = fetch('data/pevs.json')
+    .then(r => r.json())
+    .then(d => {
+      PEVS = d;
+      sil_tipos    = d.tipos;
+      sil_cats     = d.categorias_por_tipo;
+      sil_metricas = d.metricas_por_tipo;
+      sil_unidades = d.unidades || {};
+      sil_sep      = d.sep || '||';
+      pevs_est_data = d.est_data; pevs_mic_data = d.mic_data; pevs_mun_data = d.mun_data;
+      if (!sil_tipos.includes(state.tipoSil)) state.tipoSil = sil_tipos[0];
+      pevsLoaded = true;
+    })
+    .catch(e => {
+      console.error('Erro ao carregar pevs.json', e);
+      alert('Não foi possível carregar os dados de silvicultura.');
+    })
+    .finally(() => {
+      if (btn) { btn.textContent = original; btn.disabled = false; }
+      pevsLoading = null;
+    });
+  return pevsLoading;
+}
+
 function switchDomain(dom) {
   if (dom === state.domain) return;
   const proceed = () => {
-    if (dom === 'pecuaria' && !ppmLoaded) return; // load falhou, permanece no domínio atual
+    if (dom === 'pecuaria' && !ppmLoaded) return;       // load falhou, permanece no domínio atual
+    if (dom === 'silvicultura' && !pevsLoaded) return;  // idem
     state.domain = dom;
     document.body.dataset.domain = dom;
     document.querySelectorAll('.dom-btn').forEach(b => b.classList.toggle('active', b.dataset.dom === dom));
@@ -893,9 +1030,14 @@ function switchDomain(dom) {
       populateMetricaPecOptions();
       populateCategoriaPec();
     }
+    if (dom === 'silvicultura') {
+      populateMetricaSilOptions();
+      populateCategoriaSil();
+    }
     refreshAll();
   };
   if (dom === 'pecuaria' && !ppmLoaded) loadPPM().then(proceed);
+  else if (dom === 'silvicultura' && !pevsLoaded) loadPEVS().then(proceed);
   else proceed();
 }
 
@@ -922,6 +1064,7 @@ function showTab(name) {
 // ═══════════════════════════════════════════════════════════
 function refreshAll() {
   if (state.domain === 'pecuaria' && !ppmLoaded) return;
+  if (state.domain === 'silvicultura' && !pevsLoaded) return;
   updateKPIs();
   const t = state.tab;
   if (t === 'brasil')    updateMapBR();
@@ -937,14 +1080,19 @@ function refreshAll() {
 // EXPORT
 // ═══════════════════════════════════════════════════════════
 function exportCSV() {
-  const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel;
+  const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel, dom = state.domain;
   const ufs = uf ? [uf] : Object.keys(ufs_info);
-  const isPec = state.domain === 'pecuaria';
-  const rows = [['UF', 'Estado', isPec ? 'Categoria' : 'Cultura', metLabel()]];
+  const label = dom === 'agricola' ? 'Cultura' : dom === 'pecuaria' ? 'Categoria' : 'Produto';
+  const rows = [['UF', 'Estado', label, metLabel()]];
   ufs.forEach(u => {
-    if (isPec) {
+    if (dom === 'pecuaria') {
       const v = ppm_est_data?.[u]?.[state.categoriaPec]?.[M]?.[ai];
       if (v) rows.push([u, ufs_info[u]?.n || u, state.categoriaPec, v]);
+      return;
+    }
+    if (dom === 'silvicultura') {
+      const v = pevs_est_data?.[u]?.[silKey()]?.[M]?.[ai];
+      if (v) rows.push([u, ufs_info[u]?.n || u, state.categoriaSil, v]);
       return;
     }
     const d = est_data[u]; if (!d) return;
@@ -952,21 +1100,26 @@ function exportCSV() {
       const v = d[c]?.[M]?.[ai]; if (v) rows.push([u, ufs_info[u]?.n || u, c, v]);
     });
   });
+  const prefix = dom === 'agricola' ? 'PAM' : dom === 'pecuaria' ? 'PPM' : 'PEVS';
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,﻿' +
     encodeURIComponent(rows.map(r => r.join(';')).join('\n'));
-  a.download = `${isPec ? 'PPM' : 'PAM'}_${getAno()}_${uf || 'Brasil'}.csv`;
+  a.download = `${prefix}_${getAno()}_${uf || 'Brasil'}.csv`;
   a.click();
 }
 
 function exportJSON() {
-  const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel;
-  const isPec = state.domain === 'pecuaria';
+  const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel, dom = state.domain;
   const out = { ano: getAno(), metrica: M, uf: uf || 'BR', data: {} };
   (uf ? [uf] : Object.keys(ufs_info)).forEach(u => {
-    if (isPec) {
+    if (dom === 'pecuaria') {
       const v = ppm_est_data?.[u]?.[state.categoriaPec]?.[M]?.[ai];
       if (v) out.data[u] = { [state.categoriaPec]: v };
+      return;
+    }
+    if (dom === 'silvicultura') {
+      const v = pevs_est_data?.[u]?.[silKey()]?.[M]?.[ai];
+      if (v) out.data[u] = { [state.categoriaSil]: v };
       return;
     }
     const d = est_data[u]; if (!d) return; out.data[u] = {};
@@ -974,9 +1127,10 @@ function exportJSON() {
       const v = d[c]?.[M]?.[ai]; if (v) out.data[u][c] = v;
     });
   });
+  const prefix = dom === 'agricola' ? 'PAM' : dom === 'pecuaria' ? 'PPM' : 'PEVS';
   const a = document.createElement('a');
   a.href = 'data:application/json,' + encodeURIComponent(JSON.stringify(out));
-  a.download = `${isPec ? 'PPM' : 'PAM'}_${getAno()}.json`;
+  a.download = `${prefix}_${getAno()}.json`;
   a.click();
 }
 
@@ -1013,6 +1167,19 @@ function bindEvents() {
   });
   document.getElementById('f-categoria-pec').addEventListener('change', e => {
     state.categoriaPec = e.target.value; refreshAll();
+  });
+  document.getElementById('f-metrica-sil')?.addEventListener('change', e => {
+    state.metricaSil = e.target.value; refreshAll();
+  });
+  document.querySelectorAll('.tipo-sil-btn').forEach(btn => btn.addEventListener('click', () => {
+    state.tipoSil = btn.dataset.tipo;
+    document.querySelectorAll('.tipo-sil-btn').forEach(b => b.classList.toggle('active', b === btn));
+    populateMetricaSilOptions();
+    populateCategoriaSil();
+    refreshAll();
+  }));
+  document.getElementById('f-categoria-sil')?.addEventListener('change', e => {
+    state.categoriaSil = e.target.value; refreshAll();
   });
   document.querySelectorAll('.dom-btn').forEach(btn => btn.addEventListener('click', () => {
     switchDomain(btn.dataset.dom);

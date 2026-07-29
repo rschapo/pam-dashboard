@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body data-tab="brasil">
+<body data-tab="brasil" data-domain="agricola">
 
 <!-- ══ LOADING OVERLAY ══ -->
 <div id="loading-overlay">
@@ -56,6 +56,7 @@
     <div class="domain-switch">
       <button class="dom-btn active" data-dom="agricola">🌾 Agrícola</button>
       <button class="dom-btn" data-dom="pecuaria">🐄 Pecuária</button>
+      <button class="dom-btn" data-dom="silvicultura">🌲 Silvicultura</button>
     </div>
 
     <div class="sidebar-section-title">Indicadores</div>
@@ -75,6 +76,14 @@
       <select id="f-metrica-pec">
         <option value="q" selected>Quantidade</option>
         <option value="v">Valor (mil R$)</option>
+      </select>
+    </div>
+
+    <div class="filter-block dom-silvicultura">
+      <label>Métrica</label>
+      <select id="f-metrica-sil">
+        <option value="v" selected>Valor (mil R$)</option>
+        <option value="q">Quantidade</option>
       </select>
     </div>
 
@@ -114,6 +123,21 @@
     <div class="filter-block dom-pecuaria">
       <label>Categoria</label>
       <select id="f-categoria-pec"></select>
+    </div>
+
+    <div class="sidebar-section-title dom-silvicultura">Tipo</div>
+
+    <div class="filter-block dom-silvicultura">
+      <div class="grp-btns">
+        <button class="tipo-sil-btn active" data-tipo="Silvicultura" style="grid-column:1/-1">🌲 Silvicultura (plantada)</button>
+        <button class="tipo-sil-btn" data-tipo="Extração vegetal" style="grid-column:1/-1">🌳 Extração vegetal (nativa)</button>
+        <button class="tipo-sil-btn" data-tipo="Área plantada" style="grid-column:1/-1">📐 Área plantada (espécie)</button>
+      </div>
+    </div>
+
+    <div class="filter-block dom-silvicultura">
+      <label>Produto / Espécie</label>
+      <select id="f-categoria-sil"></select>
     </div>
 
     <div class="sidebar-section-title">Localização</div>
@@ -204,6 +228,28 @@
             <h3>Municípios</h3>
             <div class="val" id="kpi-pec-mun">—</div>
             <div class="sub" id="kpi-pec-mun-sub">com dados</div>
+          </div>
+        </div>
+        <div id="kpi-row-sil" class="dom-silvicultura" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+          <div class="kpi-card">
+            <h3 id="kpi-sil-qtd-title">Quantidade Total</h3>
+            <div class="val" id="kpi-sil-qtd">—</div>
+            <div class="sub" id="kpi-sil-qtd-sub"></div>
+          </div>
+          <div class="kpi-card">
+            <h3>Valor da Produção</h3>
+            <div class="val" id="kpi-sil-val">—</div>
+            <div class="sub" id="kpi-sil-val-sub">mil R$</div>
+          </div>
+          <div class="kpi-card">
+            <h3>Item Selecionado</h3>
+            <div class="val" id="kpi-sil-cat" style="font-size:16px">—</div>
+            <div class="sub" id="kpi-sil-cat-sub"></div>
+          </div>
+          <div class="kpi-card">
+            <h3>Municípios</h3>
+            <div class="val" id="kpi-sil-mun">—</div>
+            <div class="sub" id="kpi-sil-mun-sub">com dados</div>
           </div>
         </div>
         <div class="map-box"><div id="map-br"></div></div>

@@ -41,16 +41,17 @@ body {
 body[data-tab="municipio"] .hide-municipio  { display: none !important; }
 body:not([data-tab="municipio"]) .only-municipio { display: none !important; }
 
-/* ── Domain-aware visibility (Agrícola vs Pecuária) ── */
-body[data-domain="pecuaria"] .dom-agricola { display: none !important; }
-body[data-domain="agricola"] .dom-pecuaria { display: none !important; }
+/* ── Domain-aware visibility (Agrícola / Pecuária / Silvicultura) ── */
+body:not([data-domain="agricola"])     .dom-agricola     { display: none !important; }
+body:not([data-domain="pecuaria"])     .dom-pecuaria     { display: none !important; }
+body:not([data-domain="silvicultura"]) .dom-silvicultura { display: none !important; }
 
 /* ── Domain switch ── */
-.domain-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.domain-switch { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
 .dom-btn {
-  padding: 9px 6px; border: 1px solid var(--border);
+  padding: 8px 3px; border: 1px solid var(--border);
   border-radius: 8px; background: var(--white);
-  font-size: 12.5px; font-weight: 700; cursor: pointer; text-align: center;
+  font-size: 11px; font-weight: 700; cursor: pointer; text-align: center;
   transition: all .15s; color: var(--text);
 }
 .dom-btn.active {
