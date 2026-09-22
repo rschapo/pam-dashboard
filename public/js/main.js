@@ -34,6 +34,10 @@ let PEVS = null, pevsLoaded = false, pevsLoading = false;
 let sil_tipos, sil_cats, sil_metricas, sil_unidades = {}, sil_sep = '||';
 let pevs_est_data, pevs_mic_data, pevs_mun_data;
 
+// ECON (Economia) — carregado sob demanda ao abrir o domínio Economia
+let ECON = null, econLoaded = false, econLoading = false;
+let econ_mun, econ_uf;
+
 // Unidade de cada categoria pecuária (rebanho = sempre cabeças; produção varia)
 const PEC_UNITS = {
   'Bovino': 'cab.', 'Bubalino': 'cab.', 'Caprino': 'cab.', 'Codornas': 'cab.', 'Equino': 'cab.',
@@ -48,12 +52,14 @@ let state = {
   metricaAgro: 'p', grupoId: 'ALL', cultura: '',
   metricaPec: 'q', tipoPec: 'Rebanho', categoriaPec: '',
   metricaSil: 'v', tipoSil: 'Silvicultura', categoriaSil: '',
+  metricaEcon: 'pib',
   ufSel: '', microSel: '', munSel: '', anoIdx: 0
 };
 
 function curMetrica() {
   if (state.domain === 'pecuaria') return state.metricaPec;
   if (state.domain === 'silvicultura') return state.metricaSil;
+  if (state.domain === 'economia') return state.metricaEcon;
   return state.metricaAgro;
 }
 function getActiveCategoriasPec() { return state.tipoPec === 'Rebanho' ? rebanho_categorias : producao_categorias; }
@@ -153,6 +159,10 @@ function calcMunVal(munId, m, ai) {
     const d = pevs_mun_data?.[munId]?.[silKey()]; if (!d) return 0;
     return d[m]?.[ai] || 0;
   }
+  if (state.domain === 'economia') {
+    const d = econ_mun?.[munId]; if (!d) return 0;
+    return d[m] || 0;
+  }
   if (state.grupoId && state.grupoId !== 'ALL') {
     const grp = state.grupoId;
     const gd = mun_grp_data[grp];
@@ -175,6 +185,12 @@ function metLabel() {
     if (M === 'v') return cat + ' — Valor (mil R$)';
     if (M === 'a') return cat + ' — Área (ha)';
     return cat + ' — Quantidade' + (unit ? ' (' + unit + ')' : '');
+  }
+  if (state.domain === 'economia') {
+    if (M === 'pib') return 'PIB Total (mil R$)';
+    if (M === 'agro') return 'PIB Agrícola (mil R$)';
+    if (M === 'pc') return 'PIB per Capita (R$)';
+    if (M === 'pct') return '% do PIB Agrícola';
   }
   if (M === 'p') return 'Produção (ton)';
   if (M === 'a') return 'Área Colhida (ha)';
@@ -1052,11 +1068,37 @@ function loadPEVS() {
   return pevsLoading;
 }
 
+function loadEcon() {
+  if (econLoaded) return Promise.resolve();
+  if (econLoading) return econLoading;
+  const btn = document.querySelector('.dom-btn[data-dom="economia"]');
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
+  econLoading = fetch('data/econ.json')
+    .then(r => r.json())
+    .then(d => {
+      ECON = d;
+      econ_mun = d.mun || {};
+      econ_uf = d.uf || {};
+      econLoaded = true;
+    })
+    .catch(e => {
+      console.error('Erro ao carregar econ.json', e);
+      alert('Não foi possível carregar os dados de economia.');
+    })
+    .finally(() => {
+      if (btn) { btn.textContent = original; btn.disabled = false; }
+      econLoading = null;
+    });
+  return econLoading;
+}
+
 function switchDomain(dom) {
   if (dom === state.domain) return;
   const proceed = () => {
     if (dom === 'pecuaria' && !ppmLoaded) return;       // load falhou, permanece no domínio atual
     if (dom === 'silvicultura' && !pevsLoaded) return;  // idem
+    if (dom === 'economia' && !econLoaded) return;
     state.domain = dom;
     document.body.dataset.domain = dom;
     document.querySelectorAll('.dom-btn').forEach(b => b.classList.toggle('active', b.dataset.dom === dom));
@@ -1072,6 +1114,7 @@ function switchDomain(dom) {
   };
   if (dom === 'pecuaria' && !ppmLoaded) loadPPM().then(proceed);
   else if (dom === 'silvicultura' && !pevsLoaded) loadPEVS().then(proceed);
+  else if (dom === 'economia' && !econLoaded) loadEcon().then(proceed);
   else proceed();
 }
 
@@ -1214,6 +1257,9 @@ function bindEvents() {
   }));
   document.getElementById('f-categoria-sil')?.addEventListener('change', e => {
     state.categoriaSil = e.target.value; refreshAll();
+  });
+  document.getElementById('f-metrica-econ')?.addEventListener('change', e => {
+    state.metricaEcon = e.target.value; refreshAll();
   });
   document.querySelectorAll('.dom-btn').forEach(btn => btn.addEventListener('click', () => {
     switchDomain(btn.dataset.dom);

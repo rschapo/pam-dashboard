@@ -50,6 +50,7 @@
       <button class="dom-btn active" data-dom="agricola">🌾 Agrícola</button>
       <button class="dom-btn" data-dom="pecuaria">🐄 Pecuária</button>
       <button class="dom-btn" data-dom="silvicultura">🌲 Silvicultura</button>
+      <button class="dom-btn" data-dom="economia">📊 Economia</button>
     </div>
 
     <div class="sidebar-section-title">Indicadores</div>
@@ -77,6 +78,16 @@
       <select id="f-metrica-sil">
         <option value="v" selected>Valor (mil R$)</option>
         <option value="q">Quantidade</option>
+      </select>
+    </div>
+
+    <div class="filter-block dom-economia">
+      <label>Métrica</label>
+      <select id="f-metrica-econ">
+        <option value="pib" selected>PIB Total</option>
+        <option value="agro">PIB Agrícola</option>
+        <option value="pc">PIB per Capita</option>
+        <option value="pct">% Agrícola</option>
       </select>
     </div>
 
