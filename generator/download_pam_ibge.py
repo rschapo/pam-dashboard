@@ -29,6 +29,8 @@ VARIAVEIS = {
     "215": "Valor_Producao_mil_reais",
 }
 
+COL_RENDIMENTO = "Rendimento_Medio_kg_ha"
+
 TABELAS = [
     {"tabela": 1612, "classif": "c81", "tipo": "Temporaria"},
     {"tabela": 1613, "classif": "c82", "tipo": "Permanente"},
@@ -239,6 +241,17 @@ def carregar_tabela(tabela, ultimo_ano):
 
 # ── Exportacao ──────────────────────────────────────────────────────────────
 
+def agregar(df, chaves, cols_num):
+    # Rendimento e uma razao: soma numerador e denominador e so entao divide.
+    # Soma-lo direto daria a soma dos rendimentos municipais, sem significado fisico.
+    cols_soma = [c for c in cols_num if c != COL_RENDIMENTO]
+    out = df.groupby(chaves)[cols_soma].sum(min_count=1).reset_index()
+    if {"Quantidade_Produzida_ton", "Area_Colhida_ha"} <= set(out.columns):
+        area = out["Area_Colhida_ha"]
+        out[COL_RENDIMENTO] = (out["Quantidade_Produzida_ton"] / area * 1000).where(area > 0).round(1)
+    return out[chaves + cols_num]
+
+
 def salvar_csv(df, nome):
     p = os.path.join(PASTA_SAIDA, nome)
     df.to_csv(p, index=False, encoding="utf-8-sig", sep=";")
@@ -290,12 +303,8 @@ def main():
     df_total = pd.concat([df_temp, df_perm], ignore_index=True)
     cols_num = [c for c in VARIAVEIS.values() if c in df_total.columns]
 
-    df_est = (df_total
-              .groupby(["UF","Regiao","Ano","Tipo_Lavoura","Cod_Cultura","Cultura"])
-              [cols_num].sum(min_count=1).reset_index())
-    df_bra = (df_total
-              .groupby(["Ano","Tipo_Lavoura","Cod_Cultura","Cultura"])
-              [cols_num].sum(min_count=1).reset_index())
+    df_est = agregar(df_total, ["UF","Regiao","Ano","Tipo_Lavoura","Cod_Cultura","Cultura"], cols_num)
+    df_bra = agregar(df_total, ["Ano","Tipo_Lavoura","Cod_Cultura","Cultura"], cols_num)
 
     df_dic = pd.DataFrame([
         {"Campo":"Cod_Municipio",            "Descricao":"Codigo IBGE do municipio (7 digitos)"},

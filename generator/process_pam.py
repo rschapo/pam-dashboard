@@ -163,8 +163,9 @@ est_agg = df.groupby(["UF","Cultura","Ano"], as_index=False, sort=False).agg(
     a=("Area_Colhida_ha","sum"),
     p=("Quantidade_Produzida_ton","sum"),
     v=("Valor_Producao_mil_reais","sum"),
-    r=("Rendimento_Medio_kg_ha","mean")
 )
+# Media simples entre municipios faria um de 5 ha pesar como um de 500 mil.
+est_agg["r"] = (est_agg["p"] / est_agg["a"] * 1000).where(est_agg["a"] > 0, 0)
 EST_DATA = {}
 for row in est_agg.itertuples(index=False):
     uf, c, ano = row.UF, row.Cultura, int(row.Ano)
