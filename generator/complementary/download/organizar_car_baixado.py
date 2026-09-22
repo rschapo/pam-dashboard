@@ -123,7 +123,7 @@ def processar(origem: Path, uf_forcada: str | None, manter: bool):
                 alvo.mkdir(parents=True, exist_ok=True)
                 zf.extractall(alvo)
                 extraidos += 1
-                print(f"  [ok] {z.name} → data/raw/car/{uf}/{camada}/")
+                print(f"  [ok] {z.name} -> data/raw/car/{uf}/{camada}/")
         except zipfile.BadZipFile:
             print(f"  [X] {z.name}: ZIP inválido (download interrompido?)")
             continue
