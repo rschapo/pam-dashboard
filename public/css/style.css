@@ -41,10 +41,18 @@ body {
 body[data-tab="municipio"] .hide-municipio  { display: none !important; }
 body:not([data-tab="municipio"]) .only-municipio { display: none !important; }
 
-/* ── Domain-aware visibility (Agrícola / Pecuária / Silvicultura) ── */
+/* ── Domain-aware visibility ── */
 body:not([data-domain="agricola"])     .dom-agricola     { display: none !important; }
 body:not([data-domain="pecuaria"])     .dom-pecuaria     { display: none !important; }
 body:not([data-domain="silvicultura"]) .dom-silvicultura { display: none !important; }
+body:not([data-domain="economia"])     .dom-economia     { display: none !important; }
+body:not([data-domain="terra"])        .dom-terra        { display: none !important; }
+body:not([data-domain="maquinas"])     .dom-maquinas     { display: none !important; }
+body:not([data-domain="credito"])      .dom-credito      { display: none !important; }
+
+/* Fontes de recorte único (Censo 2017, SICOR): repetir o mesmo valor ao longo
+   da linha do tempo sugeriria uma estabilidade que o dado não afirma. */
+body[data-serie="ausente"] .serie-temporal { display: none !important; }
 
 /* ── Domain switch ── */
 .domain-switch { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px; }
@@ -167,6 +175,10 @@ body:not([data-domain="silvicultura"]) .dom-silvicultura { display: none !import
 }
 .filter-block select:focus {
   outline: 2px solid var(--gold); border-color: transparent;
+}
+.filter-note {
+  margin-top: 5px; font-size: 11px; line-height: 1.4;
+  color: var(--text-lt);
 }
 input[type=range] {
   accent-color: var(--gold);

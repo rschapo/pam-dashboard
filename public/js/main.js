@@ -42,6 +42,14 @@ let econ_mun, econ_uf;
 let TERRA = null, terraLoaded = false, terraLoading = false;
 let terra_mun;
 
+// MAQUINAS (Censo Agro 2017) — frota de tratores por faixa de potência
+let MAQ = null, maqLoaded = false, maqLoading = false;
+let maq_mun;
+
+// CREDITO (BCB/SICOR) — crédito rural contratado por finalidade
+let CRED = null, credLoaded = false, credLoading = false;
+let cred_mun;
+
 // Unidade de cada categoria pecuária (rebanho = sempre cabeças; produção varia)
 const PEC_UNITS = {
   'Bovino': 'cab.', 'Bubalino': 'cab.', 'Caprino': 'cab.', 'Codornas': 'cab.', 'Equino': 'cab.',
@@ -58,6 +66,8 @@ let state = {
   metricaSil: 'v', tipoSil: 'Silvicultura', categoriaSil: '',
   metricaEcon: 'pib',
   metricaTerra: 'natural',
+  metricaMaq: 'trat',
+  metricaCred: 'total',
   ufSel: '', microSel: '', munSel: '', anoIdx: 0
 };
 
@@ -66,6 +76,8 @@ function curMetrica() {
   if (state.domain === 'silvicultura') return state.metricaSil;
   if (state.domain === 'economia') return state.metricaEcon;
   if (state.domain === 'terra') return state.metricaTerra;
+  if (state.domain === 'maquinas') return state.metricaMaq;
+  if (state.domain === 'credito') return state.metricaCred;
   return state.metricaAgro;
 }
 function getActiveCategoriasPec() { return state.tipoPec === 'Rebanho' ? rebanho_categorias : producao_categorias; }
@@ -128,6 +140,56 @@ function getMicKey() {
   return state.grupoId === 'COL' ? 'COL' : state.grupoId; // ALL, TEM, PER, COL
 }
 
+// ─── Domínios de fonte única (economia, uso do solo, tratores, crédito) ───
+// Só existem em granularidade municipal: estado e microrregião são somados na
+// hora. Razões (PIB per capita, % agrícola) não podem ser somadas — recompõem-se
+// a partir dos componentes, senão o total do estado vira a soma das taxas.
+const RAZOES_ECON = {
+  pc:  { num: 'pib', den: 'pop', fator: 1000 },  // pib em mil R$, per capita em R$
+  pct: { num: 'agro', den: 'pib', fator: 1 },
+};
+
+function baseDominioSimples() {
+  return { economia: econ_mun, terra: terra_mun,
+           maquinas: maq_mun, credito: cred_mun }[state.domain] || null;
+}
+
+let _idsPorUF = null, _idsPorMic = null;
+function indicesMunicipios() {
+  if (!_idsPorUF) {
+    _idsPorUF = {}; _idsPorMic = {};
+    for (const [id, i] of Object.entries(mun_info)) {
+      (_idsPorUF[i.uf] ||= []).push(id);
+      (_idsPorMic[i.mid] ||= []).push(id);
+    }
+  }
+  return { uf: _idsPorUF, mic: _idsPorMic };
+}
+
+const _aggCache = new Map();
+function agregarDominioSimples(ids, m) {
+  const base = baseDominioSimples();
+  if (!base) return 0;
+  const razao = state.domain === 'economia' ? RAZOES_ECON[m] : null;
+  if (razao) {
+    let num = 0, den = 0;
+    for (const id of ids) {
+      const d = base[id];
+      if (d) { num += d[razao.num] || 0; den += d[razao.den] || 0; }
+    }
+    return den ? (num * razao.fator) / den : 0;
+  }
+  let soma = 0;
+  for (const id of ids) soma += base[id]?.[m] || 0;
+  return soma;
+}
+
+function calcSimplesEscopo(chave, ids, m) {
+  const ck = `${state.domain}|${m}|${chave}`;
+  if (!_aggCache.has(ck)) _aggCache.set(ck, agregarDominioSimples(ids, m));
+  return _aggCache.get(ck);
+}
+
 function calcEst(uf, m) {
   if (state.domain === 'pecuaria') {
     const d = ppm_est_data?.[uf]?.[state.categoriaPec]; if (!d) return 0;
@@ -136,6 +198,9 @@ function calcEst(uf, m) {
   if (state.domain === 'silvicultura') {
     const d = pevs_est_data?.[uf]?.[silKey()]; if (!d) return 0;
     return d[m]?.[getAnoIdx()] || 0;
+  }
+  if (baseDominioSimples()) {
+    return calcSimplesEscopo('uf:' + uf, indicesMunicipios().uf[uf] || [], m);
   }
   const d = est_data[uf]; if (!d) return 0;
   const ai = getAnoIdx();
@@ -151,6 +216,9 @@ function calcMic(mid, m) {
     const d = pevs_mic_data?.[mid]?.[silKey()]; if (!d) return 0;
     return d[m]?.[getAnoIdx()] || 0;
   }
+  if (baseDominioSimples()) {
+    return calcSimplesEscopo('mic:' + mid, indicesMunicipios().mic[mid] || [], m);
+  }
   const key = getMicKey();
   const d = mic_data[mid]; if (!d) return 0;
   return d[key]?.[m]?.[getAnoIdx()] || 0;
@@ -165,14 +233,9 @@ function calcMunVal(munId, m, ai) {
     const d = pevs_mun_data?.[munId]?.[silKey()]; if (!d) return 0;
     return d[m]?.[ai] || 0;
   }
-  if (state.domain === 'economia') {
-    const d = econ_mun?.[munId]; if (!d) return 0;
-    return d[m] || 0;
-  }
-  if (state.domain === 'terra') {
-    const d = terra_mun?.[munId]; if (!d) return 0;
-    return d[m] || 0;
-  }
+  // Fontes de recorte único (sem série histórica): o valor não varia com o ano.
+  const base = baseDominioSimples();
+  if (base) return base[munId]?.[m] || 0;
   if (state.grupoId && state.grupoId !== 'ALL') {
     const grp = state.grupoId;
     const gd = mun_grp_data[grp];
@@ -209,6 +272,20 @@ function metLabel() {
     if (M === 'urban') return 'Urbano (ha)';
     if (M === 'agua') return 'Água (ha)';
     if (M === 'outros') return 'Outros (ha)';
+  }
+  if (state.domain === 'maquinas') {
+    const ano = MAQ?.ano || 2017;
+    if (M === 'trat') return `Frota de tratores (${ano})`;
+    if (M === 'trat_p') return `Tratores até 100 cv (${ano})`;
+    if (M === 'trat_g') return `Tratores de 100 cv ou mais (${ano})`;
+    if (M === 'est') return `Estabelecimentos com trator (${ano})`;
+  }
+  if (state.domain === 'credito') {
+    const ano = CRED?.ano || 2024;
+    if (M === 'total') return `Crédito rural contratado (mil R$, ${ano})`;
+    if (M === 'cust') return `Custeio (mil R$, ${ano})`;
+    if (M === 'inv') return `Investimento (mil R$, ${ano})`;
+    if (M === 'area') return `Área financiada (ha, ${ano})`;
   }
   if (M === 'p') return 'Produção (ton)';
   if (M === 'a') return 'Área Colhida (ha)';
@@ -1086,64 +1163,68 @@ function loadPEVS() {
   return pevsLoading;
 }
 
-function loadEcon() {
-  if (econLoaded) return Promise.resolve();
-  if (econLoading) return econLoading;
-  const btn = document.querySelector('.dom-btn[data-dom="economia"]');
-  const original = btn ? btn.textContent : '';
-  if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
-  econLoading = fetch('data/econ.json')
-    .then(r => r.json())
-    .then(d => {
-      ECON = d;
-      econ_mun = d.mun || {};
-      econ_uf = d.uf || {};
-      econLoaded = true;
-    })
-    .catch(e => {
-      console.error('Erro ao carregar econ.json', e);
-      alert('Não foi possível carregar os dados de economia.');
-    })
-    .finally(() => {
-      if (btn) { btn.textContent = original; btn.disabled = false; }
-      econLoading = null;
-    });
-  return econLoading;
-}
+// Domínios de arquivo único: buscam o JSON na primeira abertura e guardam o
+// resultado. PPM e PEVS têm carga própria porque desdobram várias estruturas.
+const DOMINIOS_SIMPLES = {
+  economia: {
+    arquivo: 'econ.json', rotulo: 'economia',
+    aplicar: d => { ECON = d; econ_mun = d.mun || {}; econ_uf = d.uf || {}; },
+    pronto: () => econLoaded, marcar: v => econLoaded = v,
+    pendente: () => econLoading, guardar: p => econLoading = p,
+  },
+  terra: {
+    arquivo: 'mapbiomas_mun.json', rotulo: 'uso do solo',
+    aplicar: d => { TERRA = d; terra_mun = d.mun || {}; },
+    pronto: () => terraLoaded, marcar: v => terraLoaded = v,
+    pendente: () => terraLoading, guardar: p => terraLoading = p,
+  },
+  maquinas: {
+    arquivo: 'maquinas.json', rotulo: 'tratores',
+    aplicar: d => { MAQ = d; maq_mun = d.mun || {}; },
+    pronto: () => maqLoaded, marcar: v => maqLoaded = v,
+    pendente: () => maqLoading, guardar: p => maqLoading = p,
+  },
+  credito: {
+    arquivo: 'credito.json', rotulo: 'crédito rural',
+    aplicar: d => { CRED = d; cred_mun = d.mun || {}; },
+    pronto: () => credLoaded, marcar: v => credLoaded = v,
+    pendente: () => credLoading, guardar: p => credLoading = p,
+  },
+};
 
-function loadTerra() {
-  if (terraLoaded) return Promise.resolve();
-  if (terraLoading) return terraLoading;
-  const btn = document.querySelector('.dom-btn[data-dom="terra"]');
+function loadDominio(dom) {
+  const cfg = DOMINIOS_SIMPLES[dom];
+  if (!cfg || cfg.pronto()) return Promise.resolve();
+  if (cfg.pendente()) return cfg.pendente();
+  const btn = document.querySelector(`.dom-btn[data-dom="${dom}"]`);
   const original = btn ? btn.textContent : '';
   if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
-  terraLoading = fetch('data/mapbiomas_mun.json')
+  const p = fetch('data/' + cfg.arquivo)
     .then(r => r.json())
-    .then(d => {
-      TERRA = d;
-      terra_mun = d.mun || {};
-      terraLoaded = true;
-    })
+    .then(d => { cfg.aplicar(d); cfg.marcar(true); _aggCache.clear(); })
     .catch(e => {
-      console.error('Erro ao carregar mapbiomas_mun.json', e);
-      alert('Não foi possível carregar os dados de uso do solo.');
+      console.error('Erro ao carregar ' + cfg.arquivo, e);
+      alert('Não foi possível carregar os dados de ' + cfg.rotulo + '.');
     })
     .finally(() => {
       if (btn) { btn.textContent = original; btn.disabled = false; }
-      terraLoading = null;
+      cfg.guardar(null);
     });
-  return terraLoading;
+  cfg.guardar(p);
+  return p;
 }
 
 function switchDomain(dom) {
   if (dom === state.domain) return;
+  const simples = DOMINIOS_SIMPLES[dom];
   const proceed = () => {
     if (dom === 'pecuaria' && !ppmLoaded) return;       // load falhou, permanece no domínio atual
     if (dom === 'silvicultura' && !pevsLoaded) return;  // idem
-    if (dom === 'economia' && !econLoaded) return;
-    if (dom === 'terra' && !terraLoaded) return;
+    if (simples && !simples.pronto()) return;
     state.domain = dom;
     document.body.dataset.domain = dom;
+    document.body.dataset.serie = simples ? 'ausente' : 'presente';
+    if (simples && state.tab === 'historico') showTab('brasil');
     document.querySelectorAll('.dom-btn').forEach(b => b.classList.toggle('active', b.dataset.dom === dom));
     if (dom === 'pecuaria') {
       populateMetricaPecOptions();
@@ -1157,8 +1238,7 @@ function switchDomain(dom) {
   };
   if (dom === 'pecuaria' && !ppmLoaded) loadPPM().then(proceed);
   else if (dom === 'silvicultura' && !pevsLoaded) loadPEVS().then(proceed);
-  else if (dom === 'economia' && !econLoaded) loadEcon().then(proceed);
-  else if (dom === 'terra' && !terraLoaded) loadTerra().then(proceed);
+  else if (simples && !simples.pronto()) loadDominio(dom).then(proceed);
   else proceed();
 }
 
@@ -1307,6 +1387,12 @@ function bindEvents() {
   });
   document.getElementById('f-metrica-terra')?.addEventListener('change', e => {
     state.metricaTerra = e.target.value; refreshAll();
+  });
+  document.getElementById('f-metrica-maq')?.addEventListener('change', e => {
+    state.metricaMaq = e.target.value; refreshAll();
+  });
+  document.getElementById('f-metrica-cred')?.addEventListener('change', e => {
+    state.metricaCred = e.target.value; refreshAll();
   });
   document.querySelectorAll('.dom-btn').forEach(btn => btn.addEventListener('click', () => {
     switchDomain(btn.dataset.dom);

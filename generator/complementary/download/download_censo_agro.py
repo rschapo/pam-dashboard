@@ -48,15 +48,18 @@ def validar_tabela(cli: SidraClient, tabela: int, temas_busca: list[str]) -> dic
     nome = meta.get("nome", "")
     # classificação cujo nome casa com algum termo buscado
     classif = None
+    classif_nome = ""
     for c in meta.get("classificacoes", []):
         cn = str(c.get("nome", "")).lower()
         if any(t.lower() in cn for t in temas_busca):
             classif = f"c{c['id']}"
+            classif_nome = str(c.get("nome", ""))
             break
     periodos = [str(p.get("id")) for p in meta.get("periodos", [])] if "periodos" in meta else []
     ano_ok = (not periodos) or (str(ANO_CENSO) in periodos)
-    print(f"    tabela {tabela}: {nome[:60]} | classif={classif} | {ANO_CENSO} disponível={ano_ok}")
-    return {"nome": nome, "classif": classif, "meta": meta, "ano_ok": ano_ok}
+    print(f"    tabela {tabela}: {nome[:60]} | classif={classif} ({classif_nome}) | {ANO_CENSO} disponível={ano_ok}")
+    return {"nome": nome, "classif": classif, "classif_nome": classif_nome,
+            "meta": meta, "ano_ok": ano_ok}
 
 
 def baixar_tema(cli: SidraClient, tema: str, cfg: dict, dry: bool):
@@ -82,6 +85,7 @@ def baixar_tema(cli: SidraClient, tema: str, cfg: dict, dry: bool):
     variaveis = cli.descobrir_variaveis(info["meta"], metricas) if metricas else {}
     var_str = ",".join(variaveis.keys()) or "allxp"
     classif = info["classif"]
+    classif_nome = info.get("classif_nome", "")
 
     frames = []
     for cod_est in ESTADOS_COD:
@@ -96,9 +100,16 @@ def baixar_tema(cli: SidraClient, tema: str, cfg: dict, dry: bool):
         cab = dados[0]
         def col(pred): return next((k for k, v in cab.items() if pred(v)), None)
         c_mc = col(lambda v: "Munic" in v and "digo" in v) or "D1C"
-        c_vn = col(lambda v: "Vari" in v and "Nome" in v) or "D2N"
+        c_vn = col(lambda v: v.strip() == "Variável") or col(lambda v: "Vari" in v and "Nome" in v) or "D2N"
         c_an = col(lambda v: "Ano" in v and "Nome" in v)
-        c_cn = col(lambda v: ("classifica" in v.lower() or any(b.lower() in v.lower() for b in busca)) and "Nome" in v)
+        # O cabeçalho do /values rotula a coluna com o NOME da classificação
+        # ("Potência dos tratores"), não com a palavra "Nome" — casar pelo nome
+        # vindo dos metadados, senão a subcategoria sai vazia e as categorias
+        # da classificação viram linhas duplicadas indistinguíveis.
+        c_cn = (col(lambda v: classif_nome and v.strip() == classif_nome)
+                or col(lambda v: ("classifica" in v.lower()
+                                  or any(b.lower() in v.lower() for b in busca))
+                                 and "digo" not in v))
         c_un = col(lambda v: "Unidade de Medida" in v and "Nome" in v)
         linhas = []
         for row in dados[1:]:

@@ -1,7 +1,7 @@
 {
   "dataset": "censo_agro",
   "source": "IBGE — Censo Agropecuário 2017",
-  "extraction_date": "2026-07-29",
+  "extraction_date": "2026-09-22",
   "reference_date": "2017-12-31",
   "source_files": [
     "censo_agro"
@@ -13,14 +13,14 @@
     }
   ],
   "script_version": "0.1.0",
-  "row_count": 437574,
+  "row_count": 453972,
   "municipality_count": 0,
   "rejected_rows": 0,
   "warnings": [],
   "output_files": [
     {
       "file": "censo_agro_area_groups.parquet",
-      "sha256": "edf092832b63e3d733316f641577881737364ed0c29dc00c303a17d4e78dc94b",
+      "sha256": "9e6b5de47a7481b79c15e30ddd1e50febee7f36a695d4c9c14d80adf3bf00cd3",
       "bytes": 202976
     },
     {
@@ -30,7 +30,7 @@
     },
     {
       "file": "censo_agro_family_farming.parquet",
-      "sha256": "5b3b528a442b73c6246f5229498dcdc50f3934f4de6c693a128b10ac20b59ec9",
+      "sha256": "dfd232b152ccb1e2577ac5ce13545c22715bdbfcda9981f850aa263bab31ceea",
       "bytes": 58164
     },
     {
@@ -40,7 +40,7 @@
     },
     {
       "file": "censo_agro_land_condition.parquet",
-      "sha256": "a7a860e55cfbbad33af56b0f63f8fc67a1b41d12a8c2290bbc6dfff0f233f576",
+      "sha256": "bd4b45b8b63d48d6dd552126a083ce0c24e4e608a42a1fc102584c0283c20ed2",
       "bytes": 120174
     },
     {
@@ -50,17 +50,17 @@
     },
     {
       "file": "censo_agro_machinery.parquet",
-      "sha256": "ded234bf84bca5566076766add78d8420d9ddbc200635b892115208e12028d4f",
-      "bytes": 80438
+      "sha256": "f7b7cc66fb39655694573ea918b04b2a46d74b30912618204e38922a7577824e",
+      "bytes": 113484
     },
     {
       "file": "censo_agro_machinery.csv",
-      "sha256": "38ca14caa2822244f142186ea87ff9f73b6685c0ca4990b9476c2d3b0fd44be0",
-      "bytes": 1507721
+      "sha256": "683ff8bbf641676afc0da1a43b3d9186c633066648b4b02bd2da52cb5a072047",
+      "bytes": 3586159
     },
     {
       "file": "censo_agro_irrigation.parquet",
-      "sha256": "e072326973eec8c97112431ae0301bde728fd7092cb05361c5c87b80c78c380b",
+      "sha256": "3f167bcadcfbd04b6059035ed755754b31c1e4d8e1f554c91261ec87c001ed06",
       "bytes": 105111
     },
     {
@@ -70,7 +70,7 @@
     },
     {
       "file": "censo_agro_storage.parquet",
-      "sha256": "06b92cb1194494833335f9e29e3c288faef64b34b8d55417b4f3e1bf7513d775",
+      "sha256": "9aaed04db2c3e18cfb58432271c8989a28f6e8889a6c7e6b5cb7b882e7913a8b",
       "bytes": 51580
     },
     {
@@ -80,7 +80,7 @@
     },
     {
       "file": "censo_agro_finance.parquet",
-      "sha256": "f2bacb5c19bab9ebb33083665b7af8480827b1925e216f8fe952aa6f2691e7d1",
+      "sha256": "e53f0144a995a0f64d7749b6289e6da5301dcc28f27999b4162cf7b10f9ae151",
       "bytes": 92625
     },
     {
@@ -90,7 +90,7 @@
     },
     {
       "file": "censo_agro_technical_assistance.parquet",
-      "sha256": "0d7aa44267abd4f41c8d45914e994476de5276823060bd6702a42951c82b6e7f",
+      "sha256": "816b5972d04a3bd2daba4355e4f46693c7e283b3f3e6b81aeb82b81cfa06210a",
       "bytes": 58194
     },
     {
@@ -100,7 +100,7 @@
     },
     {
       "file": "censo_agro_land_use.parquet",
-      "sha256": "1cde17839c32e2bbe64e81a22cf27852495c047dad0dd6e2c22b1b87fcd35e63",
+      "sha256": "2eb86b6cb1fcdbdd5eb829db9438f4dae79631addeeeb1621b6857c462576e3e",
       "bytes": 162742
     },
     {
@@ -110,7 +110,7 @@
     },
     {
       "file": "censo_agro_activity.parquet",
-      "sha256": "bf217b717824fd87dc97375613de0133721a765b31f3ffc69cfa9bd72f7cbe7c",
+      "sha256": "eb2d6cf4b5236c524b3fc3ab031b1a5b562beb8c8a9256198b66d28b9e88313f",
       "bytes": 123368
     },
     {
@@ -120,7 +120,7 @@
     },
     {
       "file": "censo_agro_municipio_summary.parquet",
-      "sha256": "0e750dd9ffb5c0b67bee80078ee2e1a793d475117218b6a4e0a5a2bef081ab9d",
+      "sha256": "8f94f1fb9365e57d5128e6b647b1e5bf9b56fade2c61050460fbaa5b37331eb9",
       "bytes": 56622
     },
     {
@@ -129,5 +129,5 @@
       "bytes": 120005
     }
   ],
-  "generated_at": "2026-07-29T13:01:28-04:00"
+  "generated_at": "2026-09-22T06:45:21-04:00"
 }

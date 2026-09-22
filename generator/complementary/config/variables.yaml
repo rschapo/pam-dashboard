@@ -35,9 +35,12 @@ censo_agro_2017:
       classificacao_busca: ["condição do produtor", "condição legal"]
       validar: true
     machinery:
-      descricao: "Tratores, colheitadeiras, máquinas e implementos, veículos"
+      descricao: "Tratores: estabelecimentos com trator e frota existente, por potência"
       tabelas_candidatas: [6870, 6871]
-      classificacao_busca: ["tratores", "máquinas", "colheitadeiras"]
+      metricas:
+        estabelecimentos: "estabelecimentos agropecuários com tratores"
+        tratores: "tratores existentes"
+      classificacao_busca: ["potência dos tratores", "tratores", "máquinas", "colheitadeiras"]
       validar: true
     irrigation:
       descricao: "Estabelecimentos que utilizam irrigação e área irrigada"

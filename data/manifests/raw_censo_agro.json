@@ -1,78 +1,24 @@
 {
   "dataset": "raw_censo_agro",
   "source": "IBGE — Censo Agropecuário 2017 (SIDRA)",
-  "extraction_date": "2026-07-29",
+  "extraction_date": "2026-09-22",
   "reference_date": "2017-12-31",
   "source_files": [],
   "source_hashes": [],
   "script_version": "0.1.0",
-  "row_count": 437574,
+  "row_count": 32796,
   "municipality_count": 0,
   "rejected_rows": 0,
   "warnings": [
-    "area_groups: tabela 6778",
-    "family_farming: tabela 6778",
-    "land_condition: tabela 6853",
-    "machinery: tabela 6870",
-    "irrigation: tabela 6859",
-    "storage: tabela 6875",
-    "finance: tabela 6895",
-    "technical_assistance: tabela 6847",
-    "land_use: tabela 6881",
-    "activity: tabela 6778"
+    "machinery: tabela 6870"
   ],
   "output_files": [],
-  "generated_at": "2026-07-29T13:01:22-04:00",
+  "generated_at": "2026-09-22T06:44:03-04:00",
   "temas": [
-    {
-      "tema": "area_groups",
-      "tabela": 6778,
-      "linhas": 111260
-    },
-    {
-      "tema": "family_farming",
-      "tabela": 6778,
-      "linhas": 5563
-    },
-    {
-      "tema": "land_condition",
-      "tabela": 6853,
-      "linhas": 44504
-    },
     {
       "tema": "machinery",
       "tabela": 6870,
-      "linhas": 16398
-    },
-    {
-      "tema": "irrigation",
-      "tabela": 6859,
-      "linhas": 65700
-    },
-    {
-      "tema": "storage",
-      "tabela": 6875,
-      "linhas": 5524
-    },
-    {
-      "tema": "finance",
-      "tabela": 6895,
-      "linhas": 60676
-    },
-    {
-      "tema": "technical_assistance",
-      "tabela": 6847,
-      "linhas": 5563
-    },
-    {
-      "tema": "land_use",
-      "tabela": 6881,
-      "linhas": 66756
-    },
-    {
-      "tema": "activity",
-      "tabela": 6778,
-      "linhas": 55630
+      "linhas": 32796
     }
   ]
 }

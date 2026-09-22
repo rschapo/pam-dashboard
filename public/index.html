@@ -52,6 +52,8 @@
       <button class="dom-btn" data-dom="silvicultura">🌲 Silvicultura</button>
       <button class="dom-btn" data-dom="economia">📊 Economia</button>
       <button class="dom-btn" data-dom="terra">🗺️ Uso do Solo</button>
+      <button class="dom-btn" data-dom="maquinas">🚜 Tratores</button>
+      <button class="dom-btn" data-dom="credito">💰 Crédito</button>
     </div>
 
     <div class="sidebar-section-title">Indicadores</div>
@@ -102,6 +104,28 @@
         <option value="agua">Água</option>
         <option value="outros">Outros</option>
       </select>
+    </div>
+
+    <div class="filter-block dom-maquinas">
+      <label>Métrica</label>
+      <select id="f-metrica-maq">
+        <option value="trat" selected>Frota de tratores</option>
+        <option value="trat_p">Tratores (menos de 100 cv)</option>
+        <option value="trat_g">Tratores (100 cv ou mais)</option>
+        <option value="est">Estabelecimentos com trator</option>
+      </select>
+      <div class="filter-note">Censo Agropecuário 2017 (IBGE)</div>
+    </div>
+
+    <div class="filter-block dom-credito">
+      <label>Métrica</label>
+      <select id="f-metrica-cred">
+        <option value="total" selected>Crédito total (mil R$)</option>
+        <option value="cust">Custeio (mil R$)</option>
+        <option value="inv">Investimento (mil R$)</option>
+        <option value="area">Área financiada (ha)</option>
+      </select>
+      <div class="filter-note">BCB/SICOR, ano-safra 2024</div>
     </div>
 
     <div class="filter-block">
@@ -195,7 +219,7 @@
       <button class="tab-btn active" data-tab="brasil">🗺️ Mapa Brasil</button>
       <button class="tab-btn" data-tab="estados">📍 Estado / Micro</button>
       <button class="tab-btn" data-tab="municipio">🏘️ Municípios</button>
-      <button class="tab-btn" data-tab="historico">📈 Série Histórica</button>
+      <button class="tab-btn serie-temporal" data-tab="historico">📈 Série Histórica</button>
       <button class="tab-btn" data-tab="ranking">🏆 Rankings</button>
     </div>
 
@@ -284,7 +308,7 @@
               <h3 id="chart-est-title">📊 Microrregiões</h3>
               <div class="chart-container" style="height:220px"><canvas id="chart-est"></canvas></div>
             </div>
-            <div class="chart-wrap">
+            <div class="chart-wrap serie-temporal">
               <h3 id="chart-micro-title">📈 Série Histórica da Microrregião</h3>
               <div class="chart-container" style="height:180px"><canvas id="chart-micro"></canvas></div>
             </div>
@@ -328,7 +352,7 @@
             <h3 id="mun-chart-top-title">📊 Top 15 Municípios</h3>
             <div class="chart-container" style="height:280px"><canvas id="chart-mun-top"></canvas></div>
           </div>
-          <div class="chart-wrap">
+          <div class="chart-wrap serie-temporal">
             <h3 id="mun-chart-hist-title">📈 Série Histórica</h3>
             <div class="chart-container" style="height:280px"><canvas id="chart-mun-hist"></canvas></div>
           </div>
