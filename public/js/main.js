@@ -203,6 +203,26 @@ function calcSimplesEscopo(chave, ids, m) {
   return _aggCache.get(ck);
 }
 
+// ─── Rendimento ───
+// É produção ÷ área, e só existe pré-calculado por estado e cultura. Somá-lo
+// entre culturas, municípios ou estados daria a soma de razões, e a média entre
+// municípios faria um de 5 ha pesar como um de 500 mil. Em todo nível agregado
+// ele é recomposto das duas parcelas, que são as únicas grandezas somáveis.
+function rendimentoPonderado(producaoTon, areaHa) {
+  return areaHa > 0 ? (producaoTon / areaHa) * 1000 : 0;
+}
+
+// `soma(metrica)` devolve o total daquela métrica no escopo sendo agregado.
+function agregarAgro(m, soma) {
+  if (m !== 'r' || state.domain !== 'agricola') return soma(m);
+  return rendimentoPonderado(soma('p'), soma('a'));
+}
+
+function agregarMunicipios(ids, m, ai) {
+  if (baseDominioSimples()) return agregarDominioSimples(ids, m);
+  return agregarAgro(m, k => ids.reduce((s, id) => s + calcMunVal(id, k, ai), 0));
+}
+
 function calcEst(uf, m) {
   if (state.domain === 'pecuaria') {
     const d = ppm_est_data?.[uf]?.[state.categoriaPec]; if (!d) return 0;
@@ -217,7 +237,8 @@ function calcEst(uf, m) {
   }
   const d = est_data[uf]; if (!d) return 0;
   const ai = getAnoIdx();
-  return getActiveCulturas().reduce((s, c) => s + (d[c]?.[m]?.[ai] || 0), 0);
+  return agregarAgro(m, k =>
+    getActiveCulturas().reduce((s, c) => s + (d[c]?.[k]?.[ai] || 0), 0));
 }
 
 function calcMic(mid, m) {
@@ -233,8 +254,9 @@ function calcMic(mid, m) {
     return calcSimplesEscopo('mic:' + mid, indicesMunicipios().mic[mid] || [], m);
   }
   const key = getMicKey();
-  const d = mic_data[mid]; if (!d) return 0;
-  return d[key]?.[m]?.[getAnoIdx()] || 0;
+  const d = mic_data[mid]?.[key]; if (!d) return 0;
+  const ai = getAnoIdx();
+  return agregarAgro(m, k => d[k]?.[ai] || 0);
 }
 
 function calcMunVal(munId, m, ai) {
@@ -250,11 +272,11 @@ function calcMunVal(munId, m, ai) {
   const base = baseDominioSimples();
   if (base) return agregarDominioSimples([munId], m);
   if (state.grupoId && state.grupoId !== 'ALL') {
-    const grp = state.grupoId;
-    const gd = mun_grp_data[grp];
-    if (gd) return gd[munId]?.[m]?.[ai] || 0;
+    const gd = mun_grp_data[state.grupoId]?.[munId];
+    if (gd) return agregarAgro(m, k => gd[k]?.[ai] || 0);
   }
-  return mun_data[munId]?.[m]?.[ai] || 0;
+  const d = mun_data[munId]; if (!d) return 0;
+  return agregarAgro(m, k => d[k]?.[ai] || 0);
 }
 
 function metLabel() {
@@ -697,11 +719,8 @@ function updateMunChartHist(munId) {
 
 function updateMunChartHistUF(uf, M) {
   const ctx = document.getElementById('chart-mun-hist')?.getContext('2d'); if (!ctx) return;
-  const series = anos.map((_, ai) =>
-    Object.keys(mun_info)
-      .filter(id => mun_info[id].uf === uf)
-      .reduce((s, id) => s + calcMunVal(id, M, ai), 0)
-  );
+  const ids = Object.keys(mun_info).filter(id => mun_info[id].uf === uf);
+  const series = anos.map((_, ai) => agregarMunicipios(ids, M, ai));
   if (chMunHist) chMunHist.destroy();
   chMunHist = new Chart(ctx, {
     type: 'line',
@@ -750,7 +769,8 @@ function updateHistorico() {
   } else {
     series = anos.map((_, ai) => {
       const tmp = state.anoIdx; state.anoIdx = ai;
-      const v = Object.keys(ufs_info).reduce((s, u) => s + calcEst(u, M), 0);
+      const v = agregarAgro(M, k =>
+        Object.keys(ufs_info).reduce((s, u) => s + calcEst(u, k), 0));
       state.anoIdx = tmp; return v;
     });
     label = 'Brasil';
@@ -804,9 +824,9 @@ function updateHistorico() {
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else {
     cultVals = getActiveCulturas().map(c => {
-      const v = uf
-        ? (est_data[uf]?.[c]?.[M]?.[ai] || 0)
-        : Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
+      const v = agregarAgro(M, k => uf
+        ? (est_data[uf]?.[c]?.[k]?.[ai] || 0)
+        : Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[k]?.[ai] || 0), 0));
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   }
@@ -883,7 +903,8 @@ function updateRanking() {
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else {
     cultVals = getActiveCulturas().map(c => {
-      const v = Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[M]?.[ai] || 0), 0);
+      const v = agregarAgro(M, k =>
+        Object.keys(ufs_info).reduce((s, u) => s + (est_data[u]?.[c]?.[k]?.[ai] || 0), 0));
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   }
