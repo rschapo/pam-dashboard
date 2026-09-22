@@ -120,11 +120,21 @@ for g in GROUP_COLS:
 known = set(grp_df["cultura"])
 novas = [c for c in culturas if c not in known]
 if novas:
+    # Tipo_Lavoura in the source CSV already reflects IBGE's own PAM table split
+    # (1612=Temporaria, 1613=Permanente) per crop — use it instead of a blind
+    # TEM default, which previously misclassified perennials like Acerola/
+    # Cupuaçu/Graviola as temporárias.
+    tipo_lavoura_map = df.drop_duplicates("Cultura").set_index("Cultura")["Tipo_Lavoura"]
     print(f"  [AVISO] {len(novas)} cultura(s) nova(s) sem entrada em crop_groups.csv "
-          f"— adicionadas com default TEM/{'=0, '.join(GROUP_COLS)}=0, revise manualmente:")
+          f"— adicionadas com tipo herdado de Tipo_Lavoura (fonte IBGE) e {'=0, '.join(GROUP_COLS)}=0, revise manualmente:")
     for c in novas:
         print(f"    - {c}")
-    extra = pd.DataFrame([{"cultura": c, "tipo": "TEM", **{g: 0 for g in GROUP_COLS}} for c in novas])
+    extra = pd.DataFrame([
+        {"cultura": c,
+         "tipo": "PER" if str(tipo_lavoura_map.get(c, "Temporaria")).startswith("Perm") else "TEM",
+         **{g: 0 for g in GROUP_COLS}}
+        for c in novas
+    ])
     grp_df = pd.concat([grp_df, extra], ignore_index=True)
     grp_df.to_csv(CROP_GROUPS_CSV, index=False, encoding="utf-8-sig")
 
