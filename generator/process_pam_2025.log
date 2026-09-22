@@ -1,0 +1,30 @@
+Loading CSV …
+  Raw rows: 1,384,279   27 states in CSV
+  After UF fix: 1,384,279 rows, 27 states
+  Municipality column: Municipio
+  Anos: 2004–2025 (22)  |  Culturas: 81
+Carregando agrupamentos de crop_groups.csv ...
+  Permanentes: 36 | Temporárias: 45
+  Colheitadeiras: 14  |  Tratores: 31
+Building EST_DATA …
+  States in EST_DATA: 27
+Building MIC_DATA …
+  Microregiões in MIC_DATA: 557
+Building MUN_DATA …
+  Municípios in MUN_DATA: 5540
+Building MUN_GRP_DATA …
+  TEM: 5534 municipalities
+  PER: 5463 municipalities
+  COL: 5476 municipalities
+  TRA: 5525 municipalities
+  States: 27  |  Micros: 558  |  Municípios: 5540
+Downloading GeoJSON (parallel) …
+  UF features fetched: 27
+  UF features: 27  |  Micro features: 558
+Sanitizing NaN values …
+Writing JSON files …
+  pkg.json: 16.3 MB  ->  D:\OneDrive - Agrocore\01 - Claude\Dados IBGE PAM Culturas\pam-dashboard\public\data\pkg.json
+  geo_uf.json: 0.2 MB  ->  D:\OneDrive - Agrocore\01 - Claude\Dados IBGE PAM Culturas\pam-dashboard\public\data\geo_uf.json
+  geo_mic.json: 4.1 MB  ->  D:\OneDrive - Agrocore\01 - Claude\Dados IBGE PAM Culturas\pam-dashboard\public\data\geo_mic.json
+
+Done! Deploy the public/ folder to Netlify.

@@ -1,0 +1,158 @@
+{
+  "dataset": "raw_financas",
+  "source": "STN/SICONFI (DCA-Anexo I-C)",
+  "extraction_date": "2026-08-08",
+  "reference_date": "2026-08-08",
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 0,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "dca_lote_00000.json",
+      "sha256": "9d5f55d889acd62f1439de1e96604f5e20f142944f098d5e0f6c9394b8bfd7b1",
+      "bytes": 9174072
+    },
+    {
+      "file": "dca_lote_00001.json",
+      "sha256": "0308596ab37f40000d6668bada3680899725e75dcc9ab3edb99c712b7a19f3bf",
+      "bytes": 8906041
+    },
+    {
+      "file": "dca_lote_00002.json",
+      "sha256": "9c80a3b08a1dbde78f3a9aeb03946dfd7aae3233c2f8ef45152dd5aadaa84a70",
+      "bytes": 8039496
+    },
+    {
+      "file": "dca_lote_00003.json",
+      "sha256": "a8edba3b9cfcadff90142b2a15c7217d703aa1a1a84bf8cbb283f4813c7af481",
+      "bytes": 7015559
+    },
+    {
+      "file": "dca_lote_00004.json",
+      "sha256": "874b3b37b05dae0818067c76a42a4f7cf705ec4f41cd09c7748f7d1390b7891a",
+      "bytes": 7037340
+    },
+    {
+      "file": "dca_lote_00005.json",
+      "sha256": "f264fb7770b6080b08093c0c346472e2462cbca02afde9d96344f74012a45490",
+      "bytes": 7518388
+    },
+    {
+      "file": "dca_lote_00006.json",
+      "sha256": "2b20b8767975b1d742d469885eef6a1a2e8789f95ab2aa2571cf150c8440a328",
+      "bytes": 8182410
+    },
+    {
+      "file": "dca_lote_00007.json",
+      "sha256": "6936595dc9b070b41357e864f5fa07d330b07758c7ddfcdbaf76d0a43a36995d",
+      "bytes": 10195867
+    },
+    {
+      "file": "dca_lote_00008.json",
+      "sha256": "440fd2e1c95e7ce28f70c8cf1de3fa509ec3d35086dbac357c1d27b2029415a8",
+      "bytes": 10454649
+    },
+    {
+      "file": "dca_lote_00009.json",
+      "sha256": "f68baddb0f0208318e1b33ed3d9917b59777bc210564f1c5e30ffed16ed5b0f1",
+      "bytes": 7762384
+    },
+    {
+      "file": "dca_lote_00010.json",
+      "sha256": "40814a343d3abed5ae39b4f88573181566e921a43eed3c48a136ac5cd5579f74",
+      "bytes": 8577960
+    },
+    {
+      "file": "dca_lote_00011.json",
+      "sha256": "d2bec77e07f261731c770a2e05ed2670d412bbee7d1812c7728ec0fb23fc1ae0",
+      "bytes": 9469071
+    },
+    {
+      "file": "dca_lote_00012.json",
+      "sha256": "058b6047eacb8dcd0df6eae5704fd38696d3f85b5fab1896ac13d344d3826610",
+      "bytes": 9591211
+    },
+    {
+      "file": "dca_lote_00013.json",
+      "sha256": "3197fff6748b7c9a439154090adf08cc3789592782d2302ff63962dd8bc52f10",
+      "bytes": 9363771
+    },
+    {
+      "file": "dca_lote_00014.json",
+      "sha256": "c6260f38a9e02c43d835c4e2eb7b6f89f6e59304a9534c8a529d39c0b9da4829",
+      "bytes": 9291067
+    },
+    {
+      "file": "dca_lote_00015.json",
+      "sha256": "a83c37e7ff9c07ad4b450bab30af869cbbf5e1e7399e4480eeb745eaf274a15b",
+      "bytes": 10196403
+    },
+    {
+      "file": "dca_lote_00016.json",
+      "sha256": "55e5375b17304529347beed3b9dd77ac6be7db9dd1872c0e30c877e0f85662fe",
+      "bytes": 7955797
+    },
+    {
+      "file": "dca_lote_00017.json",
+      "sha256": "2476f8e1b4cf395992537e34788ff79074d71064980f3bb9f264e3b3bd65ce71",
+      "bytes": 9929827
+    },
+    {
+      "file": "dca_lote_00018.json",
+      "sha256": "712edb90d29f9fccf08d482d84777336b5075da8a3bd7b85f749ede45de269e0",
+      "bytes": 11652958
+    },
+    {
+      "file": "dca_lote_00019.json",
+      "sha256": "c469d08933091ce5649576513ef648a43d541233427de8bb4e9b838346568708",
+      "bytes": 10336157
+    },
+    {
+      "file": "dca_lote_00020.json",
+      "sha256": "62d1f41490b0c87ca200aca678307e7c19ebe318fe15edbab46c421784d28906",
+      "bytes": 10408642
+    },
+    {
+      "file": "dca_lote_00021.json",
+      "sha256": "dff96080ce076ac9b24d3c576cbd1dab6926a870909f041c838f63a8de9e3904",
+      "bytes": 11069442
+    },
+    {
+      "file": "dca_lote_00022.json",
+      "sha256": "4d32f54baf02751fa403889e735f6e7b7941a735ac3191402f4cfca2b0453faf",
+      "bytes": 9461368
+    },
+    {
+      "file": "dca_lote_00023.json",
+      "sha256": "dfd9a3410b378692e6a4df52b150853cf99f50edbe8eb2366db0f1913eed5ff8",
+      "bytes": 10393932
+    },
+    {
+      "file": "dca_lote_00024.json",
+      "sha256": "4f7d17fa9de6127c0c9256b194b1609b22b9f2cf2a158e04dc55fd7544931133",
+      "bytes": 9459001
+    },
+    {
+      "file": "dca_lote_00025.json",
+      "sha256": "374527923e722fab936c4490e820348b87e8b146c05902fb57e9e082bc5112fc",
+      "bytes": 8223047
+    },
+    {
+      "file": "dca_lote_00026.json",
+      "sha256": "a5466827ed44c892209007a6330153e463900a8f01baa358857cf4c55380300e",
+      "bytes": 7890765
+    },
+    {
+      "file": "dca_lote_00027.json",
+      "sha256": "8f6e59a829cb16337f3ce525c678de0657b30d8bb2c2ff29956f9f385334dac1",
+      "bytes": 6171822
+    }
+  ],
+  "generated_at": "2026-08-08T17:27:01-04:00",
+  "ano_fin": 2023,
+  "n_lotes": 28
+}

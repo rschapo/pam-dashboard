@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pam-dashboard",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-m", "http.server", "8091", "--directory", "public"],
+      "port": 8091,
+      "autoPort": false
+    }
+  ]
+}

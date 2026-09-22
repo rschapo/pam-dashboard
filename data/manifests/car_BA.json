@@ -1,0 +1,30 @@
+{
+  "dataset": "car_BA",
+  "source": "SICAR — CAR",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 1303505,
+  "municipality_count": 498,
+  "rejected_rows": 0,
+  "warnings": [
+    "geometrias corrigidas: 2",
+    "fora da UF: 0",
+    "área divergente>20.0%: 268"
+  ],
+  "output_files": [
+    {
+      "file": "car_imoveis_validos_BA.parquet",
+      "sha256": "54c0a4d2a1777d24b9e579e33292404bd910f3cd8d5e07894f72e007ed23c996",
+      "bytes": 398501362
+    },
+    {
+      "file": "car_imovel_municipio_intersection_BA.parquet",
+      "sha256": "69b80d8ef3912d96606647095e5406d9d4e9a59e320ad7f0126a4992972743a8",
+      "bytes": 45800236
+    }
+  ],
+  "generated_at": "2026-07-30T19:32:53-04:00"
+}

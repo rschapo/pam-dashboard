@@ -1,0 +1,32 @@
+{
+  "dataset": "raw_credito_rural",
+  "source": "BCB/SICOR (MDCR)",
+  "extraction_date": "2026-08-08",
+  "reference_date": "2026-08-08",
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 0,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "sicor_regiaouf_lookup.json",
+      "sha256": "1a41d0fe942832c5764ad71a3f2307006d2a0b1788beb4c48aac468f83942cc8",
+      "bytes": 71821
+    },
+    {
+      "file": "sicor_custeio_2024.json",
+      "sha256": "be598e2a22566709ba4109dec394cc57ce0529422da614ed2b0a7e5654939546",
+      "bytes": 25301485
+    },
+    {
+      "file": "sicor_investimento_2024.json",
+      "sha256": "1ac308d087f66bfd5df4b4573fd737d777bdca7b241bcbf6701041450588ed7b",
+      "bytes": 42882266
+    }
+  ],
+  "generated_at": "2026-08-08T15:57:23-04:00",
+  "ano_credito": 2024
+}

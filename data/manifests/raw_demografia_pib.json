@@ -1,0 +1,52 @@
+{
+  "dataset": "raw_demografia_pib",
+  "source": "IBGE/SIDRA (tabelas 5938 e 6579)",
+  "extraction_date": "2026-08-08",
+  "reference_date": "2026-08-08",
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 0,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "sidra_populacao_municipios_2024.json",
+      "sha256": "0ce9e8e0ae27781087c811e3ac43b6b8bd05233672e3bb1e3d9491dd23dc8f74",
+      "bytes": 1157615
+    },
+    {
+      "file": "sidra_pibtotal_municipios_2023.json",
+      "sha256": "84e846ac7d5aa20adde09461a3ba8d493183ef0f738b2d910a155528511af22c",
+      "bytes": 1226877
+    },
+    {
+      "file": "sidra_vabsetorial_municipios_2021.json",
+      "sha256": "85dbc50d853f88c819c0e13b21392b9df8a6f2f19127c409ba585a50e9a220d6",
+      "bytes": 5813990
+    },
+    {
+      "file": "sidra_populacao_uf_2024.json",
+      "sha256": "66e2ef809f7ab7dbc5bdfd2a302d20aae66f381e825a6238d4b481da34cd8d00",
+      "bytes": 5978
+    },
+    {
+      "file": "sidra_pibtotal_uf_2023.json",
+      "sha256": "42c0094dfed75b0e9d7ab79e277971b7b5aeb178bd325a4f635feb2f91180ee9",
+      "bytes": 6319
+    },
+    {
+      "file": "sidra_vabsetorial_uf_2021.json",
+      "sha256": "8eff146f1ee19b8be7025f3ffb7038899d9129f3120f2e7ffb19d32f77b0e6b9",
+      "bytes": 28761
+    }
+  ],
+  "generated_at": "2026-08-08T14:53:08-04:00",
+  "ano_pib": 2023,
+  "ano_pop": 2024,
+  "ano_vab_efetivo": {
+    "municipios": 2021,
+    "uf": 2021
+  }
+}

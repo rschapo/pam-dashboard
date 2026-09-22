@@ -1,0 +1,39 @@
+classe_id;classe_nome;grupo_analitico;nivel;observacao
+1;Floresta;formacao_florestal;1;Nível 1 agregador — não somar com filhas
+3;Formação Florestal;formacao_florestal;2;
+4;Formação Savânica;formacao_savanica;2;
+5;Mangue;formacao_florestal;2;
+6;Floresta Alagável;area_umida;2;
+49;Restinga Arbórea;formacao_florestal;2;
+10;Formação Natural não Florestal;outras_formacoes_naturais;1;
+11;Campo Alagado e Área Pantanosa;area_umida;2;
+12;Formação Campestre;formacao_campestre;2;
+32;Apicum;area_umida;2;
+29;Afloramento Rochoso;outras_formacoes_naturais;2;
+50;Restinga Herbácea;formacao_campestre;2;
+13;Outras Formações não Florestais;outras_formacoes_naturais;2;
+14;Agropecuária;agropecuaria;1;Agregador — não somar com filhas
+15;Pastagem;pastagem;2;
+18;Agricultura;agricultura;2;Agregador de lavouras
+19;Lavoura Temporária;agricultura;3;
+39;Soja;agricultura;4;
+20;Cana;agricultura;4;
+40;Arroz;agricultura;4;
+62;Algodão;agricultura;4;
+41;Outras Lavouras Temporárias;agricultura;4;
+36;Lavoura Perene;agricultura;3;
+46;Café;agricultura;4;
+47;Citrus;agricultura;4;
+35;Dendê;agricultura;4;
+48;Outras Lavouras Perenes;agricultura;4;
+9;Silvicultura;silvicultura;2;Floresta plantada
+21;Mosaico de Usos;mosaico_de_usos;2;
+22;Área não Vegetada;area_nao_vegetada;1;
+23;Praia, Duna e Areal;area_nao_vegetada;2;
+24;Área Urbanizada;area_urbana;2;
+30;Mineração;area_nao_vegetada;2;
+25;Outras Áreas não Vegetadas;area_nao_vegetada;2;
+26;Corpo D'água;corpo_dagua;1;
+33;Rio, Lago e Oceano;corpo_dagua;2;
+31;Aquicultura;corpo_dagua;2;
+27;Não observado;nao_observado;1;

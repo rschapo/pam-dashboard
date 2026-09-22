@@ -1,0 +1,589 @@
+{
+  "generated_at": "2026-07-29T13:01:59-04:00",
+  "n_datasets": 14,
+  "datasets": [
+    {
+      "dataset": "censo_agro",
+      "source": "IBGE — Censo Agropecuário 2017",
+      "extraction_date": "2026-07-29",
+      "reference_date": "2017-12-31",
+      "source_files": [
+        "censo_agro"
+      ],
+      "source_hashes": [
+        {
+          "file": "censo_agro",
+          "sha256": null
+        }
+      ],
+      "script_version": "0.1.0",
+      "row_count": 437574,
+      "municipality_count": 0,
+      "rejected_rows": 0,
+      "warnings": [],
+      "output_files": [
+        {
+          "file": "censo_agro_area_groups.parquet",
+          "sha256": "edf092832b63e3d733316f641577881737364ed0c29dc00c303a17d4e78dc94b",
+          "bytes": 202976
+        },
+        {
+          "file": "censo_agro_area_groups.csv",
+          "sha256": "c4fcee16ccbe94e13a73384556211e7522b346117e71882eb4d3baa6d1803115",
+          "bytes": 8916155
+        },
+        {
+          "file": "censo_agro_family_farming.parquet",
+          "sha256": "5b3b528a442b73c6246f5229498dcdc50f3934f4de6c693a128b10ac20b59ec9",
+          "bytes": 58164
+        },
+        {
+          "file": "censo_agro_family_farming.csv",
+          "sha256": "31a64def44ceda65fde85541047c741d98ea6d8f7efb87cea7641f9c8bcdbe03",
+          "bytes": 474301
+        },
+        {
+          "file": "censo_agro_land_condition.parquet",
+          "sha256": "a7a860e55cfbbad33af56b0f63f8fc67a1b41d12a8c2290bbc6dfff0f233f576",
+          "bytes": 120174
+        },
+        {
+          "file": "censo_agro_land_condition.csv",
+          "sha256": "0b7ed34e69e843d2434cff3f90172a252e4fe9242a48902558e77ded169f2e6f",
+          "bytes": 3705802
+        },
+        {
+          "file": "censo_agro_machinery.parquet",
+          "sha256": "ded234bf84bca5566076766add78d8420d9ddbc200635b892115208e12028d4f",
+          "bytes": 80438
+        },
+        {
+          "file": "censo_agro_machinery.csv",
+          "sha256": "38ca14caa2822244f142186ea87ff9f73b6685c0ca4990b9476c2d3b0fd44be0",
+          "bytes": 1507721
+        },
+        {
+          "file": "censo_agro_irrigation.parquet",
+          "sha256": "e072326973eec8c97112431ae0301bde728fd7092cb05361c5c87b80c78c380b",
+          "bytes": 105111
+        },
+        {
+          "file": "censo_agro_irrigation.csv",
+          "sha256": "d8ac80c8dc40a12cea132c51858712520de920fa2df70515e8cd56f80a42bed1",
+          "bytes": 6623070
+        },
+        {
+          "file": "censo_agro_storage.parquet",
+          "sha256": "06b92cb1194494833335f9e29e3c288faef64b34b8d55417b4f3e1bf7513d775",
+          "bytes": 51580
+        },
+        {
+          "file": "censo_agro_storage.csv",
+          "sha256": "fd600235a2dcf8ea23b21194593a6418bc8361f2d57c94fc279959e4c27c10b5",
+          "bytes": 505816
+        },
+        {
+          "file": "censo_agro_finance.parquet",
+          "sha256": "f2bacb5c19bab9ebb33083665b7af8480827b1925e216f8fe952aa6f2691e7d1",
+          "bytes": 92625
+        },
+        {
+          "file": "censo_agro_finance.csv",
+          "sha256": "d78f70d0bcf4a57c56a187fe9725793eea8a369a36acc0bbb7092742b748480e",
+          "bytes": 6221509
+        },
+        {
+          "file": "censo_agro_technical_assistance.parquet",
+          "sha256": "0d7aa44267abd4f41c8d45914e994476de5276823060bd6702a42951c82b6e7f",
+          "bytes": 58194
+        },
+        {
+          "file": "censo_agro_technical_assistance.csv",
+          "sha256": "378ce670edb7adc2ecaae93284073bde0bfa734b6d2d048e72a3d49e111e5c50",
+          "bytes": 507679
+        },
+        {
+          "file": "censo_agro_land_use.parquet",
+          "sha256": "1cde17839c32e2bbe64e81a22cf27852495c047dad0dd6e2c22b1b87fcd35e63",
+          "bytes": 162742
+        },
+        {
+          "file": "censo_agro_land_use.csv",
+          "sha256": "ac2294b45ed0dfd7371de8b66cd99949b4fb3bdd7f96f9ac86f276d9e9aaebc3",
+          "bytes": 5884125
+        },
+        {
+          "file": "censo_agro_activity.parquet",
+          "sha256": "bf217b717824fd87dc97375613de0133721a765b31f3ffc69cfa9bd72f7cbe7c",
+          "bytes": 123368
+        },
+        {
+          "file": "censo_agro_activity.csv",
+          "sha256": "abe425dbfbd151126b64135f729adceae8f35bc47f54b97ce302b20f6a37b486",
+          "bytes": 4274264
+        },
+        {
+          "file": "censo_agro_municipio_summary.parquet",
+          "sha256": "0e750dd9ffb5c0b67bee80078ee2e1a793d475117218b6a4e0a5a2bef081ab9d",
+          "bytes": 56622
+        },
+        {
+          "file": "censo_agro_municipio_summary.csv",
+          "sha256": "5132e0d7baf6bf7e3a946eb1186637a783b8f980ccd20ba51353bfd222c56ff7",
+          "bytes": 120005
+        }
+      ],
+      "generated_at": "2026-07-29T13:01:28-04:00"
+    },
+    {
+      "dataset": "dim_municipio",
+      "source": "IBGE (malha/localidades) — entrada: municipios.csv",
+      "extraction_date": "2026-07-29",
+      "reference_date": "2024-01-01",
+      "source_files": [
+        "municipios.csv"
+      ],
+      "source_hashes": [
+        {
+          "file": "municipios.csv",
+          "sha256": "3d316efcb2465786b5927ab72b303153426cf2c9fc1a321a218daffbe72b852e"
+        }
+      ],
+      "script_version": "0.1.0",
+      "row_count": 5571,
+      "municipality_count": 5571,
+      "rejected_rows": 0,
+      "warnings": [],
+      "output_files": [
+        {
+          "file": "dim_municipio.parquet",
+          "sha256": "9aaa394805887a17479c1e12af17f477234f08f194b41c2ac0fa3913dcde1644",
+          "bytes": 216143
+        },
+        {
+          "file": "dim_municipio.csv",
+          "sha256": "c8975964c70d20b704cc5eb45e6ad7eb1846629daded57d6708a63cb8f8cfc42",
+          "bytes": 882039
+        },
+        {
+          "file": "dim_municipio_codigos_historicos.csv",
+          "sha256": "cb00c16aa14cc20de2f8e89f70dc07dce8c78aef36bad0de5f57fdad0b49928c",
+          "bytes": 96
+        }
+      ],
+      "generated_at": "2026-07-29T13:01:24-04:00",
+      "areas_preenchidas": 5573,
+      "produtores_pam_marcados": true,
+      "produtores_ppm_marcados": true
+    },
+    {
+      "dataset": "frontend_json",
+      "source": "Composição das bases complementares (Parquet)",
+      "extraction_date": "2026-07-29",
+      "reference_date": null,
+      "source_files": [],
+      "source_hashes": [],
+      "script_version": "0.1.0",
+      "row_count": 0,
+      "municipality_count": 0,
+      "rejected_rows": 0,
+      "warnings": [],
+      "output_files": [
+        {
+          "file": "perfil_rural.json",
+          "sha256": "22dede3ba2672e219e0cdfe6b849e8b194a42bddd036f04a0b552a7b60f4c906",
+          "bytes": 2129368
+        }
+      ],
+      "generated_at": "2026-07-29T12:45:16-04:00"
+    },
+    {
+      "dataset": "pevs_municipio",
+      "source": "IBGE — PEVS (291/289/5930)",
+      "extraction_date": "2026-07-29",
+      "reference_date": null,
+      "source_files": [
+        "PEVS_municipios_completo.csv"
+      ],
+      "source_hashes": [
+        {
+          "file": "PEVS_municipios_completo.csv",
+          "sha256": "7f1d285a3c427cc8c0c1a67d83f6db505d979417fd1f694863093179e7c19816"
+        }
+      ],
+      "script_version": "0.1.0",
+      "row_count": 559021,
+      "municipality_count": 5446,
+      "rejected_rows": 0,
+      "warnings": [],
+      "output_files": [
+        {
+          "file": "pevs_municipio.parquet",
+          "sha256": "5d6e5b3bd22762a51b47d406ccf246b112b6f32618527514eb9e0399e6c7c2db",
+          "bytes": 2542189
+        },
+        {
+          "file": "pevs_municipio.csv",
+          "sha256": "23893d154ffa8530059bc914beb83e0ef916c480d1659e40ae7d4f9fb724b620",
+          "bytes": 42116425
+        }
+      ],
+      "generated_at": "2026-07-29T13:01:59-04:00"
+    },
+    {
+      "dataset": "raw_car",
+      "source": "SICAR — CAR (por UF)",
+      "extraction_date": "2026-07-28",
+      "reference_date": "2026-07-28",
+      "source_files": [],
+      "source_hashes": [],
+      "script_version": "0.1.0",
+      "row_count": 0,
+      "municipality_count": 0,
+      "rejected_rows": 0,
+      "warnings": [
+        "UF sem bruto: RO",
+        "UF sem bruto: AC",
+        "UF sem bruto: AM",
+        "UF sem bruto: RR",
+        "UF sem bruto: PA",
+        "UF sem bruto: AP",
+        "UF sem bruto: TO",
+        "UF sem bruto: MA",
+        "UF sem bruto: PI",
+        "UF sem bruto: CE",
+        "UF sem bruto: RN",
+        "UF sem bruto: PB",
+        "UF sem bruto: PE",
+        "UF sem bruto: AL",
+        "UF sem bruto: SE",
+        "UF sem bruto: BA",
+        "UF sem bruto: MG",
+        "UF sem bruto: ES",
+        "UF sem bruto: RJ",
+        "UF sem bruto: SP",
+        "UF sem bruto: PR",
+        "UF sem bruto: SC",
+        "UF sem bruto: RS",
+        "UF sem bruto: MS",
+        "UF sem bruto: MT",
+        "UF sem bruto: GO",
+        "UF sem bruto: DF"
+      ],
+      "output_files": [],
+      "generated_at": "2026-07-28T22:19:11+00:00"
+    },
+    {
+      "dataset": "raw_censo_agro",
+      "source": "IBGE — Censo Agropecuário 2017 (SIDRA)",
+      "extraction_date": "2026-07-29",
+      "reference_date": "2017-12-31",
+      "source_files": [],
+      "source_hashes": [],
+      "script_version": "0.1.0",
+      "row_count": 437574,
+      "municipality_count": 0,
+      "rejected_rows": 0,
+      "warnings": [
+        "area_groups: tabela 6778",
+        "family_farming: tabela 6778",
+        "land_condition: tabela 6853",
+        "machinery: tabela 6870",
+        "irrigation: tabela 6859",
+        "storage: tabela 6875",
+        "finance: tabela 6895",
+        "technical_assistance: tabela 6847",
+        "land_use: tabela 6881",
+        "activity: tabela 6778"
+      ],
+      "output_files": [],
+      "generated_at": "2026-07-29T13:01:22-04:00",
+      "temas": [
+        {
+          "tema": "area_groups",
+          "tabela": 6778,
+          "linhas": 111260
+        },
+        {
+          "tema": "family_farming",
+          "tabela": 6778,
+          "linhas": 5563
+        },
+        {
+          "tema": "land_condition",
+          "tabela": 6853,
+          "linhas": 44504
+        },
+        {
+          "tema": "machinery",
+          "tabela": 6870,
+          "linhas": 16398
+        },
+        {
+          "tema": "irrigation",
+          "tabela": 6859,
+          "linhas": 65700
+        },
+        {
+          "tema": "storage",
+          "tabela": 6875,
+          "linhas": 5524
+        },
+        {
+          "tema": "finance",
+          "tabela": 6895,
+          "linhas": 60676
+        },
+        {
+          "tema": "technical_assistance",
+          "tabela": 6847,
+          "linhas": 5563
+        },
+        {
+          "tema": "land_use",
+          "tabela": 6881,
+          "linhas": 66756
+        },
+        {
+          "tema": "activity",
+          "tabela": 6778,
+          "linhas": 55630
+        }
+      ]
+    },
+    {
+      "dataset": "raw_ibge_areas",
+      "source": "IBGE — Áreas Territoriais",
+      "extraction_date": "2026-07-29",
+      "reference_date": "2026-07-29",
+      "source_files": [
+        "AR_BR_RG_UF_RGINT_RGI_MUN_2025.ods"
+      ],
+      "source_hashes": [
+        {
+          "file": "AR_BR_RG_UF_RGINT_RGI_MUN_2025.ods",
+          "sha256": "029219bb994d87750fbe7d26c31217152a7e95449ddd2d2f26b504cb32a425f1"
+        }
+      ],
+      "script_version": "0.1.0",
+      "row_count": 5573,
+      "municipality_count": 5573,
+      "rejected_rows": 0,
+      "warnings": [],
+      "output_files": [
+        {
+          "file": "areas_municipios.csv",
+          "sha256": "343e427a2707f3a60c89f696a6a9ca8da0193d4203a6e1d17dd2010ca8104891",
+          "bytes": 95285
+        }
+      ],
+      "generated_at": "2026-07-29T13:01:19-04:00"
+    },
+    {
+      "dataset": "raw_ibge_geography",
+      "source": "IBGE Localidades/Malhas",
+      "extraction_date": "2026-07-29",
+      "reference_date": "2026-07-29",
+      "source_files": [],
+      "source_hashes": [],
+      "script_version": "0.1.0",
+      "row_count": 5571,
+      "municipality_count": 5571,
+      "rejected_rows": 0,
+      "warnings": [],
+      "output_files": [
+        {
+          "file": "municipios.csv",
+          "sha256": "3d316efcb2465786b5927ab72b303153426cf2c9fc1a321a218daffbe72b852e",
+          "bytes": 684813
+        }
+      ],
+      "generated_at": "2026-07-29T13:01:16-04:00"
+    },
+    {
+      "dataset": "raw_pevs",
+      "source": "IBGE — PEVS (via download_pevs_ibge.py)",
+      "extraction_date": "2026-07-29",
+      "reference_date": "2026-07-29",
+      "source_files": [
+        "PEVS_municipios_completo.csv"
+      ],
+      "source_hashes": [
+        {
+          "file": "PEVS_municipios_completo.csv",
+          "sha256": "7f1d285a3c427cc8c0c1a67d83f6db505d979417fd1f694863093179e7c19816"
+        }
+      ],
+      "script_version": "0.1.0",
+      "row_count": 0,
+      "municipality_count": 0,
+      "rejected_rows": 0,
+      "warnings": [],
+      "output_files": [
+        {
+          "file": "PEVS_municipios_completo.csv",
+          "sha256": "7f1d285a3c427cc8c0c1a67d83f6db505d979417fd1f694863093179e7c19816",
+          "bytes": 65521424
+        }
+      ],
+      "generated_at": "2026-07-29T13:01:22-04:00"
+    },
+    {
+      "dataset": "raw_sncr",
+      "source": "INCRA — SNCR (imóveis rurais, por UF)",
+      "extraction_date": "2026-07-29",
+      "reference_date": "2026-07-29",
+      "source_files": [],
+      "source_hashes": [],
+      "script_version": "0.1.0",
+      "row_count": 0,
+      "municipality_count": 0,
+      "rejected_rows": 0,
+      "warnings": [
+        "UF sem bruto: RO",
+        "UF sem bruto: AC",
+        "UF sem bruto: AM",
+        "UF sem bruto: RR",
+        "UF sem bruto: PA",
+        "UF sem bruto: AP",
+        "UF sem bruto: TO",
+        "UF sem bruto: MA",
+        "UF sem bruto: PI",
+        "UF sem bruto: CE",
+        "UF sem bruto: RN",
+        "UF sem bruto: PB",
+        "UF sem bruto: PE",
+        "UF sem bruto: AL",
+        "UF sem bruto: SE",
+        "UF sem bruto: BA",
+        "UF sem bruto: MG",
+        "UF sem bruto: ES",
+        "UF sem bruto: RJ",
+        "UF sem bruto: SP",
+        "UF sem bruto: PR",
+        "UF sem bruto: SC",
+        "UF sem bruto: RS",
+        "UF sem bruto: MS",
+        "UF sem bruto: MT",
+        "UF sem bruto: GO",
+        "UF sem bruto: DF"
+      ],
+      "output_files": [],
+      "generated_at": "2026-07-29T13:01:22-04:00",
+      "arquivos": []
+    },
+    {
+      "dataset": "rural_profile_stage1",
+      "source": "Composição Etapa 1 (MF/SNCR/Censo/PEVS)",
+      "extraction_date": "2026-07-29",
+      "reference_date": null,
+      "source_files": [],
+      "source_hashes": [],
+      "script_version": "0.1.0",
+      "row_count": 5571,
+      "municipality_count": 5571,
+      "rejected_rows": 0,
+      "warnings": [],
+      "output_files": [
+        {
+          "file": "rural_profile_stage1.parquet",
+          "sha256": "8a9ca86ea27257e9355d1f333e2945c075c7385d8d77e5c71916d6a90c9e47e3",
+          "bytes": 85362
+        },
+        {
+          "file": "rural_profile_stage1.csv",
+          "sha256": "36cdcd17a08a2d18d59ffcae8c34f217bd2429cb08fc50e5488a1c3e2260a89a",
+          "bytes": 249691
+        }
+      ],
+      "generated_at": "2026-07-29T13:01:59-04:00"
+    },
+    {
+      "modulo_fiscal": {
+        "status": "ausente"
+      },
+      "sncr": {
+        "status": "ausente"
+      }
+    },
+    {
+      "ok": true,
+      "n_municipios": 5571,
+      "duplicados": 0,
+      "areas_preenchidas": 5571,
+      "erros": [],
+      "avisos": []
+    },
+    {
+      "ok": true,
+      "faltando_obrigatorios": [],
+      "itens": [
+        {
+          "artefato": "dimensions/dim_municipio",
+          "obrigatorio": true,
+          "existe": true,
+          "linhas": 5571,
+          "cod_7dig": true,
+          "status": "OK"
+        },
+        {
+          "artefato": "dimensions/dim_modulo_fiscal",
+          "obrigatorio": false,
+          "existe": false,
+          "status": "AUSENTE (pendente)"
+        },
+        {
+          "artefato": "municipality/censo_agro_municipio_summary",
+          "obrigatorio": false,
+          "existe": true,
+          "linhas": 5563,
+          "cod_7dig": true,
+          "status": "OK"
+        },
+        {
+          "artefato": "municipality/sncr_municipio_summary",
+          "obrigatorio": false,
+          "existe": false,
+          "status": "AUSENTE (pendente)"
+        },
+        {
+          "artefato": "municipality/pevs_municipio",
+          "obrigatorio": false,
+          "existe": true,
+          "linhas": 559021,
+          "cod_7dig": true,
+          "zeros_suspeitos_em_ha": {
+            "area_ha": 602
+          },
+          "status": "OK"
+        },
+        {
+          "artefato": "municipality/rural_profile_stage1",
+          "obrigatorio": false,
+          "existe": true,
+          "linhas": 5571,
+          "cod_7dig": true,
+          "status": "OK"
+        },
+        {
+          "artefato": "geospatial/car_municipio_summary",
+          "obrigatorio": false,
+          "existe": false,
+          "status": "AUSENTE (pendente)"
+        },
+        {
+          "artefato": "municipality/mapbiomas_municipio",
+          "obrigatorio": false,
+          "existe": false,
+          "status": "AUSENTE (pendente)"
+        },
+        {
+          "artefato": "municipality/rural_profile_stage2",
+          "obrigatorio": false,
+          "existe": false,
+          "status": "AUSENTE (pendente)"
+        }
+      ]
+    }
+  ]
+}

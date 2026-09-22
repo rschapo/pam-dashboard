@@ -1,0 +1,74 @@
+# variables.yaml — Mapeamento de variáveis/tabelas SIDRA por tema
+# ---------------------------------------------------------------------------
+# REGRA (briefing 6.3): NÃO assumir números de tabela sem validação. As tabelas
+# abaixo são CANDIDATAS: o download roda `metadados` de cada uma e casa as
+# variáveis por NOME (descoberta em tempo de execução, como no download_pevs).
+# Se a tabela candidata não existir/mudar, o log registra e o operador ajusta.
+# `validar: true` obriga o pipeline a confirmar a tabela nos metadados antes de usar.
+
+pevs:
+  # Já implementado em generator/download_pevs_ibge.py — replicado aqui como referência.
+  tabelas:
+    - {tabela: 291,  tipo: Silvicultura,     metricas: {q: "Quantidade produzida", v: "Valor da produção"}}
+    - {tabela: 289,  tipo: Extracao,         metricas: {q: "Quantidade produzida", v: "Valor da produção"}}
+    - {tabela: 5930, tipo: AreaSilvicultura, metricas: {a: "Área total existente"}}
+
+censo_agro_2017:
+  ano_referencia: 2017
+  # Tabelas candidatas do Censo Agropecuário 2017 na SIDRA. Confirmar por metadados.
+  # Cada bloco vira uma tabela temática de saída (evita uma tabela larga única).
+  temas:
+    area_groups:
+      descricao: "Número e área de estabelecimentos por grupos de área total"
+      tabelas_candidatas: [6778, 6779]
+      metricas: {estabelecimentos: "Número de estabelecimentos", area: "Área dos estabelecimentos"}
+      classificacao_busca: ["grupos de área total"]
+      validar: true
+    family_farming:
+      descricao: "Agricultura familiar x não familiar (Lei 11.326)"
+      tabelas_candidatas: [6778, 6846]
+      classificacao_busca: ["agricultura familiar"]
+      validar: true
+    land_condition:
+      descricao: "Condição legal das terras / condição do produtor"
+      tabelas_candidatas: [6853, 6854]
+      classificacao_busca: ["condição do produtor", "condição legal"]
+      validar: true
+    machinery:
+      descricao: "Tratores, colheitadeiras, máquinas e implementos, veículos"
+      tabelas_candidatas: [6870, 6871]
+      classificacao_busca: ["tratores", "máquinas", "colheitadeiras"]
+      validar: true
+    irrigation:
+      descricao: "Estabelecimentos que utilizam irrigação e área irrigada"
+      tabelas_candidatas: [6859]
+      classificacao_busca: ["irrigação"]
+      validar: true
+    storage:
+      descricao: "Depósitos, silos e capacidade de armazenagem"
+      tabelas_candidatas: [6875]
+      classificacao_busca: ["armazenagem", "silo", "depósito"]
+      validar: true
+    finance:
+      descricao: "Estabelecimentos que obtiveram financiamento"
+      tabelas_candidatas: [6895]
+      classificacao_busca: ["financiamento"]
+      validar: true
+    technical_assistance:
+      descricao: "Estabelecimentos com orientação/assistência técnica"
+      tabelas_candidatas: [6847]
+      classificacao_busca: ["assistência técnica", "orientação técnica"]
+      validar: true
+    land_use:
+      descricao: "Utilização das terras (lavouras, pastagens, matas)"
+      tabelas_candidatas: [6881]
+      classificacao_busca: ["utilização das terras"]
+      validar: true
+    activity:
+      descricao: "Grupos de atividade econômica predominante"
+      tabelas_candidatas: [6778]
+      classificacao_busca: ["grupos de atividade econômica"]
+      validar: true
+
+# Observação: variáveis reais (códigos) são resolvidas por nome nos metadados;
+# não fixamos códigos numéricos aqui de propósito (robustez a mudanças SIDRA).

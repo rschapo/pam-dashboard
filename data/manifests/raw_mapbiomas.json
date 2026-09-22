@@ -1,0 +1,31 @@
+{
+  "dataset": "raw_mapbiomas",
+  "source": "MapBiomas — Estatísticas municipais",
+  "extraction_date": "2026-08-08",
+  "reference_date": "2026-08-08",
+  "source_files": [
+    "mapbiomas_cobertura_municipios.xlsx"
+  ],
+  "source_hashes": [
+    {
+      "file": "mapbiomas_cobertura_municipios.xlsx",
+      "sha256": "96504305146d55d48c316887aaa65c66e89b08d1c54db58442511c75aad5594d"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 0,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "mapbiomas_cobertura_municipios.xlsx",
+      "sha256": "96504305146d55d48c316887aaa65c66e89b08d1c54db58442511c75aad5594d",
+      "bytes": 78695178
+    }
+  ],
+  "generated_at": "2026-08-08T15:22:34-04:00",
+  "colecao": "10.1",
+  "versao": "Coleção 10.1",
+  "licenca": "CC-BY-SA"
+}

@@ -1,0 +1,83 @@
+{
+  "dataset": "demografia_pib",
+  "source": "IBGE/SIDRA (tabela 5938 PIB total + VAB setorial, tabela 6579 população)",
+  "extraction_date": "2026-08-08",
+  "reference_date": "2023-01-01",
+  "source_files": [
+    "sidra_pibtotal_municipios_2023.json",
+    "sidra_pibtotal_uf_2023.json",
+    "sidra_pib_municipios_2023.json",
+    "sidra_pib_uf_2023.json",
+    "sidra_populacao_municipios_2024.json",
+    "sidra_populacao_uf_2024.json",
+    "sidra_vabsetorial_municipios_2021.json",
+    "sidra_vabsetorial_uf_2021.json"
+  ],
+  "source_hashes": [
+    {
+      "file": "sidra_pibtotal_municipios_2023.json",
+      "sha256": "84e846ac7d5aa20adde09461a3ba8d493183ef0f738b2d910a155528511af22c"
+    },
+    {
+      "file": "sidra_pibtotal_uf_2023.json",
+      "sha256": "42c0094dfed75b0e9d7ab79e277971b7b5aeb178bd325a4f635feb2f91180ee9"
+    },
+    {
+      "file": "sidra_pib_municipios_2023.json",
+      "sha256": "fb5878a7da11a05bf39344a42e4376ab62e8664b75c89de4f2e8a87d4387d9bc"
+    },
+    {
+      "file": "sidra_pib_uf_2023.json",
+      "sha256": "edaa46045024bbb03c759cefd196108d00bc6097470f51929b0b5e56f047e3f0"
+    },
+    {
+      "file": "sidra_populacao_municipios_2024.json",
+      "sha256": "0ce9e8e0ae27781087c811e3ac43b6b8bd05233672e3bb1e3d9491dd23dc8f74"
+    },
+    {
+      "file": "sidra_populacao_uf_2024.json",
+      "sha256": "66e2ef809f7ab7dbc5bdfd2a302d20aae66f381e825a6238d4b481da34cd8d00"
+    },
+    {
+      "file": "sidra_vabsetorial_municipios_2021.json",
+      "sha256": "85dbc50d853f88c819c0e13b21392b9df8a6f2f19127c409ba585a50e9a220d6"
+    },
+    {
+      "file": "sidra_vabsetorial_uf_2021.json",
+      "sha256": "8eff146f1ee19b8be7025f3ffb7038899d9129f3120f2e7ffb19d32f77b0e6b9"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 0,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "demografia_pib.parquet",
+      "sha256": "f488c21197edebc4a6e1bdfe3ed51afbe194ca9af1c26d794aa98bd79d0d98d9",
+      "bytes": 330730
+    },
+    {
+      "file": "demografia_pib.csv",
+      "sha256": "09bbf12ec163df2bfc2f6029a58a1577a6a56617836a4c1d155560aa54760667",
+      "bytes": 650778
+    },
+    {
+      "file": "demografia_pib.parquet",
+      "sha256": "7cdb9754c5e04c8252fc5e56325dbafabbd9d3c8dfa12e60e6f98db12f739426",
+      "bytes": 9551
+    },
+    {
+      "file": "demografia_pib.csv",
+      "sha256": "afd1cc123f6b5375748ef36ed5c0b81f8506d2e15b9e2b0b2c9986c8b2686507",
+      "bytes": 3555
+    }
+  ],
+  "generated_at": "2026-08-08T14:53:20-04:00",
+  "ano_pib": 2023,
+  "ano_pop": 2024,
+  "anos_vab_efetivos": [
+    2021
+  ]
+}

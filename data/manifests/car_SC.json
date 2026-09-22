@@ -1,0 +1,30 @@
+{
+  "dataset": "car_SC",
+  "source": "SICAR — CAR",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 430605,
+  "municipality_count": 335,
+  "rejected_rows": 0,
+  "warnings": [
+    "geometrias corrigidas: 136",
+    "fora da UF: 0",
+    "área divergente>20.0%: 13"
+  ],
+  "output_files": [
+    {
+      "file": "car_imoveis_validos_SC.parquet",
+      "sha256": "78bb72d934d939135d568393b4b62c324af6745436cad7b8e2c0057ab14dae43",
+      "bytes": 159573449
+    },
+    {
+      "file": "car_imovel_municipio_intersection_SC.parquet",
+      "sha256": "0dc507de5c3e21800f733b241d94f964450dc66ebf714c1dc142bcb8bcf34dad",
+      "bytes": 15612688
+    }
+  ],
+  "generated_at": "2026-07-30T19:21:01-04:00"
+}

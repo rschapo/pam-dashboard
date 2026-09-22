@@ -1,0 +1,30 @@
+{
+  "dataset": "car_MA",
+  "source": "SICAR — CAR",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 414395,
+  "municipality_count": 264,
+  "rejected_rows": 0,
+  "warnings": [
+    "geometrias corrigidas: 95",
+    "fora da UF: 0",
+    "área divergente>20.0%: 37"
+  ],
+  "output_files": [
+    {
+      "file": "car_imoveis_validos_MA.parquet",
+      "sha256": "f7e839e6259b0739fb4e3079908e0f1dc85962b350f9380b5dd4db504a4c56ac",
+      "bytes": 100410572
+    },
+    {
+      "file": "car_imovel_municipio_intersection_MA.parquet",
+      "sha256": "699545b8d23d019557db40f1b1f77bbb8ca40736398e2973b12e7894a7a6b19a",
+      "bytes": 14813107
+    }
+  ],
+  "generated_at": "2026-07-30T19:45:37-04:00"
+}

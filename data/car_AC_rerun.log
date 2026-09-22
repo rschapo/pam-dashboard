@@ -1,0 +1,31 @@
+﻿[CAR ambiental/AC] agregando camadas ÔÇª
+python.exe : C:\Users\schap\Claude\Projects\Dados IBGE PAM 
+Culturas\pam-dashboard\generator\complementary\.venv\Lib\site-packages\pyogrio\raw.py:200: RuntimeWarning: 
+C:\Users\schap\Claude\Projects\Dados IBGE PAM 
+Culturas\pam-dashboard\data\raw\car\AC\area_consolidada\AREA_CONSOLIDADA_1.shp contains polygon(s) with rings with 
+invalid winding order. Autocorrecting them, but that shapefile should be corrected using ogr2ogr for example.
+No linha:1 caractere:214
++ ... AC --force; & $py -u process\process_car_layers.py --uf AC 2>&1 | Out ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\schap\...gr for example.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  return ogr_read(
+  area_consolidada: 22 munic├¡pios, 3,036,747 ha
+  vegetacao_nativa: 22 munic├¡pios, 13,354,067 ha
+C:\Users\schap\Claude\Projects\Dados IBGE PAM 
+Culturas\pam-dashboard\generator\complementary\.venv\Lib\site-packages\pyogrio\raw.py:200: RuntimeWarning: 
+C:\Users\schap\Claude\Projects\Dados IBGE PAM Culturas\pam-dashboard\data\raw\car\AC\reserva_legal\RESERVA_LEGAL_1.shp 
+contains polygon(s) with rings with invalid winding order. Autocorrecting them, but that shapefile should be corrected 
+using ogr2ogr for example.
+  return ogr_read(
+  reserva_legal: 22 munic├¡pios, 8,770,425 ha
+C:\Users\schap\Claude\Projects\Dados IBGE PAM 
+Culturas\pam-dashboard\generator\complementary\.venv\Lib\site-packages\pyogrio\raw.py:200: RuntimeWarning: 
+C:\Users\schap\Claude\Projects\Dados IBGE PAM Culturas\pam-dashboard\data\raw\car\AC\app\APPS_1.shp contains 
+polygon(s) with rings with invalid winding order. Autocorrecting them, but that shapefile should be corrected using 
+ogr2ogr for example.
+  return ogr_read(
+  app: 22 munic├¡pios, 882,851 ha
+  uso_restrito: 12 munic├¡pios, 446 ha
+[CAR ambiental/AC] 22 munic├¡pios ┬À camadas: area_consolidada, vegetacao_nativa, reserva_legal, app, uso_restrito

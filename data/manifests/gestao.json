@@ -1,0 +1,37 @@
+{
+  "dataset": "gestao",
+  "source": "TSE — dados abertos (consulta_cand)",
+  "extraction_date": "2026-08-08",
+  "reference_date": "2024-10-01",
+  "source_files": [
+    "consulta_cand_2024.zip"
+  ],
+  "source_hashes": [
+    {
+      "file": "consulta_cand_2024.zip",
+      "sha256": "e1f114fb7333a0148b9204ff8b44f44a9800d9849555291a60b719520d730979"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 5567,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [
+    "chave cod_ibge ausente — de-para TSE->IBGE não encontrado"
+  ],
+  "output_files": [
+    {
+      "file": "gestao.parquet",
+      "sha256": "ed83a6f021f6818721d0a0c1dbd85be11bcd654f84d0fc8529833c32c7ce489f",
+      "bytes": 271773
+    },
+    {
+      "file": "gestao.csv",
+      "sha256": "3b5dc1ca1628708e0c7106ca83131ffc2930ab0b78fe45156302b185cbb9dcda",
+      "bytes": 579434
+    }
+  ],
+  "generated_at": "2026-08-08T14:56:47-04:00",
+  "ano_eleicao": 2024,
+  "chave_cod_ibge_disponivel": false
+}

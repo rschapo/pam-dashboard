@@ -1,0 +1,22 @@
+produto;tipo_atividade;grupo;observacao
+Madeira em tora para papel e celulose;Silvicultura;madeira_tora_papel_celulose;
+Madeira em tora para outras finalidades;Silvicultura;madeira_tora_outros_fins;
+Madeira em tora;Silvicultura;madeira_tora_outros_fins;Quando a fonte não separa a finalidade
+Lenha;Silvicultura;lenha;
+Carvão vegetal;Silvicultura;carvao_vegetal;
+Resina;Silvicultura;outros_produtos_silvicultura;
+Casca de acácia-negra;Silvicultura;outros_produtos_silvicultura;
+Folha de eucalipto;Silvicultura;outros_produtos_silvicultura;
+Madeira em tora;Extracao;extracao_madeireira;Extração vegetal = floresta nativa
+Lenha;Extracao;extracao_madeireira;
+Carvão vegetal;Extracao;extracao_madeireira;
+Açaí (fruto);Extracao;extracao_nao_madeireira;
+Castanha-do-pará;Extracao;extracao_nao_madeireira;
+Erva-mate;Extracao;extracao_nao_madeireira;
+Babaçu (amêndoa);Extracao;extracao_nao_madeireira;
+Pó de carnaúba;Extracao;extracao_nao_madeireira;
+Piaçava;Extracao;extracao_nao_madeireira;
+# Faixas por espécie (tabela 5930 — área de silvicultura)
+Eucalipto;AreaSilvicultura;eucalipto;
+Pinus;AreaSilvicultura;pinus;
+Outras espécies;AreaSilvicultura;outros_produtos_silvicultura;

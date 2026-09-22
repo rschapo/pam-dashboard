@@ -1,0 +1,22 @@
+{
+  "dataset": "raw_gestao",
+  "source": "TSE — dados abertos (consulta_cand)",
+  "extraction_date": "2026-08-08",
+  "reference_date": "2026-08-08",
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 0,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "consulta_cand_2024.zip",
+      "sha256": "e1f114fb7333a0148b9204ff8b44f44a9800d9849555291a60b719520d730979",
+      "bytes": 63626550
+    }
+  ],
+  "generated_at": "2026-08-08T14:56:30-04:00",
+  "ano_eleicao": 2024
+}

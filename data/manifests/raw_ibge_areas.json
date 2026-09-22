@@ -1,0 +1,28 @@
+{
+  "dataset": "raw_ibge_areas",
+  "source": "IBGE — Áreas Territoriais",
+  "extraction_date": "2026-07-29",
+  "reference_date": "2026-07-29",
+  "source_files": [
+    "AR_BR_RG_UF_RGINT_RGI_MUN_2025.ods"
+  ],
+  "source_hashes": [
+    {
+      "file": "AR_BR_RG_UF_RGINT_RGI_MUN_2025.ods",
+      "sha256": "029219bb994d87750fbe7d26c31217152a7e95449ddd2d2f26b504cb32a425f1"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 5573,
+  "municipality_count": 5573,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "areas_municipios.csv",
+      "sha256": "343e427a2707f3a60c89f696a6a9ca8da0193d4203a6e1d17dd2010ca8104891",
+      "bytes": 95285
+    }
+  ],
+  "generated_at": "2026-07-29T13:01:19-04:00"
+}

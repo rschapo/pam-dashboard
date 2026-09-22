@@ -258,6 +258,9 @@ function updateMapBR() {
 // ═══════════════════════════════════════════════════════════
 let mapEst = null, layerMic = null;
 let mapMun = null, layerMunMic = null;
+let GEO_MUN = null, geoMunLoaded = false, geoMunLoading = null, GEO_MUN_BY_UF = {};
+let ECON = null, econLoaded = false, econLoading = null;
+let MBIO = null, mbioLoaded = false, mbioLoading = null;
 
 function initMapEst() {
   mapEst = L.map('map-est', { zoomSnap: .5, attributionControl: false });
@@ -304,36 +307,190 @@ function initMapMun() {
   mapMun.fitBounds([[-34, -74], [6, -28]]);
 }
 
+function loadGeoMun() {
+  if (geoMunLoaded) return Promise.resolve();
+  if (geoMunLoading) return geoMunLoading;
+  geoMunLoading = fetch('data/geo_mun.json')
+    .then(r => r.json())
+    .then(d => {
+      GEO_MUN = d;
+      GEO_MUN_BY_UF = {};
+      (d.features || []).forEach(f => {
+        const uf = f.properties.uf;
+        (GEO_MUN_BY_UF[uf] = GEO_MUN_BY_UF[uf] || []).push(f);
+      });
+      geoMunLoaded = true;
+    })
+    .catch(e => { console.error('Erro ao carregar geo_mun.json', e); })
+    .finally(() => { geoMunLoading = null; });
+  return geoMunLoading;
+}
+
+// Mapa municipal — coroplético por MUNICÍPIO (geo_mun.json, carregado sob demanda)
 function updateMapMun() {
   if (!mapMun) return;
-  const M = curMetrica(), uf = state.ufSel;
+  const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel;
+  const titleEl = document.getElementById('mun-map-title');
   if (!uf) {
-    document.getElementById('mun-map-title').textContent = '🗺️ Mapa do Estado';
+    if (titleEl) titleEl.textContent = '🗺️ Mapa do Estado';
+    if (layerMunMic) { layerMunMic.remove(); layerMunMic = null; }
     return;
   }
-  const mids = Object.keys(mic_info).filter(m => mic_info[m].uf === uf);
+  if (!geoMunLoaded) {
+    if (titleEl) titleEl.textContent = '🗺️ Carregando municípios…';
+    loadGeoMun().then(() => { if (state.tab === 'municipio') updateMapMun(); });
+    return;
+  }
+  const feats = GEO_MUN_BY_UF[uf] || [];
+  if (!feats.length) {
+    if (titleEl) titleEl.textContent = '🗺️ Municípios — (sem geometria para ' + (ufs_info[uf]?.n || uf) + ')';
+    return;
+  }
   const vals = {};
-  mids.forEach(m => { vals[m] = calcMic(m, M); });
+  feats.forEach(f => { vals[f.properties.cod_ibge] = calcMunVal(f.properties.cod_ibge, M, ai); });
   const max = Math.max(...Object.values(vals), 1);
-  const filtered = GEO_MIC.features.filter(f => mids.includes(f.properties.mid));
-  if (!filtered.length) return;
   if (layerMunMic) layerMunMic.remove();
-  layerMunMic = L.geoJSON({ type: 'FeatureCollection', features: filtered }, {
+  layerMunMic = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
     style(f) {
-      const v = vals[f.properties.mid] || 0;
-      return { fillColor: getColor(v, max, COLORS_MIC), fillOpacity: .78, color: '#fff', weight: .8 };
+      const cod = f.properties.cod_ibge, v = vals[cod] || 0;
+      const isSel = cod === state.munSel;
+      return { fillColor: getColor(v, max, COLORS_MIC), fillOpacity: .82,
+               color: isSel ? BRAND_GOLD : '#fff', weight: isSel ? 2.5 : .5 };
     },
     onEachFeature(f, layer) {
-      const mid = f.properties.mid, v = vals[mid] || 0;
+      const cod = f.properties.cod_ibge, v = vals[cod] || 0;
+      const nm = mun_info[cod]?.n || cod;
       layer.bindTooltip(
-        `<b style="color:${BRAND_GREEN}">${mic_info[mid]?.n || mid}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
+        `<b style="color:${BRAND_GREEN}">${nm}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
         { sticky: true }
       );
-      layer.on('click', () => { state.microSel = mid; updateMunicipio(); });
+      layer.on('click', () => toggleMunicipio(cod));
     }
   }).addTo(mapMun);
-  mapMun.fitBounds(layerMunMic.getBounds(), { padding: [10, 10] });
-  document.getElementById('mun-map-title').textContent = '🗺️ Microrregiões — ' + (ufs_info[uf]?.n || uf);
+  try { mapMun.fitBounds(layerMunMic.getBounds(), { padding: [10, 10] }); } catch (e) {}
+  if (titleEl) titleEl.textContent = '🗺️ Municípios — ' + (ufs_info[uf]?.n || uf) + ' (' + getAno() + ')';
+}
+
+// ═══════════════════════════════════════════════════════════
+// TERRITÓRIO — Economia (VAB/PIB) + uso do solo (MapBiomas)
+// ═══════════════════════════════════════════════════════════
+function loadEcon() {
+  if (econLoaded) return Promise.resolve();
+  if (econLoading) return econLoading;
+  econLoading = fetch('data/econ.json')
+    .then(r => r.json())
+    .then(d => { ECON = d; econLoaded = true; })
+    .catch(e => { console.error('Erro ao carregar econ.json', e); })
+    .finally(() => { econLoading = null; });
+  return econLoading;
+}
+
+function fmtReais(v) { // v em mil R$
+  if (v == null) return '—';
+  if (v >= 1e6) return 'R$ ' + (v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' bi';
+  if (v >= 1e3) return 'R$ ' + (v / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' mi';
+  return 'R$ ' + v.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + ' mil';
+}
+
+function updateTerritorio() {
+  const row = document.getElementById('terr-econ-row'); if (!row) return;
+  if (!econLoaded) {
+    row.innerHTML = '<div class="kpi-card"><h3>Economia</h3><div class="val">⏳</div><div class="sub">carregando…</div></div>';
+    loadEcon().then(() => { if (state.tab === 'territorio') updateTerritorio(); });
+    return;
+  }
+  const uf = state.ufSel, mun = state.munSel;
+  let e, escopo;
+  if (mun && ECON.mun[mun]) { e = ECON.mun[mun]; escopo = (mun_info[mun]?.n || mun); }
+  else if (uf && ECON.uf[uf]) { e = ECON.uf[uf]; escopo = (ufs_info[uf]?.n || uf); }
+  else {
+    e = { pop: 0, pib: 0, agro: 0, ind: 0, serv: 0 };
+    Object.values(ECON.uf).forEach(u => ['pop', 'pib', 'agro', 'ind', 'serv'].forEach(k => e[k] += (u[k] || 0)));
+    e.pc = e.pop ? (e.pib * 1000 / e.pop) : null; escopo = 'Brasil';
+  }
+  const pct = e.pib ? (e.agro / e.pib * 100) : 0;
+  const card = (t, v, s) => `<div class="kpi-card"><h3>${t}</h3><div class="val">${v}</div><div class="sub">${s || ''}</div></div>`;
+  row.innerHTML =
+    card('PIB total', fmtReais(e.pib), 'ano ' + ECON.ano_pib) +
+    card('VAB Agropecuária', fmtReais(e.agro), 'ano ' + ECON.ano_vab) +
+    card('% Agro no PIB', pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%', 'VAB ' + ECON.ano_vab + ' / PIB ' + ECON.ano_pib) +
+    card('PIB per capita', e.pc != null ? 'R$ ' + e.pc.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : '—', 'ano ' + ECON.ano_pib) +
+    card('População', e.pop != null ? e.pop.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) : '—', 'estimativa');
+  const lbl = document.getElementById('terr-label');
+  if (lbl) lbl.textContent = '🌍 ' + escopo + ' — PIB ' + ECON.ano_pib + ' · VAB setorial ' + ECON.ano_vab;
+}
+
+function loadMapbiomas() {
+  if (mbioLoaded) return Promise.resolve();
+  if (mbioLoading) return mbioLoading;
+  mbioLoading = fetch('data/mapbiomas_mun.json')
+    .then(r => r.json())
+    .then(d => { MBIO = d; mbioLoaded = true; })
+    .catch(e => { console.error('Erro ao carregar mapbiomas_mun.json', e); })
+    .finally(() => { mbioLoading = null; });
+  return mbioLoading;
+}
+
+const LU_META = [
+  ['agri', 'Agricultura', '#C9960C'],
+  ['past', 'Pastagem', '#9DBF6E'],
+  ['mosaic', 'Mosaico de usos', '#B8A038'],
+  ['silv', 'Silvicultura', '#2D5A1B'],
+  ['natural', 'Formação natural', '#3D7526'],
+  ['urban', 'Área urbana', '#9aa0a6'],
+  ['agua', 'Água', '#4a90c2'],
+  ['outros', 'Outros', '#cfcfcf']
+];
+
+function haFmt(v) {
+  if (v == null) return '—';
+  if (v >= 1e6) return (v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' Mi ha';
+  if (v >= 1e3) return (v / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' mil ha';
+  return v.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + ' ha';
+}
+
+function updateTerritorioLandUse() {
+  const box = document.getElementById('terr-landuse'); if (!box) return;
+  if (!mbioLoaded) {
+    box.innerHTML = '<div class="chart-wrap"><h3>🛰️ Uso do solo (MapBiomas)</h3><div style="padding:12px;color:var(--text-lt)">Carregando uso do solo…</div></div>';
+    loadMapbiomas().then(() => { if (state.tab === 'territorio') updateTerritorioLandUse(); });
+    return;
+  }
+  const uf = state.ufSel, mun = state.munSel;
+  let codes;
+  if (mun) codes = [mun];
+  else if (uf) codes = Object.keys(mun_info).filter(c => mun_info[c].uf === uf);
+  else codes = Object.keys(MBIO.mun);
+  const agg = { agri: 0, past: 0, silv: 0, mosaic: 0, natural: 0, urban: 0, agua: 0, outros: 0 };
+  codes.forEach(c => { const d = MBIO.mun[c]; if (d) for (const k in agg) agg[k] += (d[k] || 0); });
+  const total = Object.values(agg).reduce((s, v) => s + v, 0) || 1;
+  const mecan = agg.agri + agg.past + agg.mosaic;
+  const ai = N_ANOS - 1;
+  let pamArea = 0;
+  codes.forEach(c => { pamArea += (mun_data[c]?.a?.[ai] || 0); });
+  const recon = agg.agri > 0 ? pamArea / agg.agri : null;
+
+  const bars = LU_META.map(([k, lab, col]) => {
+    const v = agg[k], p = v / total * 100;
+    return `<div style="display:flex;align-items:center;gap:8px;margin:3px 0;font-size:12px">
+      <span style="width:130px;color:#444">${lab}</span>
+      <span style="flex:1;background:#f0f0f0;border-radius:3px;overflow:hidden"><span style="display:block;height:12px;width:${p.toFixed(1)}%;background:${col}"></span></span>
+      <span style="width:92px;text-align:right">${haFmt(v)}</span>
+      <span style="width:48px;text-align:right;color:var(--text-lt)">${p.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</span>
+    </div>`;
+  }).join('');
+
+  box.innerHTML = `<div class="chart-wrap">
+    <h3>🛰️ Uso do solo físico — MapBiomas Coleção ${MBIO.colecao} (${MBIO.ano})</h3>
+    <div style="padding:6px 4px">${bars}</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+      <div class="kpi-card"><h3>Área mecanizável (proxy)</h3><div class="val">${haFmt(mecan)}</div><div class="sub">agri + pastagem + mosaico · ${(mecan / total * 100).toFixed(1)}% do território</div></div>
+      <div class="kpi-card"><h3>Agricultura física</h3><div class="val">${haFmt(agg.agri)}</div><div class="sub">MapBiomas ${MBIO.ano}</div></div>
+      <div class="kpi-card"><h3>Área colhida PAM</h3><div class="val">${haFmt(pamArea)}</div><div class="sub">todas as culturas · ${anos[ai]}</div></div>
+      <div class="kpi-card"><h3>Razão colhida/física</h3><div class="val">${recon != null ? recon.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + '×' : '—'}</div><div class="sub">intensidade de uso agrícola</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--text-lt);margin-top:8px">Reconciliação: a área colhida da PAM soma todas as culturas e pode exceder a área física (múltiplas safras/ano) — a razão indica intensidade. Agricultura física via MapBiomas (CC-BY-SA).</div>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1072,6 +1229,7 @@ function refreshAll() {
   if (t === 'municipio') { updateMapMun(); updateMunicipio(); }
   if (t === 'historico') updateHistorico();
   if (t === 'ranking')   { updateMapBR(); updateRanking(); }
+  if (t === 'territorio') { updateTerritorio(); updateTerritorioLandUse(); }
   const al = document.getElementById('ano-label');
   if (al) al.textContent = getAno();
 }

@@ -1,0 +1,30 @@
+{
+  "dataset": "car_PA",
+  "source": "SICAR — CAR",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 386413,
+  "municipality_count": 170,
+  "rejected_rows": 0,
+  "warnings": [
+    "geometrias corrigidas: 104",
+    "fora da UF: 0",
+    "área divergente>20.0%: 0"
+  ],
+  "output_files": [
+    {
+      "file": "car_imoveis_validos_PA.parquet",
+      "sha256": "b0e20839c00adef3c154b0cc07e7efb77e7a4bfe00aaf8ef66b253db7087608f",
+      "bytes": 140495246
+    },
+    {
+      "file": "car_imovel_municipio_intersection_PA.parquet",
+      "sha256": "fcfd3b6e4e3b6b8509d4deca1c2484e02f2627669cecdb7453a9e5b181de61e2",
+      "bytes": 13739656
+    }
+  ],
+  "generated_at": "2026-07-30T19:48:36-04:00"
+}

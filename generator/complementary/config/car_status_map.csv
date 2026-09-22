@@ -1,0 +1,17 @@
+status_original;status_padronizado;observacao
+AT;ativo;Sigla SICAR — cadastro ativo
+Ativo;ativo;
+PE;pendente;Pendente de análise/complementação
+Pendente;pendente;
+Aguardando análise;pendente;
+Em análise;em_analise;
+Analisado;analisado;
+Analisado sem pendências;analisado;
+Analisado com pendências;pendente;
+SU;suspenso;
+Suspenso;suspenso;
+CA;cancelado;
+Cancelado;cancelado;
+Cancelado por decisão administrativa;cancelado;
+Cancelado a pedido;cancelado;
+;desconhecido;Status ausente na fonte — manter registro, marcar para revisão

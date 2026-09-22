@@ -1,0 +1,30 @@
+{
+  "dataset": "geo_mun",
+  "source": "IBGE Malhas (gpkg pré-baixado)",
+  "extraction_date": "2026-08-08",
+  "reference_date": null,
+  "source_files": [
+    "malha_municipios.gpkg"
+  ],
+  "source_hashes": [
+    {
+      "file": "malha_municipios.gpkg",
+      "sha256": "5e2b41f3c2e6df5d85776981f6de62e3512dc741b1d6c1ea094305936deac81d"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 5570,
+  "municipality_count": 5570,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "geo_mun.json",
+      "sha256": "38e4c0cafba19c2fe8e1ee5aea5df691e965d08d4e5de0fff99c537a43b5d763",
+      "bytes": 16398765
+    }
+  ],
+  "generated_at": "2026-08-08T14:42:48-04:00",
+  "tolerancia_simplificacao_graus": 0.0015,
+  "recorte_uf": "Brasil"
+}

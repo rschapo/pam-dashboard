@@ -1,0 +1,30 @@
+{
+  "dataset": "car_AL",
+  "source": "SICAR — CAR",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 143255,
+  "municipality_count": 125,
+  "rejected_rows": 0,
+  "warnings": [
+    "geometrias corrigidas: 23",
+    "fora da UF: 0",
+    "área divergente>20.0%: 4"
+  ],
+  "output_files": [
+    {
+      "file": "car_imoveis_validos_AL.parquet",
+      "sha256": "5cf6a2c747b34985cd25116a1cabd032340997054ac172f65916244d24d3802c",
+      "bytes": 47633854
+    },
+    {
+      "file": "car_imovel_municipio_intersection_AL.parquet",
+      "sha256": "0886a8a6df51d6702408f96ac49d446b1d7d073c20231f8a734f656ae8065dfa",
+      "bytes": 5346850
+    }
+  ],
+  "generated_at": "2026-07-30T19:05:56-04:00"
+}

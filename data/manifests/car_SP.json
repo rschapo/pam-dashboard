@@ -1,0 +1,30 @@
+{
+  "dataset": "car_SP",
+  "source": "SICAR — CAR",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 469187,
+  "municipality_count": 732,
+  "rejected_rows": 0,
+  "warnings": [
+    "geometrias corrigidas: 500",
+    "fora da UF: 0",
+    "área divergente>20.0%: 50"
+  ],
+  "output_files": [
+    {
+      "file": "car_imoveis_validos_SP.parquet",
+      "sha256": "c3e36ac1e64653c2c78bde4a37f96c96bd5acc8a7fc8cfb97ac6a4cd8fd7551b",
+      "bytes": 295913333
+    },
+    {
+      "file": "car_imovel_municipio_intersection_SP.parquet",
+      "sha256": "cf4e86ff888373fddbcf9538d27690f427d0f831149d35486a0ab0823d9a47f7",
+      "bytes": 17258096
+    }
+  ],
+  "generated_at": "2026-07-30T19:38:32-04:00"
+}

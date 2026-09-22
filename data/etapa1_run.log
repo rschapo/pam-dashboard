@@ -1,0 +1,160 @@
+﻿
+======================================================================
+>> download/download_ibge_geography.py 
+======================================================================
+  municipios.csv: 5,571 munic├¡pios
+
+======================================================================
+>> download/download_ibge_areas.py 
+======================================================================
+[├üREAS] fonte: https://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/areas_territoriais/2025/AR_BR_RG_UF_RGINT_RGI_MUN_2025.ods
+[├üREAS] 5,573 munic├¡pios -> areas_municipios.csv (bruto: AR_BR_RG_UF_RGINT_RGI_MUN_2025.ods)
+
+======================================================================
+>> download/download_modulo_fiscal.py 
+======================================================================
+[M├ôDULO FISCAL] Arquivo bruto n├úo encontrado.
+  Baixe a planilha de ├ìndices B├ísicos do INCRA (m├│dulo fiscal por munic├¡pio)
+  no portal (ver config/sources.yaml ÔåÆ incra_modulo_fiscal) e salve como:
+    C:\Users\schap\Claude\Projects\Dados IBGE PAM Culturas\pam-dashboard\data\raw\incra\modulo_fiscal_municipios.csv  (ou .xlsx)
+  Depois rode process/process_modulo_fiscal.py.
+  (passo sinalizou sa├¡da 2 ÔÇö seguindo)
+
+======================================================================
+>> download/download_censo_agro.py 
+======================================================================
+
+== Tema: area_groups ÔÇö N├║mero e ├írea de estabelecimentos por grupos de ├írea total
+    tabela 6778: N├║mero de estabelecimentos agropecu├írios, por tipologia, exi | classif=c220 | 2017 dispon├¡vel=True
+
+== Tema: family_farming ÔÇö Agricultura familiar x n├úo familiar (Lei 11.326)
+    tabela 6778: N├║mero de estabelecimentos agropecu├írios, por tipologia, exi | classif=None | 2017 dispon├¡vel=True
+
+== Tema: land_condition ÔÇö Condi├º├úo legal das terras / condi├º├úo do produtor
+    tabela 6853: N├║mero de estabelecimentos agropecu├írios, por tipologia, uso | classif=c218 | 2017 dispon├¡vel=True
+
+== Tema: machinery ÔÇö Tratores, colheitadeiras, m├íquinas e implementos, ve├¡culos
+    tabela 6870: N├║mero de estabelecimentos agropecu├írios com tratores e N├║me | classif=c12605 | 2017 dispon├¡vel=True
+
+== Tema: irrigation ÔÇö Estabelecimentos que utilizam irriga├º├úo e ├írea irrigada
+    tabela 6859: N├║mero de estabelecimentos agropecu├írios com uso de irriga├º├ú | classif=c12604 | 2017 dispon├¡vel=True
+
+== Tema: storage ÔÇö Dep├│sitos, silos e capacidade de armazenagem
+    tabela 6875: N├║mero de estabelecimentos agropecu├írios com ve├¡culos e N├║me | classif=None | 2017 dispon├¡vel=True
+
+== Tema: finance ÔÇö Estabelecimentos que obtiveram financiamento
+    tabela 6895: N├║mero de estabelecimentos agropecu├írios que obtiveram finan | classif=c12542 | 2017 dispon├¡vel=True
+
+== Tema: technical_assistance ÔÇö Estabelecimentos com orienta├º├úo/assist├¬ncia t├®cnica
+    tabela 6847: N├║mero de estabelecimentos agropecu├írios, por tipologia, uso | classif=None | 2017 dispon├¡vel=True
+
+== Tema: land_use ÔÇö Utiliza├º├úo das terras (lavouras, pastagens, matas)
+    tabela 6881: N├║mero de estabelecimentos agropecu├írios com ├írea e ├ürea dos | classif=c222 | 2017 dispon├¡vel=True
+
+== Tema: activity ÔÇö Grupos de atividade econ├┤mica predominante
+    tabela 6778: N├║mero de estabelecimentos agropecu├írios, por tipologia, exi | classif=c12517 | 2017 dispon├¡vel=True
+
+[CENSO AGRO] conclu├¡do: [{'tema': 'area_groups', 'tabela': 6778, 'linhas': 111260}, {'tema': 'family_farming', 'tabela': 6778, 'linhas': 5563}, {'tema': 'land_condition', 'tabela': 6853, 'linhas': 44504}, {'tema': 'machinery', 'tabela': 6870, 'linhas': 16398}, {'tema': 'irrigation', 'tabela': 6859, 'linhas': 65700}, {'tema': 'storage', 'tabela': 6875, 'linhas': 5524}, {'tema': 'finance', 'tabela': 6895, 'linhas': 60676}, {'tema': 'technical_assistance', 'tabela': 6847, 'linhas': 5563}, {'tema': 'land_use', 'tabela': 6881, 'linhas': 66756}, {'tema': 'activity', 'tabela': 6778, 'linhas': 55630}]
+
+======================================================================
+>> download/download_sncr.py 
+======================================================================
+[SNCR] UFs sem bruto em data/raw/sncr/<uf>/: RO, AC, AM, RR, PA, AP, TO, MA, PI, CE, RN, PB, PE, AL, SE, BA, MG, ES, RJ, SP, PR, SC, RS, MS, MT, GO, DF
+  Baixe os dados p├║blicos do SNCR por UF (ver config/sources.yaml ÔåÆ incra_sncr)
+  e coloque cada arquivo em data/raw/sncr/<uf>/. Preserve o original.
+
+======================================================================
+>> download/download_pevs.py 
+======================================================================
+python.exe : C:\Users\schap\Claude\Projects\Dados IBGE PAM 
+Culturas\pam-dashboard\generator\complementary\download\download_pevs.py:17: SyntaxWarning: "\d" is an invalid escape 
+sequence. Such sequences will not work in the future. Did you mean "\\d"? A raw string is also an option.
+No linha:1 caractere:131
++ ... ONUTF8="1"; & ".\.venv\Scripts\python.exe" -u run_pipeline.py --stage ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\schap\...also an option.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  PEVS_CSV_PATH=D:\dados\PEVS_municipios_completo.csv python download_pevs.py
+[PEVS] OK ÔÇö copiado para C:\Users\schap\Claude\Projects\Dados IBGE PAM Culturas\pam-dashboard\data\raw\ibge\pevs\PEVS_municipios_completo.csv
+
+======================================================================
+>> process/process_geography.py 
+======================================================================
+Construindo dim_municipio ÔÇª
+  Munic├¡pios: 5,571
+  Com ├írea preenchida: 5,573 (demais = null)
+  Sa├¡das: dim_municipio.parquet, dim_municipio.csv, dim_municipio_codigos_historicos.csv
+
+======================================================================
+>> quality/validate_geography.py 
+======================================================================
+== validate_geography ==
+  munic├¡pios: 5571  ┬À duplicados: 0
+  RESULTADO: OK
+
+======================================================================
+>> process/process_modulo_fiscal.py 
+======================================================================
+  (passo sinalizou sa├¡da Bruto do INCRA ausente. Rode download/download_modulo_fiscal.py primeiro. ÔÇö seguindo)
+
+======================================================================
+>> process/process_censo_agro.py 
+======================================================================
+  censo_agro_area_groups: 111,260 linhas
+  censo_agro_family_farming: 5,563 linhas
+  censo_agro_land_condition: 44,504 linhas
+  censo_agro_machinery: 16,398 linhas
+  censo_agro_irrigation: 65,700 linhas
+  censo_agro_storage: 5,524 linhas
+  censo_agro_finance: 60,676 linhas
+  censo_agro_technical_assistance: 5,563 linhas
+  censo_agro_land_use: 66,756 linhas
+  censo_agro_activity: 55,630 linhas
+[CENSO AGRO] 437,574 linhas em 10 temas
+
+======================================================================
+>> process/process_sncr.py 
+======================================================================
+  [AVISO] dim_modulo_fiscal ausente ÔÇö n├║mero de m├│dulos ficar├í null.
+[SNCR] Nenhum bruto encontrado em data/raw/sncr/<uf>/. Rode download/download_sncr.py e coloque os arquivos.
+
+======================================================================
+>> process/process_pevs.py 
+======================================================================
+[PEVS] 559,021 linhas ┬À munic├¡pios=5,446 ┬À anos=2004ÔÇô2024
+
+======================================================================
+>> quality/validate_fundiary_data.py 
+======================================================================
+== validate_fundiary_data ==
+{
+  "modulo_fiscal": {
+    "status": "ausente"
+  },
+  "sncr": {
+    "status": "ausente"
+  }
+}
+
+======================================================================
+>> process/build_rural_profile.py --stage 1
+======================================================================
+[PERFIL] stage1: 5,571 munic├¡pios, 7 colunas
+
+======================================================================
+>> quality/validate_outputs.py 
+======================================================================
+== validate_outputs ==
+  [                OK] dimensions/dim_municipio  (5571 linhas)
+  [AUSENTE (pendente)] dimensions/dim_modulo_fiscal
+  [                OK] municipality/censo_agro_municipio_summary  (5563 linhas)
+  [AUSENTE (pendente)] municipality/sncr_municipio_summary
+  [                OK] municipality/pevs_municipio  (559021 linhas)
+  [                OK] municipality/rural_profile_stage1  (5571 linhas)
+  [AUSENTE (pendente)] geospatial/car_municipio_summary
+  [AUSENTE (pendente)] municipality/mapbiomas_municipio
+  [AUSENTE (pendente)] municipality/rural_profile_stage2
+  RESULTADO: OK
+
+Ô£ö Pipeline conclu├¡do. Manifesto geral: C:\Users\schap\Claude\Projects\Dados IBGE PAM Culturas\pam-dashboard\data\manifests\complementary_data_manifest.json

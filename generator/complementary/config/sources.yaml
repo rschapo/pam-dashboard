@@ -1,0 +1,116 @@
+# sources.yaml — Registro de fontes oficiais das bases complementares (Agrocore)
+# ---------------------------------------------------------------------------
+# Cada fonte segue os campos de rastreabilidade da seção 2.2 do briefing.
+# Os endpoints listados são PORTAIS oficiais estáveis. Onde o caminho exato de
+# download muda com frequência (SICAR, SNCR, MapBiomas), o campo `download`
+# aponta o portal e `download_mode` indica se é automatizável ou manual — o
+# operador confirma o link atual no portal. NÃO inventar endpoints: quando um
+# caminho não for confirmado, marque `verificar: true`.
+
+meta:
+  projeto: "Agrocore — bases complementares fundiárias, produtivas e ambientais"
+  chave_geografica: cod_municipio      # texto, 7 dígitos
+  crs_armazenamento: "EPSG:4674"       # SIRGAS 2000
+  crs_area: "EPSG:5880"                # SIRGAS 2000 / Brazil Polyconic
+  janela_temporal_producao: [2004, 2024]
+
+fontes:
+
+  ibge_localidades:
+    instituicao: IBGE
+    descricao: "Malha político-administrativa (municípios + hierarquia regional)"
+    endpoint: "https://servicodados.ibge.gov.br/api/v1/localidades/municipios"
+    formato_original: JSON
+    download_mode: automatico
+    referencia_dados: "DTB vigente"
+    fallback_offline: "data/raw/ibge/ibge_municipios_full.csv"  # já disponível na base-mestra
+    verificar: false
+
+  ibge_areas_territoriais:
+    instituicao: IBGE
+    descricao: "Áreas territoriais oficiais dos municípios (km²)"
+    endpoint: "https://www.ibge.gov.br/geociencias/organizacao-do-territorio/estrutura-territorial/15761-areas-dos-municipios.html"
+    formato_original: XLSX
+    download_mode: manual        # planilha; baixar a versão do ano da malha
+    referencia_dados: "AR_BR_MUN (ano da malha)"
+    destino_raw: "data/raw/ibge/areas_municipios.xlsx"
+    verificar: true
+
+  ibge_malhas:
+    instituicao: IBGE
+    descricao: "Malhas municipais (GeoJSON/Shapefile) para interseção espacial"
+    endpoint: "https://servicodados.ibge.gov.br/api/v3/malhas/paises/BR"
+    endpoint_alt: "https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/"
+    formato_original: "GeoJSON / Shapefile"
+    download_mode: automatico
+    referencia_dados: "Malha municipal (ano vigente)"
+    destino_raw: "data/raw/ibge/malha_municipios.gpkg"
+    verificar: false
+
+  ibge_sidra_censo_agro:
+    instituicao: IBGE
+    descricao: "Censo Agropecuário 2017 (estrutura fundiária, operacional, produção)"
+    endpoint_metadados: "https://servicodados.ibge.gov.br/api/v3/agregados/{tabela}/metadados"
+    endpoint_valores: "https://apisidra.ibge.gov.br/values"
+    formato_original: JSON
+    download_mode: automatico
+    referencia_dados: "Censo Agropecuário 2017"
+    nota: "Tabelas identificadas por metadados (ver variables.yaml). NÃO assumir números."
+    verificar: false
+
+  ibge_sidra_pevs:
+    instituicao: IBGE
+    descricao: "PEVS — Silvicultura (291), Extração vegetal (289), Área silvicultura (5930)"
+    endpoint_valores: "https://apisidra.ibge.gov.br/values"
+    formato_original: JSON
+    download_mode: automatico
+    referencia_dados: "PEVS anual"
+    reutiliza: "generator/download_pevs_ibge.py (já existente)"
+    verificar: false
+
+  incra_modulo_fiscal:
+    instituicao: INCRA
+    descricao: "Módulo fiscal e fração mínima de parcelamento por município"
+    endpoint: "https://www.gov.br/incra/pt-br/assuntos/governanca-fundiaria"
+    referencia_norma: "Instrução Especial INCRA nº 20/1980 e atualizações"
+    formato_original: "XLSX/CSV (Índices Básicos)"
+    download_mode: manual        # tabela de índices básicos; confirmar link vigente
+    destino_raw: "data/raw/incra/modulo_fiscal_municipios.csv"
+    verificar: true
+
+  incra_sncr:
+    instituicao: INCRA
+    descricao: "SNCR — imóveis rurais cadastrados (estrutura fundiária declarada)"
+    endpoint: "https://www.gov.br/incra/pt-br/servicos/certificacao-de-imoveis-rurais"
+    endpoint_acervo: "https://acervofundiario.incra.gov.br/"
+    formato_original: "CSV/Shapefile por UF"
+    download_mode: manual        # download por UF; preservar bruto
+    granularidade_download: por_uf
+    destino_raw: "data/raw/sncr/<uf>/"
+    privacidade: "Não divulgar titular (CPF/CNPJ/nome). Ver seção 2.3."
+    verificar: true
+
+  sicar_car:
+    instituicao: "Serviço Florestal Brasileiro / SICAR"
+    descricao: "Cadastro Ambiental Rural — geometrias e camadas ambientais"
+    endpoint: "https://www.car.gov.br/"
+    endpoint_download: "https://consultapublica.car.gov.br/publico/imoveis/index"
+    formato_original: "Shapefile (por UF/município)"
+    download_mode: manual        # termos de uso; pode exigir seleção UF/município
+    granularidade_download: por_uf_ou_municipio
+    destino_raw: "data/raw/car/<uf>/"
+    termos_uso: "Ler e registrar termos do SICAR antes do uso."
+    nota_estadual: "UFs podem ter sistema próprio (ex.: SIMCAR/SP, SICAR estaduais)."
+    verificar: true
+
+  mapbiomas:
+    instituicao: "MapBiomas (rede colaborativa)"
+    descricao: "Uso e cobertura do solo — estatísticas municipais e raster (coleção)"
+    endpoint: "https://brasil.mapbiomas.org/"
+    endpoint_estatisticas: "https://brasil.mapbiomas.org/estatisticas/"
+    endpoint_gee: "projects/mapbiomas-public (Google Earth Engine assets)"
+    formato_original: "XLSX (estatísticas) / GeoTIFF (raster via GEE)"
+    download_mode: manual        # estatística municipal em XLSX; raster via GEE/toolkit
+    licenca: "CC-BY-SA — citar coleção e versão. Fonte complementar, não substituta."
+    destino_raw: "data/raw/mapbiomas/"
+    verificar: true

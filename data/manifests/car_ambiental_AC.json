@@ -1,0 +1,23 @@
+{
+  "dataset": "car_ambiental_AC",
+  "source": "SICAR — camadas ambientais",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 22,
+  "municipality_count": 22,
+  "rejected_rows": 0,
+  "warnings": [
+    "camadas presentes: area_consolidada, vegetacao_nativa, reserva_legal, app, uso_restrito"
+  ],
+  "output_files": [
+    {
+      "file": "car_ambiental_municipio_AC.parquet",
+      "sha256": "4195434e4a3868bfa41e6dfe8a7709c96d35d021e10dc7ec20435b91449a46d9",
+      "bytes": 9126
+    }
+  ],
+  "generated_at": "2026-07-30T20:29:42-04:00"
+}

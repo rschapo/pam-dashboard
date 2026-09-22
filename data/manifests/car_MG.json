@@ -1,0 +1,30 @@
+{
+  "dataset": "car_MG",
+  "source": "SICAR — CAR",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 1171571,
+  "municipality_count": 981,
+  "rejected_rows": 0,
+  "warnings": [
+    "geometrias corrigidas: 598",
+    "fora da UF: 0",
+    "área divergente>20.0%: 13"
+  ],
+  "output_files": [
+    {
+      "file": "car_imoveis_validos_MG.parquet",
+      "sha256": "cf0e9f4d665596a48aea65bcd6b5153eb139d5a8d07f4dce56e4662b66b0c53c",
+      "bytes": 914006471
+    },
+    {
+      "file": "car_imovel_municipio_intersection_MG.parquet",
+      "sha256": "cea13537400fc6aa5debc2112e8ed67e089fca8a25daf0a9d505ef2b36760fd6",
+      "bytes": 42500100
+    }
+  ],
+  "generated_at": "2026-07-30T20:16:50-04:00"
+}

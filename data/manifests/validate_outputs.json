@@ -1,0 +1,71 @@
+{
+  "ok": true,
+  "faltando_obrigatorios": [],
+  "itens": [
+    {
+      "artefato": "dimensions/dim_municipio",
+      "obrigatorio": true,
+      "existe": true,
+      "linhas": 5571,
+      "cod_7dig": true,
+      "status": "OK"
+    },
+    {
+      "artefato": "dimensions/dim_modulo_fiscal",
+      "obrigatorio": false,
+      "existe": false,
+      "status": "AUSENTE (pendente)"
+    },
+    {
+      "artefato": "municipality/censo_agro_municipio_summary",
+      "obrigatorio": false,
+      "existe": true,
+      "linhas": 5563,
+      "cod_7dig": true,
+      "status": "OK"
+    },
+    {
+      "artefato": "municipality/sncr_municipio_summary",
+      "obrigatorio": false,
+      "existe": false,
+      "status": "AUSENTE (pendente)"
+    },
+    {
+      "artefato": "municipality/pevs_municipio",
+      "obrigatorio": false,
+      "existe": true,
+      "linhas": 559021,
+      "cod_7dig": true,
+      "zeros_suspeitos_em_ha": {
+        "area_ha": 602
+      },
+      "status": "OK"
+    },
+    {
+      "artefato": "municipality/rural_profile_stage1",
+      "obrigatorio": false,
+      "existe": true,
+      "linhas": 5571,
+      "cod_7dig": true,
+      "status": "OK"
+    },
+    {
+      "artefato": "geospatial/car_municipio_summary",
+      "obrigatorio": false,
+      "existe": false,
+      "status": "AUSENTE (pendente)"
+    },
+    {
+      "artefato": "municipality/mapbiomas_municipio",
+      "obrigatorio": false,
+      "existe": false,
+      "status": "AUSENTE (pendente)"
+    },
+    {
+      "artefato": "municipality/rural_profile_stage2",
+      "obrigatorio": false,
+      "existe": false,
+      "status": "AUSENTE (pendente)"
+    }
+  ]
+}

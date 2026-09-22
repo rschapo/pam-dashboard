@@ -1,0 +1,30 @@
+{
+  "dataset": "car_RJ",
+  "source": "SICAR — CAR",
+  "extraction_date": "2026-07-30",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 68640,
+  "municipality_count": 130,
+  "rejected_rows": 0,
+  "warnings": [
+    "geometrias corrigidas: 33",
+    "fora da UF: 0",
+    "área divergente>20.0%: 0"
+  ],
+  "output_files": [
+    {
+      "file": "car_imoveis_validos_RJ.parquet",
+      "sha256": "79e9d23d5bea56871bd982b6b1021f745b26a5847bc26ef69d6b833ab830edf8",
+      "bytes": 46697741
+    },
+    {
+      "file": "car_imovel_municipio_intersection_RJ.parquet",
+      "sha256": "abb99d9b5cb158fd5373527826265ac1c8ff9063f1113cc5ec35a05c9ceed414",
+      "bytes": 2647037
+    }
+  ],
+  "generated_at": "2026-07-30T19:04:25-04:00"
+}

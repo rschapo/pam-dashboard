@@ -1,0 +1,19 @@
+classe_original;limite_inf_ha;limite_sup_ha;faixa_harmonizada;compativel;observacao
+Produtor sem área;;;sem_area;0;Produtor sem área (assentados aguardando titulação etc.) — não somar às faixas de área
+Mais de 0 a menos de 0,1 ha;0;0.1;ate_10_ha;1;
+De 0,1 a menos de 0,2 ha;0.1;0.2;ate_10_ha;1;
+De 0,2 a menos de 0,5 ha;0.2;0.5;ate_10_ha;1;
+De 0,5 a menos de 1 ha;0.5;1;ate_10_ha;1;
+De 1 a menos de 2 ha;1;2;ate_10_ha;1;
+De 2 a menos de 3 ha;2;3;ate_10_ha;1;
+De 3 a menos de 4 ha;3;4;ate_10_ha;1;
+De 4 a menos de 5 ha;4;5;ate_10_ha;1;
+De 5 a menos de 10 ha;5;10;ate_10_ha;1;
+De 10 a menos de 20 ha;10;20;mais_10_ate_50_ha;1;
+De 20 a menos de 50 ha;20;50;mais_10_ate_50_ha;1;
+De 50 a menos de 100 ha;50;100;mais_50_ate_100_ha;1;
+De 100 a menos de 200 ha;100;200;mais_100_ate_500_ha;1;
+De 200 a menos de 500 ha;200;500;mais_100_ate_500_ha;1;
+De 500 a menos de 1000 ha;500;1000;mais_500_ate_1000_ha;1;
+De 1000 a menos de 2500 ha;1000;2500;mais_1000_ha;1;
+De 2500 ha e mais;2500;;mais_1000_ha;1;

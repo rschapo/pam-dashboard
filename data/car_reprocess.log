@@ -1,0 +1,26 @@
+=== REPROCESS INICIO 2026-07-30 19:39:32 : ['TO', 'MT', 'MA', 'PA', 'GO', 'PR', 'RS', 'MG'] ===
+--- TO inicio 19:39:32 ---
+[OK] TO (88s): [CAR/TO] 110,803 imóveis · inválidas corrigidas 82 · fora UF 0
+--- TO fim 19:41:00 ---
+--- MT inicio 19:41:00 ---
+[OK] MT (145s): [CAR/MT] 217,026 imóveis · inválidas corrigidas 8 · fora UF 0
+--- MT fim 19:43:26 ---
+--- MA inicio 19:43:26 ---
+[OK] MA (131s): [CAR/MA] 414,395 imóveis · inválidas corrigidas 95 · fora UF 0
+--- MA fim 19:45:37 ---
+--- PA inicio 19:45:37 ---
+[OK] PA (179s): [CAR/PA] 386,413 imóveis · inválidas corrigidas 104 · fora UF 0
+--- PA fim 19:48:36 ---
+--- GO inicio 19:48:36 ---
+[OK] GO (215s): [CAR/GO] 241,422 imóveis · inválidas corrigidas 231 · fora UF 0
+--- GO fim 19:52:12 ---
+--- PR inicio 19:52:12 ---
+[OK] PR (294s): [CAR/PR] 555,177 imóveis · inválidas corrigidas 182 · fora UF 0
+--- PR fim 19:57:06 ---
+--- RS inicio 19:57:06 ---
+[OK] RS (309s): [CAR/RS] 673,393 imóveis · inválidas corrigidas 95 · fora UF 0
+--- RS fim 20:02:16 ---
+--- MG inicio 20:02:16 ---
+[OK] MG (875s): [CAR/MG] 1,171,571 imóveis · inválidas corrigidas 598 · fora UF 0
+--- MG fim 20:16:52 ---
+=== REPROCESS FIM 2026-07-30 20:16:52 ===

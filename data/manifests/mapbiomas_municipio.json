@@ -1,0 +1,45 @@
+{
+  "dataset": "mapbiomas_municipio",
+  "source": "MapBiomas — estatísticas municipais",
+  "extraction_date": "2026-08-08",
+  "reference_date": null,
+  "source_files": [
+    "mapbiomas"
+  ],
+  "source_hashes": [
+    {
+      "file": "mapbiomas",
+      "sha256": null
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 3152720,
+  "municipality_count": 5564,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "mapbiomas_municipio.parquet",
+      "sha256": "20e2ded0ea38142aaac7d649edcf483e354e926d0c0ce88b5337c7bdb95edc06",
+      "bytes": 23060641
+    },
+    {
+      "file": "mapbiomas_municipio.csv",
+      "sha256": "a61c348e58f31bfce8d47e4eec52beda4ad5f330c031cbef006c4165500c6621",
+      "bytes": 294888449
+    },
+    {
+      "file": "car_mapbiomas_comparacao.parquet",
+      "sha256": "42a13e3fc781e37e01633b00895a9910b78db69bf626a8af36dea9991a21c4a7",
+      "bytes": 198194
+    },
+    {
+      "file": "car_mapbiomas_comparacao.csv",
+      "sha256": "08a2fa4e6bbd3db1a4f0881440ef13ba29cd165c78a084b8d517b4607585679b",
+      "bytes": 276783
+    }
+  ],
+  "generated_at": "2026-08-08T15:34:43-04:00",
+  "colecao": "10.1",
+  "versao": "Coleção 10.1"
+}

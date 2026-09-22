@@ -1,6 +1,45 @@
 # Generated data files — regenerate locally with process_pam.py
 public/data/
 
+# ── Bases complementares (generator/complementary) ───────────────────────────
+# Brutos e geoespaciais pesados NÃO vão ao GitHub (regeneráveis pelos pipelines).
+data/raw/
+data/interim/
+data/processed/geospatial/
+# Formatos pesados em qualquer lugar
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.gpkg
+*.gdb/
+*.geojson
+*.tif
+*.tiff
+*.geotiff
+*.gml
+# Parquet particionado/grande de brutos e geoespacial
+data/raw/**/*.parquet
+data/processed/geospatial/*.parquet
+# Segredos e sessões
+*.env
+.env
+*.token
+*.cookie
+cookies.txt
+credentials*.json
+# Temporários
+*.tmp
+*.bak
+*.part
+.cache/
+tmp/
+
+# Mantidas versionadas (leves, de conferência): as tabelas municipais/dimensões
+# em data/processed/dimensions e data/processed/municipality (parquet + csv) e os
+# manifestos data/manifests/*.json. Use 'git add -f' se necessário.
+
 # Python
 __pycache__/
 *.pyc
@@ -8,6 +47,7 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+.pytest_cache/
 
 # OS
 .DS_Store
@@ -17,3 +57,9 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# mapbiomas_municipio.csv tem 294 MB e estoura o limite de 100 MB do GitHub.
+# O .parquet ao lado carrega os mesmos 3.152.720 registros e as mesmas 10
+# colunas em 23 MB — e esse fica versionado. Regenere o CSV localmente se
+# precisar dele em ferramentas que nao leem parquet.
+data/processed/municipality/mapbiomas_municipio.csv

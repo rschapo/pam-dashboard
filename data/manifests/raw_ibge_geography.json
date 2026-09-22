@@ -1,0 +1,26 @@
+{
+  "dataset": "raw_ibge_geography",
+  "source": "IBGE Localidades/Malhas",
+  "extraction_date": "2026-07-29",
+  "reference_date": "2026-07-29",
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 5571,
+  "municipality_count": 5571,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "municipios.csv",
+      "sha256": "3d316efcb2465786b5927ab72b303153426cf2c9fc1a321a218daffbe72b852e",
+      "bytes": 684813
+    },
+    {
+      "file": "malha_municipios.gpkg",
+      "sha256": "5e2b41f3c2e6df5d85776981f6de62e3512dc741b1d6c1ea094305936deac81d",
+      "bytes": 46264320
+    }
+  ],
+  "generated_at": "2026-07-29T20:15:32-04:00"
+}

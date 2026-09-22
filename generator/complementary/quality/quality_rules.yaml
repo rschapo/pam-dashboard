@@ -1,0 +1,54 @@
+# quality_rules.yaml — Regras e limiares dos controles de qualidade (briefing §9)
+# Consumido por quality/*.py. Ajustável sem tocar no código.
+
+geografia:
+  cod_municipio_digitos: 7
+  exigir_municipio_na_dimensao: true
+  exigir_uf_compativel: true            # 2 primeiros díg do cod == cod_uf
+  proibir_duplicidade_dimensao: true
+  area_municipal_positiva: true         # quando area_municipal_ha != null
+
+modulo_fiscal:
+  valor_minimo_ha: 0.1                  # módulo fiscal > 0 (menor real ~1 ha)
+  exigir_todos_municipios: true         # ou justificativa registrada
+  exigir_match_municipio_uf: true
+
+censo_agro:
+  conferir_total_estadual: true
+  conferir_total_nacional: true
+  tolerancia_pct_totais: 1.0            # divergência aceitável em %
+  ausencia_nunca_zero: true
+
+sncr:
+  area_zero: {flag: flag_area_zero, regra: "area_total_ha == 0"}
+  area_negativa: {flag: flag_area_negativa, regra: "area_total_ha < 0"}
+  area_extrema_ha: 500000               # acima disso: revisar (outlier)
+  municipio_invalido: {flag: flag_municipio_invalido}
+  municipio_incompativel_uf: true
+  duplicidade_id: {flag: flag_duplicidade}
+  nao_excluir_automaticamente: true     # inconsistências vão p/ base de rejeições
+
+pevs:
+  separar_silvicultura_extracao: true
+  descartar_categoria_total: true       # soma sem sentido físico entre unidades
+  valores_nominais: true                # R$ mil nominais do ano
+
+car:
+  crs_armazenamento: "EPSG:4674"
+  crs_area: "EPSG:5880"
+  divergencia_area_pct_alerta: 20.0     # |area_geom - area_decl| / area_decl
+  corrigir_geometria: "make_valid (buffer(0) fallback), documentado"
+  niveis_sobreposicao_pct:
+    sem_sobreposicao_relevante: [0, 1]
+    ate_1_percentual: [1, 1]
+    mais_1_ate_5_percentual: [1, 5]
+    mais_5_ate_20_percentual: [5, 20]
+    mais_20_percentual: [20, 100]
+  nao_excluir_inconsistencias: true
+
+mapbiomas:
+  registrar_colecao_versao: true
+  preservar_classes_originais: true
+  conferir_soma_vs_area_municipal: true
+  tolerancia_pct_area_municipal: 5.0
+  proibir_mistura_anos_colecoes: true

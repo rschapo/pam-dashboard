@@ -1,0 +1,26 @@
+{
+  "dataset": "rural_profile_stage1",
+  "source": "Composição Etapa 1 (MF/SNCR/Censo/PEVS)",
+  "extraction_date": "2026-07-29",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 5571,
+  "municipality_count": 5571,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "rural_profile_stage1.parquet",
+      "sha256": "8a9ca86ea27257e9355d1f333e2945c075c7385d8d77e5c71916d6a90c9e47e3",
+      "bytes": 85362
+    },
+    {
+      "file": "rural_profile_stage1.csv",
+      "sha256": "36cdcd17a08a2d18d59ffcae8c34f217bd2429cb08fc50e5488a1c3e2260a89a",
+      "bytes": 249691
+    }
+  ],
+  "generated_at": "2026-07-29T13:01:59-04:00"
+}

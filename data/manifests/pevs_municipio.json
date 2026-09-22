@@ -1,0 +1,33 @@
+{
+  "dataset": "pevs_municipio",
+  "source": "IBGE — PEVS (291/289/5930)",
+  "extraction_date": "2026-07-29",
+  "reference_date": null,
+  "source_files": [
+    "PEVS_municipios_completo.csv"
+  ],
+  "source_hashes": [
+    {
+      "file": "PEVS_municipios_completo.csv",
+      "sha256": "7f1d285a3c427cc8c0c1a67d83f6db505d979417fd1f694863093179e7c19816"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 559021,
+  "municipality_count": 5446,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "pevs_municipio.parquet",
+      "sha256": "5d6e5b3bd22762a51b47d406ccf246b112b6f32618527514eb9e0399e6c7c2db",
+      "bytes": 2542189
+    },
+    {
+      "file": "pevs_municipio.csv",
+      "sha256": "23893d154ffa8530059bc914beb83e0ef916c480d1659e40ae7d4f9fb724b620",
+      "bytes": 42116425
+    }
+  ],
+  "generated_at": "2026-07-29T13:01:59-04:00"
+}

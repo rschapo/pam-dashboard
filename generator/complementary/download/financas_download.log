@@ -1,0 +1,38 @@
+[SICONFI] 5570 municípios — ano 2023
+    lote 0: 200/5570 entes -> dca_lote_00000.json
+    lote 1: 400/5570 entes -> dca_lote_00001.json
+    lote 2: 600/5570 entes -> dca_lote_00002.json
+    ! falha (HTTPSConnectionPool(host='apidatalake.tesouro.gov.br', port=443): Read timed out.); retry em 3s
+    lote 3: 800/5570 entes -> dca_lote_00003.json
+    lote 4: 1000/5570 entes -> dca_lote_00004.json
+    ! falha (HTTPSConnectionPool(host='apidatalake.tesouro.gov.br', port=443): Read timed out.); retry em 3s
+    lote 5: 1200/5570 entes -> dca_lote_00005.json
+    lote 6: 1400/5570 entes -> dca_lote_00006.json
+    ! falha (HTTPSConnectionPool(host='apidatalake.tesouro.gov.br', port=443): Max retries exceeded with url: /ords/siconfi/tt/dca?an_exercicio=2023&id_ente=4112751&no_anexo=DCA-Anexo+I-C (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)')))); retry em 3s
+    lote 7: 1600/5570 entes -> dca_lote_00007.json
+    lote 8: 1800/5570 entes -> dca_lote_00008.json
+    ! falha (HTTPSConnectionPool(host='apidatalake.tesouro.gov.br', port=443): Max retries exceeded with url: /ords/siconfi/tt/dca?an_exercicio=2023&id_ente=2911857&no_anexo=DCA-Anexo+I-C (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1082)')))); retry em 3s
+    lote 9: 2000/5570 entes -> dca_lote_00009.json
+    lote 10: 2200/5570 entes -> dca_lote_00010.json
+    lote 11: 2400/5570 entes -> dca_lote_00011.json
+    lote 12: 2600/5570 entes -> dca_lote_00012.json
+    lote 13: 2800/5570 entes -> dca_lote_00013.json
+    lote 14: 3000/5570 entes -> dca_lote_00014.json
+    lote 15: 3200/5570 entes -> dca_lote_00015.json
+    lote 16: 3400/5570 entes -> dca_lote_00016.json
+    lote 17: 3600/5570 entes -> dca_lote_00017.json
+    lote 18: 3800/5570 entes -> dca_lote_00018.json
+    ! falha (('Connection aborted.', ConnectionResetError(10054, 'Foi forçado o cancelamento de uma conexão existente pelo host remoto', None, 10054, None))); retry em 3s
+    ! falha (('Connection aborted.', ConnectionResetError(10054, 'Foi forçado o cancelamento de uma conexão existente pelo host remoto', None, 10054, None))); retry em 3s
+    lote 19: 4000/5570 entes -> dca_lote_00019.json
+    lote 20: 4200/5570 entes -> dca_lote_00020.json
+    lote 21: 4400/5570 entes -> dca_lote_00021.json
+    lote 22: 4600/5570 entes -> dca_lote_00022.json
+    lote 23: 4800/5570 entes -> dca_lote_00023.json
+    lote 24: 5000/5570 entes -> dca_lote_00024.json
+    ! falha (502 Server Error: Bad Gateway for url: https://apidatalake.tesouro.gov.br/ords/siconfi/tt/dca?an_exercicio=2023&id_ente=2311231&no_anexo=DCA-Anexo+I-C); retry em 3s
+    lote 25: 5200/5570 entes -> dca_lote_00025.json
+    ! falha (HTTPSConnectionPool(host='apidatalake.tesouro.gov.br', port=443): Read timed out.); retry em 3s
+    lote 26: 5400/5570 entes -> dca_lote_00026.json
+    lote 27: 5570/5570 entes -> dca_lote_00027.json
+[OK] 28 lotes gravados em data/raw/siconfi/
