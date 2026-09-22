@@ -209,7 +209,7 @@ let mapBR = null, layerUF = null;
 
 function initMapBR() {
   mapBR = L.map('map-br', { zoomSnap: .5, attributionControl: false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { maxZoom: 12 }).addTo(mapBR);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 12, attribution: 'Tiles &copy; Esri' }).addTo(mapBR);
   updateMapBR();
   mapBR.fitBounds([[-34, -74], [6, -28]]);
 }
@@ -261,7 +261,7 @@ let mapMun = null, layerMunMic = null;
 
 function initMapEst() {
   mapEst = L.map('map-est', { zoomSnap: .5, attributionControl: false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { maxZoom: 14 }).addTo(mapEst);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 14, attribution: 'Tiles &copy; Esri' }).addTo(mapEst);
   mapEst.fitBounds([[-34, -74], [6, -28]]);
 }
 
@@ -300,7 +300,7 @@ function updateMapEst() {
 
 function initMapMun() {
   mapMun = L.map('map-mun', { zoomSnap: .5, attributionControl: false });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', { maxZoom: 14 }).addTo(mapMun);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 14, attribution: 'Tiles &copy; Esri' }).addTo(mapMun);
   mapMun.fitBounds([[-34, -74], [6, -28]]);
 }
 
