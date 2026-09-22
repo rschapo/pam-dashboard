@@ -19,6 +19,7 @@ ambientes com allowlist de rede):
 """
 
 import sys, os, time, requests, pandas as pd
+from pathlib import Path
 from tqdm import tqdm
 
 sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -26,7 +27,9 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 # ── Configurações ────────────────────────────────────────────────────────────
 ANO_INICIO  = 2004
 ANO_FIM     = 2024
-PASTA_SAIDA = r"C:\Users\schap\Downloads\IBGE\dados_pevs"
+# Raiz dos brutos IBGE do projeto: .../pam-dashboard/data/raw/ibge
+RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+PASTA_SAIDA = str(RAW_IBGE / "pevs")
 PASTA_RAW   = os.path.join(PASTA_SAIDA, "raw")
 PAUSA_REQ   = 0.8
 MAX_TENT    = 3

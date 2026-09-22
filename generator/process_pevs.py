@@ -29,7 +29,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 import pandas as pd
 import requests
 
-CSV     = r"C:\Users\schap\Downloads\IBGE\dados_pevs\PEVS_municipios_completo.csv"
+RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+CSV     = RAW_IBGE / "pevs" / "PEVS_municipios_completo.csv"
 OUT_DIR = Path(__file__).parent.parent / "public" / "data"
 OUT     = OUT_DIR / "pevs.json"
 OUT_DIR.mkdir(parents=True, exist_ok=True)

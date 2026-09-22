@@ -1,14 +1,7 @@
 """
-PPM IBGE - Download de dados de pecuaria municipal (rebanho + producao)
-Mesmo padrao do download_pam_ibge.py: 1 estado por vez, salvamento
-progressivo por ano/tabela, retomada automatica se interrompido.
-
-Fontes (confirmadas via API de metadados do IBGE):
-  Tabela 3939 - Efetivo dos rebanhos (cabecas), classif c79
-  Tabela 74   - Producao de origem animal (quantidade + valor), classif c80
-
-Run from the project root:
-    py generator/download_ppm_ibge.py
+PAM IBGE - Download de dados agricolas municipais
+Versao com salvamento progressivo e retomada automatica.
+Baixa 1 estado por vez. Se interrompido, retoma do ponto parado.
 """
 
 import sys, os, time, requests, pandas as pd
@@ -19,20 +12,26 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 # ── Configuracoes ──────────────────────────────────────────────────────────
 ANO_INICIO  = 2004
-ANO_FIM     = 2024
+ANO_FIM     = 2025
 # Raiz dos brutos IBGE do projeto: .../pam-dashboard/data/raw/ibge
 RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
-PASTA_SAIDA = str(RAW_IBGE / "ppm")
-PASTA_RAW   = os.path.join(PASTA_SAIDA, "raw")
+PASTA_SAIDA = str(RAW_IBGE / "pam")
+PASTA_RAW   = os.path.join(PASTA_SAIDA, "raw")   # CSVs parciais por ano/tabela
 PAUSA_REQ   = 0.8
 MAX_TENT    = 3
 TIMEOUT_SEG = 90
 
+VARIAVEIS = {
+    "109": "Area_Plantada_ha",
+    "216": "Area_Colhida_ha",
+    "214": "Quantidade_Produzida_ton",
+    "112": "Rendimento_Medio_kg_ha",
+    "215": "Valor_Producao_mil_reais",
+}
+
 TABELAS = [
-    {"tabela": 3939, "classif": "c79", "tipo": "Rebanho",
-     "variaveis": {"105": "Efetivo_Cabecas"}},
-    {"tabela": 74, "classif": "c80", "tipo": "Producao",
-     "variaveis": {"106": "Quantidade", "215": "Valor_mil_reais"}},
+    {"tabela": 1612, "classif": "c81", "tipo": "Temporaria"},
+    {"tabela": 1613, "classif": "c82", "tipo": "Permanente"},
 ]
 
 ESTADOS = [11,12,13,14,15,16,17,21,22,23,24,25,26,27,28,29,
@@ -59,12 +58,11 @@ os.makedirs(PASTA_RAW,   exist_ok=True)
 
 # ── API ─────────────────────────────────────────────────────────────────────
 
-def requisitar(tabela, classif, variaveis, estado_cod, ano):
-    variaveis_str = ",".join(variaveis.keys())
+def _requisitar_uma_variavel(tabela, classif, var_cod, estado_cod, ano):
     url = (
         f"https://apisidra.ibge.gov.br/values"
         f"/t/{tabela}/n6/in%20n3%20{estado_cod}"
-        f"/v/{variaveis_str}/p/{ano}/{classif}/allxt"
+        f"/v/{var_cod}/p/{ano}/{classif}/allxt"
     )
     for tent in range(1, MAX_TENT + 1):
         try:
@@ -80,10 +78,32 @@ def requisitar(tabela, classif, variaveis, estado_cod, ano):
     return []
 
 
+def requisitar(tabela, classif, estado_cod, ano):
+    """Busca UMA variavel por vez -- estados grandes (SP, MG, PR, RS, BA) excedem
+    o limite de 50.000 valores da API SIDRA quando as 5 variaveis sao pedidas
+    juntas (allxt = todas as culturas), causando HTTP 400 tratado como "sem
+    dado" -- foi a causa raiz do gap de 5 estados no historico 2004-2024,
+    corrigido aqui de forma definitiva (nao so remendado para os anos ja
+    baixados)."""
+    cabecalho = None
+    linhas = []
+    for var_cod in VARIAVEIS.keys():
+        resp = _requisitar_uma_variavel(tabela, classif, var_cod, estado_cod, ano)
+        if not resp or len(resp) < 2:
+            continue
+        if cabecalho is None:
+            cabecalho = resp[0]
+        linhas.extend(resp[1:])
+        time.sleep(PAUSA_REQ)
+    if not linhas:
+        return []
+    return [cabecalho] + linhas
+
+
 def detectar_ultimo_ano():
     print("Detectando ultimo ano disponivel...")
     for ano in range(ANO_FIM, ANO_INICIO - 1, -1):
-        url = f"https://apisidra.ibge.gov.br/values/t/3939/n3/11/v/105/p/{ano}/c79/2670"
+        url = f"https://apisidra.ibge.gov.br/values/t/1612/n3/11/v/216/p/{ano}/c81/2713"
         try:
             r = requests.get(url, timeout=20)
             d = r.json()
@@ -105,7 +125,7 @@ def limpar(v):
     except: return None
 
 
-def parsear(dados, tipo, uf, variaveis):
+def parsear(dados, tipo, uf):
     if len(dados) < 2: return pd.DataFrame()
     cab = dados[0]
 
@@ -116,8 +136,8 @@ def parsear(dados, tipo, uf, variaveis):
     col_mn = achar(lambda v: "Munic" in v and "Nome"  in v) or "D1N"
     col_vc = achar(lambda v: "Vari"  in v and "digo"  in v) or "D2C"
     col_an = achar(lambda v: "Ano"   in v and "Nome"  in v) or "D3N"
-    col_cc = achar(lambda v: ("rebanho" in v.lower() or "produto" in v.lower()) and "digo" in v) or "D4C"
-    col_cn = achar(lambda v: ("rebanho" in v.lower() or "produto" in v.lower()) and "Nome" in v) or "D4N"
+    col_cc = achar(lambda v: "lavoura" in v.lower() and "digo" in v) or "D4C"
+    col_cn = achar(lambda v: "lavoura" in v.lower() and "Nome" in v) or "D4N"
 
     linhas = []
     for row in dados[1:]:
@@ -128,10 +148,10 @@ def parsear(dados, tipo, uf, variaveis):
             "UF"           : uf,
             "Regiao"       : REGIAO_UF.get(uf, "??"),
             "Ano"          : row.get(col_an, ""),
-            "Tipo"         : tipo,
-            "Cod_Categoria": row.get(col_cc, ""),
-            "Categoria"    : row.get(col_cn, ""),
-            "Variavel"     : variaveis.get(cod_var, cod_var),
+            "Tipo_Lavoura" : tipo,
+            "Cod_Cultura"  : row.get(col_cc, ""),
+            "Cultura"      : row.get(col_cn, ""),
+            "Variavel"     : VARIAVEIS.get(cod_var, cod_var),
             "Valor"        : limpar(row.get("V", "")),
         })
     return pd.DataFrame(linhas)
@@ -140,12 +160,13 @@ def parsear(dados, tipo, uf, variaveis):
 # ── Download com salvamento progressivo ─────────────────────────────────────
 
 def caminho_raw(tabela, ano):
-    return os.path.join(PASTA_RAW, f"ppm_{tabela}_{ano}.csv")
+    return os.path.join(PASTA_RAW, f"pam_{tabela}_{ano}.csv")
 
 
-def baixar_tabela(tabela, classif, tipo, variaveis, ultimo_ano):
+def baixar_tabela(tabela, classif, tipo, ultimo_ano):
     anos = list(range(ANO_INICIO, ultimo_ano + 1))
 
+    # Detectar quais anos ja foram baixados
     anos_pendentes = [a for a in anos if not os.path.exists(caminho_raw(tabela, a))]
     anos_prontos   = len(anos) - len(anos_pendentes)
 
@@ -165,40 +186,43 @@ def baixar_tabela(tabela, classif, tipo, variaveis, ultimo_ano):
             frames_ano = []
             for cod_est in ESTADOS:
                 uf = SIGLA_UF[cod_est]
-                dados = requisitar(tabela, classif, variaveis, cod_est, ano)
+                dados = requisitar(tabela, classif, cod_est, ano)
                 if dados and len(dados) > 1:
-                    df_bloco = parsear(dados, tipo, uf, variaveis)
+                    df_bloco = parsear(dados, tipo, uf)
                     if not df_bloco.empty:
                         frames_ano.append(df_bloco)
                 barra.update(1)
                 barra.set_postfix(ano=ano, uf=uf, refresh=False)
                 time.sleep(PAUSA_REQ)
 
+            # Salvar CSV deste ano imediatamente
             if frames_ano:
                 df_ano = pd.concat(frames_ano, ignore_index=True)
                 df_ano.to_csv(caminho_raw(tabela, ano), index=False,
                               encoding="utf-8-sig", sep=";")
                 tqdm.write(f"  [SALVO] {tabela}/{ano}: {len(df_ano):,} linhas")
             else:
+                # Criar arquivo vazio para nao re-baixar
                 pd.DataFrame().to_csv(caminho_raw(tabela, ano), index=False)
                 tqdm.write(f"  [-]  {tabela}/{ano}: sem dados")
 
 
-def pivotar(df, variaveis):
+def pivotar(df):
     if df.empty: return df
     idx = ["Cod_Municipio","Municipio","UF","Regiao","Ano",
-           "Tipo","Cod_Categoria","Categoria"]
+           "Tipo_Lavoura","Cod_Cultura","Cultura"]
     pv = df.pivot_table(
         index=idx, columns="Variavel", values="Valor", aggfunc="first"
     ).reset_index()
     pv.columns.name = None
-    for col in variaveis.values():
+    for col in VARIAVEIS.values():
         if col not in pv.columns:
             pv[col] = None
     return pv
 
 
-def carregar_tabela(tabela, ultimo_ano, variaveis):
+def carregar_tabela(tabela, ultimo_ano):
+    """Le todos os CSVs parciais de uma tabela e retorna DataFrame consolidado."""
     anos  = list(range(ANO_INICIO, ultimo_ano + 1))
     files = [caminho_raw(tabela, a) for a in anos if os.path.exists(caminho_raw(tabela, a))]
     if not files: return pd.DataFrame()
@@ -210,7 +234,7 @@ def carregar_tabela(tabela, ultimo_ano, variaveis):
                 frames.append(df)
         except: pass
     if not frames: return pd.DataFrame()
-    return pivotar(pd.concat(frames, ignore_index=True), variaveis)
+    return pivotar(pd.concat(frames, ignore_index=True))
 
 
 # ── Exportacao ──────────────────────────────────────────────────────────────
@@ -222,11 +246,21 @@ def salvar_csv(df, nome):
     print(f"  [SALVO] {nome} | {len(df):,} linhas | {mb:.1f} MB")
 
 
+def criar_excel(dfs):
+    p = os.path.join(PASTA_SAIDA, "PAM_completo.xlsx")
+    print("\nCriando PAM_completo.xlsx...")
+    with pd.ExcelWriter(p, engine="openpyxl") as w:
+        for aba, df in dfs.items():
+            if not df.empty:
+                df.head(1_000_000).to_excel(w, sheet_name=aba, index=False)
+    print(f"  [SALVO] PAM_completo.xlsx | {os.path.getsize(p)/1_048_576:.1f} MB")
+
+
 # ── Main ────────────────────────────────────────────────────────────────────
 
 def main():
     print("=" * 60)
-    print("PPM IBGE - Download com salvamento progressivo")
+    print("PAM IBGE - Download com salvamento progressivo")
     print(f"Saida: {os.path.abspath(PASTA_SAIDA)}")
     print("(Se interrompido, rode novamente para retomar)")
     print("=" * 60)
@@ -236,35 +270,72 @@ def main():
         ultimo_ano = ANO_FIM
 
     n_anos = len(range(ANO_INICIO, ultimo_ano + 1))
-    n_req  = n_anos * len(ESTADOS) * len(TABELAS)
+    n_req  = n_anos * len(ESTADOS) * 2
     est_min = round(n_req * (PAUSA_REQ + 0.5) / 60)
     print(f"\nTotal: {n_req} requisicoes | ~{est_min} min")
 
     # ── 1. Download (com retomada automatica)
     for cfg in TABELAS:
-        baixar_tabela(cfg["tabela"], cfg["classif"], cfg["tipo"], cfg["variaveis"], ultimo_ano)
+        baixar_tabela(cfg["tabela"], cfg["classif"], cfg["tipo"], ultimo_ano)
 
     # ── 2. Consolidar e exportar
     print("\nConsolidando dados...")
-    dfs = {cfg["tipo"]: carregar_tabela(cfg["tabela"], ultimo_ano, cfg["variaveis"]) for cfg in TABELAS}
+    df_temp = carregar_tabela(1612, ultimo_ano)
+    df_perm = carregar_tabela(1613, ultimo_ano)
 
-    if all(d.empty for d in dfs.values()):
+    if df_temp.empty and df_perm.empty:
         print("[X] Nenhum dado disponivel.")
         return
 
-    df_total = pd.concat([d for d in dfs.values() if not d.empty], ignore_index=True)
+    df_total = pd.concat([df_temp, df_perm], ignore_index=True)
+    cols_num = [c for c in VARIAVEIS.values() if c in df_total.columns]
+
+    df_est = (df_total
+              .groupby(["UF","Regiao","Ano","Tipo_Lavoura","Cod_Cultura","Cultura"])
+              [cols_num].sum(min_count=1).reset_index())
+    df_bra = (df_total
+              .groupby(["Ano","Tipo_Lavoura","Cod_Cultura","Cultura"])
+              [cols_num].sum(min_count=1).reset_index())
+
+    df_dic = pd.DataFrame([
+        {"Campo":"Cod_Municipio",            "Descricao":"Codigo IBGE do municipio (7 digitos)"},
+        {"Campo":"Municipio",                "Descricao":"Nome do municipio"},
+        {"Campo":"UF",                       "Descricao":"Sigla do estado"},
+        {"Campo":"Regiao",                   "Descricao":"Grande regiao"},
+        {"Campo":"Ano",                      "Descricao":"Ano de referencia"},
+        {"Campo":"Tipo_Lavoura",             "Descricao":"Temporaria ou Permanente"},
+        {"Campo":"Cod_Cultura",              "Descricao":"Codigo IBGE da cultura"},
+        {"Campo":"Cultura",                  "Descricao":"Nome da cultura"},
+        {"Campo":"Area_Plantada_ha",         "Descricao":"Area plantada (ha) - var 109"},
+        {"Campo":"Area_Colhida_ha",          "Descricao":"Area colhida (ha) - var 216"},
+        {"Campo":"Quantidade_Produzida_ton", "Descricao":"Quantidade produzida (ton) - var 214"},
+        {"Campo":"Rendimento_Medio_kg_ha",   "Descricao":"Rendimento medio (kg/ha) - var 112"},
+        {"Campo":"Valor_Producao_mil_reais", "Descricao":"Valor da producao (mil R$) - var 215"},
+        {"Campo":"Fonte",                    "Descricao":"IBGE PAM - SIDRA tabelas 1612 e 1613"},
+    ])
 
     print(f"\n{'='*60}")
     print("Salvando arquivos finais...")
-    if not dfs["Rebanho"].empty:  salvar_csv(dfs["Rebanho"],  "PPM_municipios_rebanho.csv")
-    if not dfs["Producao"].empty: salvar_csv(dfs["Producao"], "PPM_municipios_producao.csv")
-    salvar_csv(df_total, "PPM_municipios_completo.csv")
+    if not df_temp.empty: salvar_csv(df_temp, "PAM_municipios_temporarias.csv")
+    if not df_perm.empty: salvar_csv(df_perm, "PAM_municipios_permanentes.csv")
+    salvar_csv(df_total, "PAM_municipios_completo.csv")
+    salvar_csv(df_est,   "PAM_estados.csv")
+    salvar_csv(df_bra,   "PAM_brasil.csv")
+    salvar_csv(df_dic,   "dicionario_dados.csv")
+
+    criar_excel({
+        "Temporarias": df_temp,
+        "Permanentes": df_perm,
+        "Por_Estado" : df_est,
+        "Brasil"     : df_bra,
+        "Dicionario" : df_dic,
+    })
 
     print("\n" + "=" * 60)
     print("[CONCLUIDO]")
     print(f"  Linhas totais : {len(df_total):,}")
     print(f"  Municipios    : {df_total['Cod_Municipio'].nunique():,}")
-    print(f"  Categorias    : {df_total['Categoria'].nunique():,}")
+    print(f"  Culturas      : {df_total['Cultura'].nunique():,}")
     print(f"  Anos          : {df_total['Ano'].min()} - {df_total['Ano'].max()}")
     print(f"  Arquivos em   : {os.path.abspath(PASTA_SAIDA)}")
     print("=" * 60)

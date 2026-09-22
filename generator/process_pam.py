@@ -24,7 +24,8 @@ import requests
 from ibge_common import IBGE2UF, build_ufs_info, build_mic_info, build_mun_info
 
 # ── Paths ────────────────────────────────────────────────────────────────────
-CSV      = r"C:\Users\schap\Downloads\IBGE\dados_pam\PAM_municipios_completo.csv"
+RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+CSV      = RAW_IBGE / "pam" / "PAM_municipios_completo.csv"
 OUT_DIR  = Path(__file__).parent.parent / "public" / "data"
 OUT_PKG  = OUT_DIR / "pkg.json"
 OUT_GEO_UF  = OUT_DIR / "geo_uf.json"

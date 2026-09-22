@@ -26,7 +26,7 @@ pam-dashboard/
 
 Arquivo CSV do IBGE (PAM):
 ```
-C:\Users\schap\Downloads\IBGE\dados_pam\PAM_municipios_completo.csv
+data/raw/ibge/pam/PAM_municipios_completo.csv   (relativo à raiz do projeto)
 ```
 
 ## Como Gerar os Dados
