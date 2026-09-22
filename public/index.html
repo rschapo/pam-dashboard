@@ -234,6 +234,7 @@
       <button class="tab-btn" data-tab="municipio">🏘️ Municípios</button>
       <button class="tab-btn serie-temporal" data-tab="historico">📈 Série Histórica</button>
       <button class="tab-btn" data-tab="ranking">🏆 Rankings</button>
+      <button class="tab-btn" data-tab="concentracao">📊 Concentração</button>
     </div>
 
     <div id="tab-area">
@@ -399,6 +400,68 @@
         <div class="chart-wrap">
           <h3 id="rank-mic-title">📍 Top 20 Microrregiões</h3>
           <div class="chart-container" style="height:260px"><canvas id="chart-rank-mic"></canvas></div>
+        </div>
+      </div>
+
+      <!-- ═══ CONCENTRAÇÃO TAB ═══ -->
+      <div class="tab-pane" id="tab-concentracao">
+        <div id="conc-indisponivel" class="conc-aviso" style="display:none"></div>
+        <div id="conc-conteudo">
+          <div id="conc-escopo" class="conc-escopo"></div>
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <div class="kpi-card">
+              <h3>HHI Municipal</h3>
+              <div class="val" id="conc-hhi">—</div>
+              <div class="sub" id="conc-hhi-sub">acima de 2.500 = alta concentração</div>
+            </div>
+            <div class="kpi-card">
+              <h3>Gini</h3>
+              <div class="val" id="conc-gini">—</div>
+              <div class="sub">0 = uniforme · 1 = tudo num município</div>
+            </div>
+            <div class="kpi-card">
+              <h3>Top 10</h3>
+              <div class="val" id="conc-top10">—</div>
+              <div class="sub" id="conc-top5-sub">dos 10 maiores</div>
+            </div>
+            <div class="kpi-card">
+              <h3>Para 50% do total</h3>
+              <div class="val" id="conc-p50">—</div>
+              <div class="sub">municípios</div>
+            </div>
+            <div class="kpi-card">
+              <h3>Para 80% do total</h3>
+              <div class="val" id="conc-p80">—</div>
+              <div class="sub">municípios</div>
+            </div>
+            <div class="kpi-card">
+              <h3>Municípios com valor</h3>
+              <div class="val" id="conc-n">—</div>
+              <div class="sub" id="conc-n-sub"></div>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <h3 id="conc-pareto-title">📈 Curva de Pareto</h3>
+            <div class="chart-container" style="height:300px"><canvas id="chart-pareto"></canvas></div>
+          </div>
+          <div class="chart-wrap">
+            <h3 id="conc-tbl-title">🏘️ Municípios no recorte de 80%</h3>
+            <div class="mun-tbl-scroll" style="max-height:420px">
+              <table class="data-tbl" id="table-conc">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Município</th>
+                    <th>Microrregião</th>
+                    <th id="conc-tbl-metrica">Valor</th>
+                    <th>%</th>
+                    <th>% acum.</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 

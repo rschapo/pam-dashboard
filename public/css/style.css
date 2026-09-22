@@ -181,6 +181,13 @@ body[data-serie="ausente"] .serie-temporal { display: none !important; }
   margin-top: 5px; font-size: 11px; line-height: 1.4;
   color: var(--text-lt);
 }
+.conc-aviso {
+  padding: 16px 18px; border-radius: 8px; font-size: 14px; line-height: 1.55;
+  background: var(--gold-bg); color: var(--text);
+}
+.conc-escopo {
+  font-size: 12px; color: var(--text-lt); margin-bottom: 10px;
+}
 input[type=range] {
   accent-color: var(--gold);
 }

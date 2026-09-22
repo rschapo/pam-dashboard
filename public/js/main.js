@@ -1317,6 +1317,170 @@ function showTab(name) {
 // ═══════════════════════════════════════════════════════════
 // REFRESH
 // ═══════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
+// CONCENTRAÇÃO
+// ═══════════════════════════════════════════════════════════
+// Mede o quanto a métrica selecionada se concentra em poucos municípios.
+// Só vale para grandezas extensivas: concentrar rendimento, PIB per capita ou
+// percentuais não significa nada, porque não existe um "total" a repartir.
+
+let chPareto = null;
+
+function metricaEhRazao() {
+  const M = curMetrica();
+  if (state.domain === 'agricola') return M === 'r';
+  return !!razoesDoDominio()[M];
+}
+
+function escopoMunicipiosAtual() {
+  const ids = Object.keys(mun_info);
+  if (state.microSel) return ids.filter(id => mun_info[id].mid === state.microSel);
+  if (state.ufSel)    return ids.filter(id => mun_info[id].uf === state.ufSel);
+  return ids;
+}
+
+function calcularConcentracao() {
+  const M = curMetrica(), ai = getAnoIdx();
+  const itens = escopoMunicipiosAtual()
+    .map(id => ({ id, v: calcMunVal(id, M, ai) }))
+    .filter(x => x.v > 0)
+    .sort((a, b) => b.v - a.v);
+  const n = itens.length;
+  const total = itens.reduce((s, x) => s + x.v, 0);
+  if (!n || !total) return null;
+
+  // HHI na escala 0–10.000: soma dos quadrados das participações percentuais.
+  const hhi = itens.reduce((s, x) => s + Math.pow(100 * x.v / total, 2), 0);
+
+  // Gini pela fórmula sobre a série crescente; itens está decrescente.
+  let somaPonderada = 0;
+  for (let i = n - 1, pos = 1; i >= 0; i--, pos++) somaPonderada += pos * itens[i].v;
+  const gini = n > 1 ? (2 * somaPonderada) / (n * total) - (n + 1) / n : 1;
+
+  const acumulado = [];
+  let soma = 0, p50 = 0, p80 = 0;
+  itens.forEach((x, i) => {
+    soma += x.v;
+    x.pct = 100 * x.v / total;
+    x.acum = 100 * soma / total;
+    acumulado.push(x.acum);
+    if (!p50 && soma >= 0.5 * total) p50 = i + 1;
+    if (!p80 && soma >= 0.8 * total) p80 = i + 1;
+  });
+  const top = k => 100 * itens.slice(0, k).reduce((s, x) => s + x.v, 0) / total;
+
+  return { itens, total, n, hhi, gini, acumulado, p50, p80,
+           top5: top(5), top10: top(10) };
+}
+
+function nomeEscopoAtual() {
+  if (state.microSel) return mic_info[state.microSel]?.n || state.microSel;
+  if (state.ufSel)    return ufs_info[state.ufSel]?.n || state.ufSel;
+  return 'Brasil';
+}
+
+function updateConcentracao() {
+  const aviso = document.getElementById('conc-indisponivel');
+  const corpo = document.getElementById('conc-conteudo');
+  if (!aviso || !corpo) return;
+
+  if (metricaEhRazao()) {
+    aviso.style.display = '';
+    corpo.style.display = 'none';
+    aviso.textContent =
+      `${metLabel()} é uma razão, não uma quantidade que se reparta entre ` +
+      'municípios. Concentração só se calcula sobre grandezas somáveis — ' +
+      'escolha produção, área, valor ou efetivo.';
+    return;
+  }
+  aviso.style.display = 'none';
+  corpo.style.display = '';
+
+  const c = calcularConcentracao();
+  const set = (id, txt) => { const e = document.getElementById(id); if (e) e.textContent = txt; };
+  const escopo = nomeEscopoAtual();
+  // Fonte de recorte único já carrega o próprio ano no rótulo da métrica; o ano
+  // do seletor não se aplica a ela e só confundiria ao lado.
+  const quando = baseDominioSimples() ? '' : ' · ' + getAno();
+
+  if (!c) {
+    ['conc-hhi', 'conc-gini', 'conc-top10', 'conc-p50', 'conc-p80', 'conc-n']
+      .forEach(id => set(id, '—'));
+    set('conc-escopo', `${metLabel()} · ${escopo}${quando} — sem dados no recorte`);
+    document.querySelector('#table-conc tbody').innerHTML = '';
+    if (chPareto) { chPareto.destroy(); chPareto = null; }
+    return;
+  }
+
+  set('conc-escopo', `${metLabel()} · ${escopo}${quando}`);
+  set('conc-hhi', Math.round(c.hhi).toLocaleString('pt-BR'));
+  set('conc-hhi-sub', c.hhi > 2500 ? 'alta concentração' : 'acima de 2.500 = alta concentração');
+  set('conc-gini', c.gini.toFixed(2));
+  set('conc-top10', c.top10.toFixed(1) + '%');
+  set('conc-top5-sub', `dos 10 maiores · top 5 = ${c.top5.toFixed(1)}%`);
+  set('conc-p50', c.p50.toLocaleString('pt-BR'));
+  set('conc-p80', c.p80.toLocaleString('pt-BR'));
+  set('conc-n', c.n.toLocaleString('pt-BR'));
+  set('conc-n-sub', `de ${escopoMunicipiosAtual().length.toLocaleString('pt-BR')} no recorte`);
+  set('conc-tbl-metrica', metLabel());
+  set('conc-tbl-title', `🏘️ ${c.p80.toLocaleString('pt-BR')} municípios concentram 80%`);
+
+  updateParetoChart(c);
+  updateTabelaConcentracao(c);
+}
+
+function updateParetoChart(c) {
+  const ctx = document.getElementById('chart-pareto')?.getContext('2d'); if (!ctx) return;
+  // Com milhares de municípios a curva não ganha nada desenhando ponto a ponto.
+  const passo = Math.max(1, Math.ceil(c.n / 400));
+  const labels = [], dados = [];
+  for (let i = 0; i < c.n; i += passo) { labels.push(i + 1); dados.push(c.acumulado[i]); }
+  if (labels[labels.length - 1] !== c.n) { labels.push(c.n); dados.push(100); }
+
+  if (chPareto) chPareto.destroy();
+  chPareto = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: '% acumulado', data: dados,
+      borderColor: BRAND_GREEN, backgroundColor: 'rgba(45,90,27,.12)',
+      fill: true, pointRadius: 0, borderWidth: 2, tension: .1,
+    }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: {
+          title: it => `${Number(it[0].label).toLocaleString('pt-BR')} municípios`,
+          label: it => `${it.parsed.y.toFixed(1)}% do total`,
+        } },
+      },
+      scales: {
+        x: { title: { display: true, text: 'Municípios, do maior para o menor' },
+             ticks: { maxTicksLimit: 10, callback(v) { return Number(this.getLabelForValue(v)).toLocaleString('pt-BR'); } } },
+        y: { min: 0, max: 100, title: { display: true, text: '% acumulado' },
+             ticks: { callback: v => v + '%' } },
+      },
+    },
+  });
+}
+
+function updateTabelaConcentracao(c) {
+  const tb = document.querySelector('#table-conc tbody'); if (!tb) return;
+  const M = curMetrica();
+  const linhas = c.itens.slice(0, Math.min(c.p80, 200));
+  tb.innerHTML = linhas.map((x, i) => {
+    const info = mun_info[x.id] || {};
+    return `<tr><td>${i + 1}</td><td>${info.n || x.id}</td>` +
+           `<td>${mic_info[info.mid]?.n || '—'}</td>` +
+           `<td>${fmt(x.v, M)}</td><td>${x.pct.toFixed(2)}%</td>` +
+           `<td>${x.acum.toFixed(1)}%</td></tr>`;
+  }).join('');
+  if (c.p80 > linhas.length) {
+    tb.innerHTML += `<tr><td colspan="6" style="color:var(--text-lt);font-style:italic">` +
+      `… e mais ${(c.p80 - linhas.length).toLocaleString('pt-BR')} municípios até 80%</td></tr>`;
+  }
+}
+
 function refreshAll() {
   if (state.domain === 'pecuaria' && !ppmLoaded) return;
   if (state.domain === 'silvicultura' && !pevsLoaded) return;
@@ -1327,6 +1491,7 @@ function refreshAll() {
   if (t === 'municipio') { updateMapMun(); updateMunicipio(); }
   if (t === 'historico') updateHistorico();
   if (t === 'ranking')   { updateMapBR(); updateRanking(); }
+  if (t === 'concentracao') updateConcentracao();
   const al = document.getElementById('ano-label');
   if (al) al.textContent = getAno();
 }
