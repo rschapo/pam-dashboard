@@ -50,6 +50,10 @@ let maq_mun;
 let CRED = null, credLoaded = false, credLoading = false;
 let cred_mun;
 
+// CAR (SICAR) — imóveis rurais cadastrados e território declarado
+let CAR = null, carLoaded = false, carLoading = false;
+let car_mun, car_razoes = {};
+
 // Unidade de cada categoria pecuária (rebanho = sempre cabeças; produção varia)
 const PEC_UNITS = {
   'Bovino': 'cab.', 'Bubalino': 'cab.', 'Caprino': 'cab.', 'Codornas': 'cab.', 'Equino': 'cab.',
@@ -68,6 +72,7 @@ let state = {
   metricaTerra: 'natural',
   metricaMaq: 'trat',
   metricaCred: 'total',
+  metricaCar: 'imov',
   ufSel: '', microSel: '', munSel: '', anoIdx: 0
 };
 
@@ -78,6 +83,7 @@ function curMetrica() {
   if (state.domain === 'terra') return state.metricaTerra;
   if (state.domain === 'maquinas') return state.metricaMaq;
   if (state.domain === 'credito') return state.metricaCred;
+  if (state.domain === 'car') return state.metricaCar;
   return state.metricaAgro;
 }
 function getActiveCategoriasPec() { return state.tipoPec === 'Rebanho' ? rebanho_categorias : producao_categorias; }
@@ -140,18 +146,25 @@ function getMicKey() {
   return state.grupoId === 'COL' ? 'COL' : state.grupoId; // ALL, TEM, PER, COL
 }
 
-// ─── Domínios de fonte única (economia, uso do solo, tratores, crédito) ───
+// ─── Domínios de fonte única ───
 // Só existem em granularidade municipal: estado e microrregião são somados na
-// hora. Razões (PIB per capita, % agrícola) não podem ser somadas — recompõem-se
-// a partir dos componentes, senão o total do estado vira a soma das taxas.
+// hora. Razões (PIB per capita, % agrícola, território declarado) não podem ser
+// somadas — recompõem-se dos componentes, senão o total do estado vira a soma
+// das taxas. car.json declara as suas próprias; economia as traz aqui.
 const RAZOES_ECON = {
   pc:  { num: 'pib', den: 'pop', fator: 1000 },  // pib em mil R$, per capita em R$
   pct: { num: 'agro', den: 'pib', fator: 1 },
 };
 
 function baseDominioSimples() {
-  return { economia: econ_mun, terra: terra_mun,
-           maquinas: maq_mun, credito: cred_mun }[state.domain] || null;
+  return { economia: econ_mun, terra: terra_mun, maquinas: maq_mun,
+           credito: cred_mun, car: car_mun }[state.domain] || null;
+}
+
+function razoesDoDominio() {
+  if (state.domain === 'economia') return RAZOES_ECON;
+  if (state.domain === 'car') return car_razoes;
+  return {};
 }
 
 let _idsPorUF = null, _idsPorMic = null;
@@ -170,7 +183,7 @@ const _aggCache = new Map();
 function agregarDominioSimples(ids, m) {
   const base = baseDominioSimples();
   if (!base) return 0;
-  const razao = state.domain === 'economia' ? RAZOES_ECON[m] : null;
+  const razao = razoesDoDominio()[m];
   if (razao) {
     let num = 0, den = 0;
     for (const id of ids) {
@@ -235,7 +248,7 @@ function calcMunVal(munId, m, ai) {
   }
   // Fontes de recorte único (sem série histórica): o valor não varia com o ano.
   const base = baseDominioSimples();
-  if (base) return base[munId]?.[m] || 0;
+  if (base) return agregarDominioSimples([munId], m);
   if (state.grupoId && state.grupoId !== 'ALL') {
     const grp = state.grupoId;
     const gd = mun_grp_data[grp];
@@ -279,6 +292,13 @@ function metLabel() {
     if (M === 'trat_p') return `Tratores até 100 cv (${ano})`;
     if (M === 'trat_g') return `Tratores de 100 cv ou mais (${ano})`;
     if (M === 'est') return `Estabelecimentos com trator (${ano})`;
+  }
+  if (state.domain === 'car') {
+    if (M === 'imov') return 'Imóveis rurais cadastrados';
+    if (M === 'area') return 'Área declarada no CAR (ha)';
+    if (M === 'cob') return 'Território declarado no CAR (%)';
+    if (M === 'amed') return 'Área média do imóvel (ha)';
+    if (M === 'sobre') return 'Sobreposição entre cadastros (%)';
   }
   if (state.domain === 'credito') {
     const ano = CRED?.ano || 2024;
@@ -1190,6 +1210,19 @@ const DOMINIOS_SIMPLES = {
     pronto: () => credLoaded, marcar: v => credLoaded = v,
     pendente: () => credLoading, guardar: p => credLoading = p,
   },
+  car: {
+    arquivo: 'car.json', rotulo: 'cadastro ambiental rural',
+    aplicar: d => {
+      CAR = d; car_mun = d.mun || {}; car_razoes = d.razoes || {};
+      const r = d.ressalvas, nota = document.getElementById('car-ressalva');
+      if (r && nota) nota.textContent =
+        `SICAR. Área omitida em ${r.area_omitida} municípios onde o total ` +
+        `declarado excede o território, e o ${r.uf_excluida} ficou de fora ` +
+        `por base incompleta.`;
+    },
+    pronto: () => carLoaded, marcar: v => carLoaded = v,
+    pendente: () => carLoading, guardar: p => carLoading = p,
+  },
 };
 
 function loadDominio(dom) {
@@ -1393,6 +1426,9 @@ function bindEvents() {
   });
   document.getElementById('f-metrica-cred')?.addEventListener('change', e => {
     state.metricaCred = e.target.value; refreshAll();
+  });
+  document.getElementById('f-metrica-car')?.addEventListener('change', e => {
+    state.metricaCar = e.target.value; refreshAll();
   });
   document.querySelectorAll('.dom-btn').forEach(btn => btn.addEventListener('click', () => {
     switchDomain(btn.dataset.dom);

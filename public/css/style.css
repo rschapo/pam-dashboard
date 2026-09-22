@@ -49,6 +49,7 @@ body:not([data-domain="economia"])     .dom-economia     { display: none !import
 body:not([data-domain="terra"])        .dom-terra        { display: none !important; }
 body:not([data-domain="maquinas"])     .dom-maquinas     { display: none !important; }
 body:not([data-domain="credito"])      .dom-credito      { display: none !important; }
+body:not([data-domain="car"])          .dom-car          { display: none !important; }
 
 /* Fontes de recorte único (Censo 2017, SICOR): repetir o mesmo valor ao longo
    da linha do tempo sugeriria uma estabilidade que o dado não afirma. */

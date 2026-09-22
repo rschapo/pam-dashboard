@@ -54,6 +54,7 @@
       <button class="dom-btn" data-dom="terra">🗺️ Uso do Solo</button>
       <button class="dom-btn" data-dom="maquinas">🚜 Tratores</button>
       <button class="dom-btn" data-dom="credito">💰 Crédito</button>
+      <button class="dom-btn" data-dom="car">🌳 CAR</button>
     </div>
 
     <div class="sidebar-section-title">Indicadores</div>
@@ -126,6 +127,18 @@
         <option value="area">Área financiada (ha)</option>
       </select>
       <div class="filter-note">BCB/SICOR, ano-safra 2024</div>
+    </div>
+
+    <div class="filter-block dom-car">
+      <label>Métrica</label>
+      <select id="f-metrica-car">
+        <option value="imov" selected>Imóveis rurais cadastrados</option>
+        <option value="area">Área declarada (ha)</option>
+        <option value="cob">Território declarado (%)</option>
+        <option value="amed">Área média do imóvel (ha)</option>
+        <option value="sobre">Sobreposição entre cadastros (%)</option>
+      </select>
+      <div class="filter-note" id="car-ressalva">SICAR — Cadastro Ambiental Rural</div>
     </div>
 
     <div class="filter-block">
