@@ -137,9 +137,24 @@ def main():
     out = out.reset_index()
     out["uf"] = uf
     out["metodo"] = "dissolve+recorte" if args.recortar else "dissolve"
+
+    # Cada camada leva dezenas de minutos, então normalmente se roda uma por vez.
+    # Sem mesclar, a rodada seguinte apagaria as anteriores.
     alvo = GEO / f"car_ambiental_dissolve_{uf}"
+    anterior = alvo.with_suffix(".parquet")
+    if anterior.exists():
+        velho = pd.read_parquet(anterior)
+        novas = [c for c in out.columns if c.endswith("_ha")]
+        velho = velho.drop(columns=[c for c in novas if c in velho.columns])
+        out = velho.drop(columns=["uf", "metodo"], errors="ignore").merge(
+            out, on="cod_municipio", how="outer")
+        out["uf"] = uf
+        out["metodo"] = "dissolve+recorte" if args.recortar else "dissolve"
+    colunas = ["cod_municipio"] + sorted(c for c in out.columns if c.endswith("_ha"))
+    out = out[colunas + ["uf", "metodo"]]
     save_table(out, alvo)
-    print(f"[CAR dissolve/{uf}] {len(out)} municípios -> {alvo}.parquet")
+    print(f"[CAR dissolve/{uf}] {len(out)} municípios · "
+          f"{', '.join(c[:-3] for c in colunas[1:])} -> {alvo}.parquet")
 
 
 if __name__ == "__main__":
