@@ -38,6 +38,10 @@ let pevs_est_data, pevs_mic_data, pevs_mun_data;
 let ECON = null, econLoaded = false, econLoading = false;
 let econ_mun, econ_uf;
 
+// TERRA (Mapbiomas) — carregado sob demanda ao abrir o domínio Uso do Solo
+let TERRA = null, terraLoaded = false, terraLoading = false;
+let terra_mun;
+
 // Unidade de cada categoria pecuária (rebanho = sempre cabeças; produção varia)
 const PEC_UNITS = {
   'Bovino': 'cab.', 'Bubalino': 'cab.', 'Caprino': 'cab.', 'Codornas': 'cab.', 'Equino': 'cab.',
@@ -53,6 +57,7 @@ let state = {
   metricaPec: 'q', tipoPec: 'Rebanho', categoriaPec: '',
   metricaSil: 'v', tipoSil: 'Silvicultura', categoriaSil: '',
   metricaEcon: 'pib',
+  metricaTerra: 'natural',
   ufSel: '', microSel: '', munSel: '', anoIdx: 0
 };
 
@@ -60,6 +65,7 @@ function curMetrica() {
   if (state.domain === 'pecuaria') return state.metricaPec;
   if (state.domain === 'silvicultura') return state.metricaSil;
   if (state.domain === 'economia') return state.metricaEcon;
+  if (state.domain === 'terra') return state.metricaTerra;
   return state.metricaAgro;
 }
 function getActiveCategoriasPec() { return state.tipoPec === 'Rebanho' ? rebanho_categorias : producao_categorias; }
@@ -163,6 +169,10 @@ function calcMunVal(munId, m, ai) {
     const d = econ_mun?.[munId]; if (!d) return 0;
     return d[m] || 0;
   }
+  if (state.domain === 'terra') {
+    const d = terra_mun?.[munId]; if (!d) return 0;
+    return d[m] || 0;
+  }
   if (state.grupoId && state.grupoId !== 'ALL') {
     const grp = state.grupoId;
     const gd = mun_grp_data[grp];
@@ -191,6 +201,14 @@ function metLabel() {
     if (M === 'agro') return 'PIB Agrícola (mil R$)';
     if (M === 'pc') return 'PIB per Capita (R$)';
     if (M === 'pct') return '% do PIB Agrícola';
+  }
+  if (state.domain === 'terra') {
+    if (M === 'natural') return 'Vegetação Natural (ha)';
+    if (M === 'agri') return 'Agricultura (ha)';
+    if (M === 'past') return 'Pastagem (ha)';
+    if (M === 'urban') return 'Urbano (ha)';
+    if (M === 'agua') return 'Água (ha)';
+    if (M === 'outros') return 'Outros (ha)';
   }
   if (M === 'p') return 'Produção (ton)';
   if (M === 'a') return 'Área Colhida (ha)';
@@ -1093,12 +1111,37 @@ function loadEcon() {
   return econLoading;
 }
 
+function loadTerra() {
+  if (terraLoaded) return Promise.resolve();
+  if (terraLoading) return terraLoading;
+  const btn = document.querySelector('.dom-btn[data-dom="terra"]');
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
+  terraLoading = fetch('data/mapbiomas_mun.json')
+    .then(r => r.json())
+    .then(d => {
+      TERRA = d;
+      terra_mun = d.mun || {};
+      terraLoaded = true;
+    })
+    .catch(e => {
+      console.error('Erro ao carregar mapbiomas_mun.json', e);
+      alert('Não foi possível carregar os dados de uso do solo.');
+    })
+    .finally(() => {
+      if (btn) { btn.textContent = original; btn.disabled = false; }
+      terraLoading = null;
+    });
+  return terraLoading;
+}
+
 function switchDomain(dom) {
   if (dom === state.domain) return;
   const proceed = () => {
     if (dom === 'pecuaria' && !ppmLoaded) return;       // load falhou, permanece no domínio atual
     if (dom === 'silvicultura' && !pevsLoaded) return;  // idem
     if (dom === 'economia' && !econLoaded) return;
+    if (dom === 'terra' && !terraLoaded) return;
     state.domain = dom;
     document.body.dataset.domain = dom;
     document.querySelectorAll('.dom-btn').forEach(b => b.classList.toggle('active', b.dataset.dom === dom));
@@ -1115,6 +1158,7 @@ function switchDomain(dom) {
   if (dom === 'pecuaria' && !ppmLoaded) loadPPM().then(proceed);
   else if (dom === 'silvicultura' && !pevsLoaded) loadPEVS().then(proceed);
   else if (dom === 'economia' && !econLoaded) loadEcon().then(proceed);
+  else if (dom === 'terra' && !terraLoaded) loadTerra().then(proceed);
   else proceed();
 }
 
@@ -1260,6 +1304,9 @@ function bindEvents() {
   });
   document.getElementById('f-metrica-econ')?.addEventListener('change', e => {
     state.metricaEcon = e.target.value; refreshAll();
+  });
+  document.getElementById('f-metrica-terra')?.addEventListener('change', e => {
+    state.metricaTerra = e.target.value; refreshAll();
   });
   document.querySelectorAll('.dom-btn').forEach(btn => btn.addEventListener('click', () => {
     switchDomain(btn.dataset.dom);

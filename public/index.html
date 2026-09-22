@@ -51,6 +51,7 @@
       <button class="dom-btn" data-dom="pecuaria">🐄 Pecuária</button>
       <button class="dom-btn" data-dom="silvicultura">🌲 Silvicultura</button>
       <button class="dom-btn" data-dom="economia">📊 Economia</button>
+      <button class="dom-btn" data-dom="terra">🗺️ Uso do Solo</button>
     </div>
 
     <div class="sidebar-section-title">Indicadores</div>
@@ -88,6 +89,18 @@
         <option value="agro">PIB Agrícola</option>
         <option value="pc">PIB per Capita</option>
         <option value="pct">% Agrícola</option>
+      </select>
+    </div>
+
+    <div class="filter-block dom-terra">
+      <label>Categoria</label>
+      <select id="f-metrica-terra">
+        <option value="natural" selected>Vegetação Natural</option>
+        <option value="agri">Agricultura</option>
+        <option value="past">Pastagem</option>
+        <option value="urban">Urbano</option>
+        <option value="agua">Água</option>
+        <option value="outros">Outros</option>
       </select>
     </div>
 
