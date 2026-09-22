@@ -1,43 +1,204 @@
 {
   "dataset": "raw_car",
   "source": "SICAR — CAR (por UF)",
-  "extraction_date": "2026-07-28",
-  "reference_date": "2026-07-28",
-  "source_files": [],
-  "source_hashes": [],
+  "extraction_date": "2026-09-22",
+  "reference_date": "2026-09-22",
+  "source_files": [
+    "car_perimetro_imoveis_ro.geojson",
+    "APPS_1.shp",
+    "AREA_CONSOLIDADA_1.shp",
+    "AREA_IMOVEL_1.shp",
+    "RESERVA_LEGAL_1.shp",
+    "USO_RESTRITO_1.shp",
+    "VEGETACAO_NATIVA_1.shp",
+    "car_perimetro_imoveis_am.geojson",
+    "car_perimetro_imoveis_rr.geojson",
+    "car_perimetro_imoveis_pa.geojson",
+    "car_perimetro_imoveis_ap.geojson",
+    "car_perimetro_imoveis_to.geojson",
+    "car_perimetro_imoveis_ma.geojson",
+    "car_perimetro_imoveis_pi.geojson",
+    "car_perimetro_imoveis_ce.geojson",
+    "car_perimetro_imoveis_rn.geojson",
+    "car_perimetro_imoveis_pb.geojson",
+    "car_perimetro_imoveis_pe.geojson",
+    "car_perimetro_imoveis_al.geojson",
+    "car_perimetro_imoveis_se.geojson",
+    "car_perimetro_imoveis_ba.geojson",
+    "car_perimetro_imoveis_mg.geojson",
+    "car_perimetro_imoveis_es.geojson",
+    "car_perimetro_imoveis_rj.geojson",
+    "car_perimetro_imoveis_sp.geojson",
+    "car_perimetro_imoveis_pr.geojson",
+    "car_perimetro_imoveis_sc.geojson",
+    "car_perimetro_imoveis_rs.geojson",
+    "car_perimetro_imoveis_ms.geojson",
+    "car_perimetro_imoveis_mt.geojson",
+    "car_perimetro_imoveis_go.geojson",
+    "car_perimetro_imoveis_df.geojson"
+  ],
+  "source_hashes": [
+    {
+      "file": "car_perimetro_imoveis_ro.geojson",
+      "sha256": "9b0ac66bc9eb915ae1911cc727bbee1410ef523c5e8f73b60d99297169ee6c8c"
+    },
+    {
+      "file": "APPS_1.shp",
+      "sha256": "516650b19b95cfed438bf9053615aba3bfd064e0ba2f650aeab877c17dd9d620"
+    },
+    {
+      "file": "AREA_CONSOLIDADA_1.shp",
+      "sha256": "2470fa22e5e73c233ab202852befbff1c8b25434d2ca6062560a686442fe704c"
+    },
+    {
+      "file": "AREA_IMOVEL_1.shp",
+      "sha256": "be1e15c615645f09ec7922c8404fb9d5668f25f976addf2ff176d451d53500d3"
+    },
+    {
+      "file": "RESERVA_LEGAL_1.shp",
+      "sha256": "9605a608f8c75ec439e997d2f9bb192c6c91010ddd283c5459b8fc0f4ece61f9"
+    },
+    {
+      "file": "USO_RESTRITO_1.shp",
+      "sha256": "8d2ac3a8e3b318ccd945814d8fd3d7f4b5c9c6b0fb978cf6d36e74f2cd1d8b1f"
+    },
+    {
+      "file": "VEGETACAO_NATIVA_1.shp",
+      "sha256": "ca692c0b58e25810ed40de769a0419befb2b8b68589f2fece33ac28b05a42aea"
+    },
+    {
+      "file": "car_perimetro_imoveis_am.geojson",
+      "sha256": "1fe652e590b37af86c575cb516b16f4b88c3bdc520ba8ef60ad629ab028617b5"
+    },
+    {
+      "file": "car_perimetro_imoveis_rr.geojson",
+      "sha256": "70d1a221baeb1f1e66bd819e84e2ebe1ee959566a824641b078f2add58f26f7d"
+    },
+    {
+      "file": "car_perimetro_imoveis_pa.geojson",
+      "sha256": "f32878caff8ec90c9c346f6b00207363a96603155dbf66241bb11df56365e6a8"
+    },
+    {
+      "file": "car_perimetro_imoveis_ap.geojson",
+      "sha256": "c1f02c4d25fbf0291296477c42d7fd1c43ddba525b5ac4ba30aa51429e46a565"
+    },
+    {
+      "file": "car_perimetro_imoveis_to.geojson",
+      "sha256": "fd395a30b4b76cd638a04f4802f84d72cf5114752b484fe0b2bbc64156fece3b"
+    },
+    {
+      "file": "car_perimetro_imoveis_ma.geojson",
+      "sha256": "749428b1154040b5013d1969f51d2ebcf55fe5d64f5a3e5fa36e7e1055cc5275"
+    },
+    {
+      "file": "car_perimetro_imoveis_pi.geojson",
+      "sha256": "02cbcd6826f99deceb3bcf940b40c3dbc96880a801b3706aad7532db9f510b4a"
+    },
+    {
+      "file": "car_perimetro_imoveis_ce.geojson",
+      "sha256": "65dda76a9f8af43c0e758dbcbf5d7c6eedcd6b6edc6a75eab047896fc6322fa2"
+    },
+    {
+      "file": "car_perimetro_imoveis_rn.geojson",
+      "sha256": "de74ecda169e56fd58cd257db16f3d84665700689c59c07f28c9cd2e1c5f22cf"
+    },
+    {
+      "file": "car_perimetro_imoveis_pb.geojson",
+      "sha256": "383ff89e62cde2522cd6ec8eca024e0ccb2428eaf0ab1c0f3ddb40905d9d1b71"
+    },
+    {
+      "file": "car_perimetro_imoveis_pe.geojson",
+      "sha256": "e0dfd9d536d25e068309cf756709b7be5bcb5de4590869a16724354d2ec1e47e"
+    },
+    {
+      "file": "car_perimetro_imoveis_al.geojson",
+      "sha256": "11aa1399425a80f9d34cb12b1c338f87e3cecec3f22d3ee50e880acafd34d058"
+    },
+    {
+      "file": "car_perimetro_imoveis_se.geojson",
+      "sha256": "e525523f98b18fc353bf2140ca92d0c0881df23d31d27c755dc6efb33a44b21a"
+    },
+    {
+      "file": "car_perimetro_imoveis_ba.geojson",
+      "sha256": "cd80bdc27a9a8867ee59e97f47a2d7bf649181fcac573f20f1a4899bd95c4d3f"
+    },
+    {
+      "file": "car_perimetro_imoveis_mg.geojson",
+      "sha256": "9d37e5005cc88b3c3f3c259c2a35f44bdc38bc08c3315d7cab64946d5268394f"
+    },
+    {
+      "file": "car_perimetro_imoveis_es.geojson",
+      "sha256": "f7dcda4635f7e4d24cbf193b50964cfa268f699db0c25db82c9ccc7d58cff9eb"
+    },
+    {
+      "file": "car_perimetro_imoveis_rj.geojson",
+      "sha256": "ec4d176c6a6626613a3f835a04f374ebd43e34e8b3e75fe6c9cdbd4be855a47d"
+    },
+    {
+      "file": "car_perimetro_imoveis_sp.geojson",
+      "sha256": "91176594419648a8543c9dd475a96925d55f254a6fb2be0e982661203a63a86c"
+    },
+    {
+      "file": "car_perimetro_imoveis_pr.geojson",
+      "sha256": "cf4e170fc909fb8f00ae6a04526db2de4c960e59cca4adc0bd107f6ac953d4af"
+    },
+    {
+      "file": "car_perimetro_imoveis_sc.geojson",
+      "sha256": "743dbd8fd474ff15403e9a6a1ab1fba92aea46face37529bffcef20c9c3de3f2"
+    },
+    {
+      "file": "car_perimetro_imoveis_rs.geojson",
+      "sha256": "dabe2cbf54b79012f71ecd1ae4b50626534d772477344cf87d5da93fe30fbef4"
+    },
+    {
+      "file": "car_perimetro_imoveis_ms.geojson",
+      "sha256": "21f39448975b322219cc18c014c426170c5e50177a75dcea75408bdf331bb389"
+    },
+    {
+      "file": "car_perimetro_imoveis_mt.geojson",
+      "sha256": "3e26eb8b21f635439eeb9439ba9c96aac8019ea08c18489247cd74b947b50471"
+    },
+    {
+      "file": "car_perimetro_imoveis_go.geojson",
+      "sha256": "b2d4e99e6d436c61918b2bc344cf5167e533d8e32cbca6f3fae7f9a9a33a0d69"
+    },
+    {
+      "file": "car_perimetro_imoveis_df.geojson",
+      "sha256": "ce98572b8a55d1eb4dbf09e18593b28a003f3ed64da6fcf4e3710f73fd3c7052"
+    }
+  ],
   "script_version": "0.1.0",
   "row_count": 0,
   "municipality_count": 0,
   "rejected_rows": 0,
   "warnings": [
-    "UF sem bruto: RO",
-    "UF sem bruto: AC",
-    "UF sem bruto: AM",
-    "UF sem bruto: RR",
-    "UF sem bruto: PA",
-    "UF sem bruto: AP",
-    "UF sem bruto: TO",
-    "UF sem bruto: MA",
-    "UF sem bruto: PI",
-    "UF sem bruto: CE",
-    "UF sem bruto: RN",
-    "UF sem bruto: PB",
-    "UF sem bruto: PE",
-    "UF sem bruto: AL",
-    "UF sem bruto: SE",
-    "UF sem bruto: BA",
-    "UF sem bruto: MG",
-    "UF sem bruto: ES",
-    "UF sem bruto: RJ",
-    "UF sem bruto: SP",
-    "UF sem bruto: PR",
-    "UF sem bruto: SC",
-    "UF sem bruto: RS",
-    "UF sem bruto: MS",
-    "UF sem bruto: MT",
-    "UF sem bruto: GO",
-    "UF sem bruto: DF"
+    "UF sem camada ambiental: RO",
+    "UF sem camada ambiental: AM",
+    "UF sem camada ambiental: RR",
+    "UF sem camada ambiental: PA",
+    "UF sem camada ambiental: AP",
+    "UF sem camada ambiental: TO",
+    "UF sem camada ambiental: MA",
+    "UF sem camada ambiental: PI",
+    "UF sem camada ambiental: CE",
+    "UF sem camada ambiental: RN",
+    "UF sem camada ambiental: PB",
+    "UF sem camada ambiental: PE",
+    "UF sem camada ambiental: AL",
+    "UF sem camada ambiental: SE",
+    "UF sem camada ambiental: BA",
+    "UF sem camada ambiental: MG",
+    "UF sem camada ambiental: ES",
+    "UF sem camada ambiental: RJ",
+    "UF sem camada ambiental: SP",
+    "UF sem camada ambiental: PR",
+    "UF sem camada ambiental: SC",
+    "UF sem camada ambiental: RS",
+    "UF sem camada ambiental: MS",
+    "UF sem camada ambiental: MT",
+    "UF sem camada ambiental: GO",
+    "UF sem camada ambiental: DF"
   ],
   "output_files": [],
-  "generated_at": "2026-07-28T22:19:11+00:00"
+  "generated_at": "2026-09-22T08:03:15-04:00"
 }

@@ -1,7 +1,7 @@
 {
   "dataset": "car_ambiental_AC",
   "source": "SICAR — camadas ambientais",
-  "extraction_date": "2026-07-30",
+  "extraction_date": "2026-09-22",
   "reference_date": null,
   "source_files": [],
   "source_hashes": [],
@@ -19,5 +19,5 @@
       "bytes": 9126
     }
   ],
-  "generated_at": "2026-07-30T20:29:42-04:00"
+  "generated_at": "2026-09-22T08:03:30-04:00"
 }

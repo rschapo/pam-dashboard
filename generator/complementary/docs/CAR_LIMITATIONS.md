@@ -38,6 +38,30 @@ digitalização, projeção, atualização). Mantemos as duas (`area_declarada_h
 `area_geometrica_ha`) e um indicador de divergência; **não** substituímos uma pela
 outra. Áreas são calculadas em projeção métrica (EPSG:5880), nunca em graus.
 
+## Camadas ambientais: a soma bruta não fecha com o território
+
+`process_car_layers.py` soma, por município, a área de cada camada tal como declarada,
+sem dissolver sobreposições e sem recortar pela malha municipal — o município vem do
+código IBGE embutido em `cod_imovel`, então a geometria inteira do imóvel é contada no
+município da inscrição. O resultado **não** pode ser lido como cobertura do território.
+
+Medido no Acre, única UF com as cinco camadas presentes (2026-09):
+
+| município | área consolidada | vegetação nativa | APP | soma |
+|-----------|------------------|------------------|-----|------|
+| Xapuri | 40,8% | **372,1%** | 8,4% | **421,3%** |
+| Acrelândia | 97,9% | 51,1% | 10,1% | 159,1% |
+| Sena Madureira | 16,6% | 135,5% | 6,2% | 158,4% |
+
+Onze dos 22 municípios passam de 100% da área municipal. Para comparar, o MapBiomas
+fecha em Acrelândia com 181.028 ha contra 181.161 ha de área municipal — diferença de
+0,07%, porque parte de um raster sem sobreposição.
+
+Antes de publicar qualquer indicador dessas camadas é preciso dissolver cada tema
+(união geométrica, eliminando dupla contagem entre cadastros) e recortar pela malha
+municipal. Enquanto isso não for feito, os campos `*_ha` e `percentual_*` servem para
+inspeção da base, não para leitura como proporção do município.
+
 ## Diferenças entre UFs
 
 O download é por UF e nem todas disponibilizam as mesmas camadas ambientais (área
