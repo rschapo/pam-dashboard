@@ -114,13 +114,98 @@ def dissolver_camada(uf: str, camada: str, recortar: bool) -> pd.Series | None:
     return pd.Series(areas, name=f"{camada}_ha").rename_axis("cod_municipio")
 
 
+def pendencias() -> dict[str, list[str]]:
+    """UFs com camada extraída e ainda não medida, na ordem do mais barato."""
+    from common import UFS
+    out = {}
+    for uf in UFS:
+        base = RAW_DIR / "car" / uf
+        if not base.exists():
+            continue
+        extraidas = [c for c in CAMADAS if (base / c).exists() and any((base / c).rglob("*.shp"))]
+        if not extraidas:
+            continue
+        medidas = set()
+        alvo = GEO / f"car_ambiental_dissolve_{uf}.parquet"
+        if alvo.exists():
+            medidas = {c[:-3] for c in pd.read_parquet(alvo).columns if c.endswith("_ha")}
+        falta = [c for c in extraidas if c not in medidas]
+        if falta:
+            # Peso do shapefile aproxima o custo; começar pelas leves devolve
+            # resultado cedo e deixa as caras por último.
+            falta.sort(key=lambda c: sum(f.stat().st_size for f in (base / c).rglob("*.shp")))
+            out[uf] = falta
+    return out
+
+
+def rodar_pendentes(recortar: bool):
+    pend = pendencias()
+    if not pend:
+        print("[CAR dissolve] nada pendente: tudo que está extraído já foi medido.")
+        return
+    total = sum(len(v) for v in pend.values())
+    print(f"[CAR dissolve] {total} camada(s) pendente(s) em {len(pend)} UF(s): "
+          f"{', '.join(pend)}")
+    feito = 0
+    t0 = time.time()
+    for uf, camadas in pend.items():
+        for camada in camadas:
+            feito += 1
+            print(f"\n=== [{feito}/{total}] {uf} · {camada} "
+                  f"({(time.time() - t0) / 60:.0f} min decorridos) ===")
+            try:
+                salvar_camada(uf, camada, recortar)
+            except Exception as e:
+                # Uma UF problemática não pode derrubar a fila inteira.
+                print(f"  [X] {uf}/{camada} falhou: {type(e).__name__}: {e}")
+    print(f"\n[CAR dissolve] fila concluída em {(time.time() - t0) / 3600:.1f} h.")
+
+
+def salvar_camada(uf: str, camada: str, recortar: bool):
+    """Mede uma camada e mescla no parquet da UF."""
+    s = dissolver_camada(uf, camada, recortar)
+    if s is None:
+        print(f"  {camada}: ausente em data/raw/car/{uf}/")
+        return
+    out = s.to_frame().reset_index()
+    out["uf"] = uf
+    out["metodo"] = "dissolve+recorte" if recortar else "dissolve"
+    _gravar(out, uf, recortar)
+
+
+def _gravar(out, uf: str, recortar: bool):
+    alvo = GEO / f"car_ambiental_dissolve_{uf}"
+    anterior = alvo.with_suffix(".parquet")
+    if anterior.exists():
+        velho = pd.read_parquet(anterior)
+        novas = [c for c in out.columns if c.endswith("_ha")]
+        velho = velho.drop(columns=[c for c in novas if c in velho.columns])
+        out = velho.drop(columns=["uf", "metodo"], errors="ignore").merge(
+            out, on="cod_municipio", how="outer")
+        out["uf"] = uf
+        out["metodo"] = "dissolve+recorte" if recortar else "dissolve"
+    colunas = ["cod_municipio"] + sorted(c for c in out.columns if c.endswith("_ha"))
+    out = out[colunas + ["uf", "metodo"]]
+    save_table(out, alvo)
+    print(f"  [{uf}] {len(out)} municípios · "
+          f"{', '.join(c[:-3] for c in colunas[1:])}")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--uf", required=True)
+    ap.add_argument("--uf")
     ap.add_argument("--camadas", nargs="*", default=CAMADAS)
     ap.add_argument("--recortar", action="store_true",
                     help="intercepta com a malha municipal além de dissolver")
+    ap.add_argument("--pendentes", action="store_true",
+                    help="mede tudo que está extraído e ainda não foi medido")
     args = ap.parse_args()
+
+    if args.pendentes:
+        rodar_pendentes(args.recortar)
+        return
+    if not args.uf:
+        raise SystemExit("informe --uf ou use --pendentes")
     uf = args.uf.upper()
 
     print(f"[CAR dissolve/{uf}] camadas: {', '.join(args.camadas)}")
