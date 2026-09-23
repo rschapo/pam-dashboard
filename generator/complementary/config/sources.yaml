@@ -103,6 +103,27 @@ fontes:
     nota_estadual: "UFs podem ter sistema próprio (ex.: SIMCAR/SP, SICAR estaduais)."
     verificar: true
 
+  inema_cefir:
+    instituicao: "Inema — Instituto do Meio Ambiente e Recursos Hídricos da Bahia"
+    descricao: >-
+      CEFIR, o cadastro ambiental da Bahia. Complementa o SICAR da Bahia com o que
+      ele não repassa: área de atividades desenvolvidas (no lugar da área
+      consolidada, que o CEFIR não tem para imóvel privado) e áreas degradadas em
+      reserva legal e APP. Ver docs/CAR_LIMITATIONS.md.
+    endpoint: "http://geoserver.inema.ba.gov.br/geoserver/wfs"   # HTTPS não responde
+    espaco: "Vetor_Recortes_Tematicos"
+    camadas:
+      - cefir_imovel_rural_atividade_desenvolvida_inema
+      - cefir_imovel_rural_area_degradada_reserva_legal_inema
+      - cefir_imovel_rural_area_degradada_app_inema
+      - cefir_imovel_rural_limite_inema   # só ide_imovel, numero_car e status
+    formato_original: "WFS 2.0 — SHAPE-ZIP, JSON ou CSV"
+    download_mode: automatico    # WFS público, sem CAPTCHA
+    atualizacao: "diária, segundo o catálogo de metadados da IDE-BA"
+    destino_raw: "data/raw/cefir/BA/"
+    privacidade: "A camada de limites traz nome de imóvel e proprietário; não pedir esses campos."
+    verificar: true
+
   mapbiomas:
     instituicao: "MapBiomas (rede colaborativa)"
     descricao: "Uso e cobertura do solo — estatísticas municipais e raster (coleção)"

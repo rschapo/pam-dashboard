@@ -1,0 +1,237 @@
+{
+  "dataset": "raw_cefir_ba",
+  "source": "Inema/CEFIR — WFS http://geoserver.inema.ba.gov.br/geoserver/wfs",
+  "extraction_date": "2026-09-23",
+  "reference_date": "2026-09-23",
+  "source_files": [
+    "limite_atributos.csv",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+    "cefir_imovel_rural_area_degradada_reserva_legal_inemaPolygon.shp",
+    "cefir_imovel_rural_area_degradada_app_inemaPolygon.shp"
+  ],
+  "source_hashes": [
+    {
+      "file": "limite_atributos.csv",
+      "sha256": "51385c94799cbbfe7787c14d6a66531845ba3d13f87297b13cbc47130f31c354"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "14cd73e0674d68a3662de0bdbc2d41948e3d66ec8ab71b2bd0f3f41df550bd3a"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "0656e4f2f9c747c3ab69e8b28ac055a19cfdb16b9e3dfc06d7f4280249f0da12"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "9eec55ae2daf41c69d638168962412c380f4fae3f71dcaeeb7648404e467620a"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "fed8e099d5c438e345b73ca767c38c3404eebd9053f44d467e4a6039fef5590a"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "b189b043de2ce73b72675eaefa3669a69b700c2247f8ae784537a17c2edb8084"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "d203e921cfdfed8dd462fb53d4b417c5a8fdfb19cf6a7523135b4d8cf914e7ef"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "3e5b0a52fcfebe67c681f9caa28110d78efe8f72d28232a9ba560a667989c496"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "a86905236cbd64bff4ad7e07cb5e4e4279888a4dfdcde1044a50ab09e892c06a"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "19acc178bb34b34c385b864699ffa6c081f9803d0889b4cda40e82ffb07ce32b"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "78693bd24504a8e1d00faddfba2e1545bfb9e117d02798d48ffe262a51591c66"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "b4f9a54e452c661d419cefaa598d3a79df1c08d8d4b4ac35b481d0f498ab2342"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "49b88e778beaac66d9710e78ec22626e155c63d6dbe51ddac5afa7901777c9ca"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "55c024549f969993573b45c2f2773afc0e113accf3a7ea4c1e7aa6f3934e4890"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "83e617319cf3b0ac235b522ca0e9b37b9fabb157641812cac1054d724843c145"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "61ba935bf04b1a18a6d1119b2278fc35b477126b5e0d860b446b2fdf44b6437c"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "3c8aff9d753a36ebaf723ab3174325c9bd6214c8ada0da084e28e343b5b86f3a"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "ace7dc99e7732853302ba20ac0d9b7970fc232418fd31c7c9adff0c5a5fbf3b5"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "f1ff006fcf51584353bd75da240c6f05c77d58d21391e8cbf29bc3eb0341d0d5"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "9b64e6258479018c4f3cec19b8bacefe5ec6f5e7a322b7f93eb42df31df51528"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "690e107d0a4a2ae4965cf72de884f54e0c41a64ef335e15deffbddeef0907e32"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "b9bb78c29e42edfb742fc2276a6077b6611c5af35acffe214886af0a989dc770"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "0920c0e6113f2eab49071769cd7de4c8fd0409399d4638517bcec8a2c71f9d97"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "841f9e4583fdd6b7cdf8f6640937cb2ad87a8fbefbfff57a55e63c2937577868"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "89c7df96c2237503ff34df6b05e7b04d00d0d07555e56ce4700eb23085c080b8"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "fe8029f2416a9d2ebc0f5d0debb59ae8e1cef3520d624eb05c40dd553baf1eae"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "1e75fbbe34207bd539d18aad44250df4dd4b38e16a30ab169acf66396c47406f"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "165b94389e772f73b3c12af34d38240ebde9873821f64fa1d090914772b94170"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "664b6daa9419b90ee77446a227ef66733c761d0c748bd7c5dc4c6789e26eee37"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "09a3507dc0def0e1bc652ac0c8ed70d819bc8f9f068ef8b16fa8f9b2fb17ba0b"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "34fb9483614a017ac9d11dfe80d3bc627752999216f660f185058dbff4cd1932"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "0a2636c064cc458b600e6d1f50fb4b7cff43c714cec4839969f2f64dd7907efc"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "8397bd27ebcc4cb5a36cd73d5427a2374403d5dded49977a4f8f61209422674e"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "fc49b263b6806e3726e1a076e21b2e14d9c507b4aee3ee32201a8392d462da8c"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "8fbd3ff219c2575784433df5d255b26219d24ce3ab41397e3624635654ae7c3d"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "3a82ece9bfa7c279122482206596ce16de3b0b5f5594893b703792d91f699323"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "d68380bb153e573fe2251a51de9e8d1fa266a050cdb565b29966a82837fade94"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "8a8aa7427e0353e966529d28455e3c4337677bce68da5b3fe70027e332e6eba4"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "62ebba54d4ace6125fe318157ac1ab33ebcee56243c57f4994545fa56a98972a"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "0e6728a264b2e9f08d72730a584c7b1444f504d431b80cdfb87d73b11a4a4392"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "1e79f0d2747219719f91fbe5e06b1911dad16ec51e8a18bc1d65133207436da9"
+    },
+    {
+      "file": "cefir_imovel_rural_atividade_desenvolvida_inemaPolygon.shp",
+      "sha256": "798a7f56118acf4f3535c736f1e4933c4393cce5b7b9df2122c52508f7789c09"
+    },
+    {
+      "file": "cefir_imovel_rural_area_degradada_reserva_legal_inemaPolygon.shp",
+      "sha256": "adc8bc31b5539f0823846ba25c6d1b71f6bd0be9b61e9dece7c08dc68e0f91a3"
+    },
+    {
+      "file": "cefir_imovel_rural_area_degradada_app_inemaPolygon.shp",
+      "sha256": "4d3f023f49d15bd6ec59026e892f8f59a0a93f130b21c4d8f953906c09d45bad"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 0,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [],
+  "generated_at": "2026-09-23T17:24:54-04:00"
+}
