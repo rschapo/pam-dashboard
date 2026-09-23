@@ -114,21 +114,23 @@ def dissolver_camada(uf: str, camada: str, recortar: bool) -> pd.Series | None:
     return pd.Series(areas, name=f"{camada}_ha").rename_axis("cod_municipio")
 
 
-def pendencias() -> dict[str, list[str]]:
+def pendencias(quais: list[str] | None = None) -> dict[str, list[str]]:
     """UFs com camada extraída e ainda não medida, na ordem do mais barato."""
     from common import UFS
+    alvo = quais or CAMADAS
     out = {}
     for uf in UFS:
         base = RAW_DIR / "car" / uf
         if not base.exists():
             continue
-        extraidas = [c for c in CAMADAS if (base / c).exists() and any((base / c).rglob("*.shp"))]
+        extraidas = [c for c in alvo if (base / c).exists() and any((base / c).rglob("*.shp"))]
         if not extraidas:
             continue
         medidas = set()
-        alvo = GEO / f"car_ambiental_dissolve_{uf}.parquet"
-        if alvo.exists():
-            medidas = {c[:-3] for c in pd.read_parquet(alvo).columns if c.endswith("_ha")}
+        parquet_uf = GEO / f"car_ambiental_dissolve_{uf}.parquet"
+        if parquet_uf.exists():
+            medidas = {c[:-3] for c in pd.read_parquet(parquet_uf).columns
+                       if c.endswith("_ha")}
         falta = [c for c in extraidas if c not in medidas]
         if falta:
             # Peso do shapefile aproxima o custo; começar pelas leves devolve
@@ -138,8 +140,8 @@ def pendencias() -> dict[str, list[str]]:
     return out
 
 
-def rodar_pendentes(recortar: bool):
-    pend = pendencias()
+def rodar_pendentes(recortar: bool, quais: list[str] | None = None):
+    pend = pendencias(quais)
     if not pend:
         print("[CAR dissolve] nada pendente: tudo que está extraído já foi medido.")
         return
@@ -202,7 +204,9 @@ def main():
     args = ap.parse_args()
 
     if args.pendentes:
-        rodar_pendentes(args.recortar)
+        # --camadas restringe a fila; sem ele, mede as cinco.
+        escolhidas = args.camadas if args.camadas != CAMADAS else None
+        rodar_pendentes(args.recortar, escolhidas)
         return
     if not args.uf:
         raise SystemExit("informe --uf ou use --pendentes")
