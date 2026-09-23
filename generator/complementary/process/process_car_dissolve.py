@@ -56,11 +56,45 @@ def _malha_municipal(codigos):
     return m.to_crs(CRS_AREA).set_index("cod_municipio")["geometry"]
 
 
+def _so_area(g):
+    """Parte de área de uma geometria; None se não sobrar área nenhuma."""
+    from shapely import get_parts, union_all
+    if g is None or g.is_empty:
+        return None
+    if g.geom_type in ("Polygon", "MultiPolygon"):
+        return g
+    partes = [p for p in get_parts(g) if p.geom_type in ("Polygon", "MultiPolygon")]
+    if not partes:
+        return None
+    return partes[0] if len(partes) == 1 else union_all(partes)
+
+
+def _sanear(g):
+    """Polígono válido a partir de uma geometria inválida do CAR.
+
+    O make_valid padrão reconstrói pelo traçado e, em polígonos muito
+    degenerados, devolve área misturada com linha — e pode abortar ali mesmo
+    ("Overlay input is mixed-dimension", visto no AM). O método estrutural
+    preserva a leitura de área; buffer(0) é o último recurso. O que sobrar
+    de linha ou ponto é descartado: tem área zero e só quebraria a união.
+    """
+    from shapely import make_valid
+    from shapely.errors import GEOSException
+    try:
+        g = make_valid(g, method="structure", keep_collapsed=False)
+    except GEOSException:
+        try:
+            g = g.buffer(0)
+        except GEOSException:
+            return None
+    return _so_area(g)
+
+
 def dissolver_camada(uf: str, camada: str, recortar: bool) -> pd.Series | None:
     """Área dissolvida (ha) por município, para uma camada."""
     import geopandas as gpd
     import pyogrio
-    from shapely import union_all, make_valid, is_valid
+    from shapely import union_all, is_valid
 
     d = RAW_DIR / "car" / uf / camada
     arquivos = sorted(d.rglob("*.shp")) if d.exists() else []
@@ -91,16 +125,23 @@ def dissolver_camada(uf: str, camada: str, recortar: bool) -> pd.Series | None:
 
     malha = _malha_municipal(por_municipio.keys()) if recortar else None
     areas = {}
-    invalidas = 0
+    invalidas = descartadas = 0
     for i, (cod, geoms) in enumerate(sorted(por_municipio.items()), 1):
         # O CAR traz polígonos com anel invertido e auto-interseção; o GEOS
         # aborta a união ao encontrá-los, então saneia antes de unir.
         saneadas = []
         for g in geoms:
-            if not is_valid(g):
-                g = make_valid(g)
+            if is_valid(g):
+                g = _so_area(g)
+            else:
                 invalidas += 1
+                g = _sanear(g)
+            if g is None:
+                descartadas += 1
+                continue
             saneadas.append(g)
+        if not saneadas:
+            continue
         u = union_all(saneadas)
         if malha is not None and cod in malha.index:
             u = u.intersection(malha.loc[cod])
@@ -110,7 +151,8 @@ def dissolver_camada(uf: str, camada: str, recortar: bool) -> pd.Series | None:
                   f"({time.time() - t0:.0f}s)")
     print(f"  {camada}: {len(areas)} municípios, {sum(areas.values()):,.0f} ha "
           f"dissolvidos de {lidas:,} feições em {time.time() - t0:.0f}s"
-          + (f" ({invalidas:,} geometrias saneadas)" if invalidas else ""))
+          + (f" ({invalidas:,} geometrias saneadas)" if invalidas else "")
+          + (f" ({descartadas:,} sem área, descartadas)" if descartadas else ""))
     return pd.Series(areas, name=f"{camada}_ha").rename_axis("cod_municipio")
 
 
@@ -148,19 +190,37 @@ def rodar_pendentes(recortar: bool, quais: list[str] | None = None):
     total = sum(len(v) for v in pend.values())
     print(f"[CAR dissolve] {total} camada(s) pendente(s) em {len(pend)} UF(s): "
           f"{', '.join(pend)}")
-    feito = 0
+    # A fila roda por horas, quase sempre com a saída redirecionada; um pipe
+    # segura tudo em buffer e uma falha no meio só apareceria no fim. O registro
+    # em arquivo é escrito linha a linha e sobrevive a qualquer forma de disparo.
+    registro = GEO / "car_dissolve_fila.log"
+
+    def anotar(msg: str):
+        linha = f"{time.strftime('%Y-%m-%d %H:%M:%S')}  {msg}"
+        print(linha, flush=True)
+        with open(registro, "a", encoding="utf-8") as f:
+            f.write(linha + "\n")
+
+    anotar(f"fila iniciada: {total} camada(s) em {len(pend)} UF(s): {', '.join(pend)}")
+    feito = falhas = 0
     t0 = time.time()
     for uf, camadas in pend.items():
         for camada in camadas:
             feito += 1
-            print(f"\n=== [{feito}/{total}] {uf} · {camada} "
-                  f"({(time.time() - t0) / 60:.0f} min decorridos) ===")
+            t1 = time.time()
+            anotar(f"[{feito}/{total}] {uf}/{camada} iniciada")
             try:
                 salvar_camada(uf, camada, recortar)
+                anotar(f"[{feito}/{total}] {uf}/{camada} ok em {(time.time() - t1) / 60:.0f} min")
             except Exception as e:
                 # Uma UF problemática não pode derrubar a fila inteira.
-                print(f"  [X] {uf}/{camada} falhou: {type(e).__name__}: {e}")
-    print(f"\n[CAR dissolve] fila concluída em {(time.time() - t0) / 3600:.1f} h.")
+                import traceback
+                falhas += 1
+                anotar(f"[{feito}/{total}] {uf}/{camada} FALHOU: {type(e).__name__}: {e}")
+                with open(registro, "a", encoding="utf-8") as f:
+                    f.write(traceback.format_exc() + "\n")
+    anotar(f"fila concluída em {(time.time() - t0) / 3600:.1f} h, "
+           f"{falhas} falha(s) — ver {registro.name}")
 
 
 def salvar_camada(uf: str, camada: str, recortar: bool):
