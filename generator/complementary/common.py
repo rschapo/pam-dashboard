@@ -33,7 +33,28 @@ from pathlib import Path
 # .../pam-dashboard/generator/complementary/common.py  →  raiz = pam-dashboard
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data"
-RAW_DIR = DATA_DIR / "raw"
+
+
+def _resolver_raw() -> Path:
+    """Onde ficam os dados brutos.
+
+    O CAR sozinho passa de 20 GB e o projeto vive numa pasta sincronizada, onde
+    esse volume não cabe. Por isso o bruto pode morar fora da árvore do projeto:
+    PAM_RAW_DIR no ambiente, ou o caminho escrito em data/raw_dir.txt. Sem
+    nenhum dos dois, segue em data/raw como antes.
+    """
+    env = os.environ.get("PAM_RAW_DIR")
+    if env:
+        return Path(env).expanduser()
+    ponteiro = DATA_DIR / "raw_dir.txt"
+    if ponteiro.exists():
+        destino = Path(ponteiro.read_text(encoding="utf-8").strip()).expanduser()
+        if destino.is_absolute():
+            return destino
+    return DATA_DIR / "raw"
+
+
+RAW_DIR = _resolver_raw()
 INTERIM_DIR = DATA_DIR / "interim"
 PROCESSED_DIR = DATA_DIR / "processed"
 MANIFEST_DIR = DATA_DIR / "manifests"

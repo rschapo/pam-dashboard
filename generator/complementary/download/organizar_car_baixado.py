@@ -10,9 +10,12 @@ arquivo: o nome muda conforme o navegador resolve duplicatas ("(1)", "_2"), e o
 conteúdo não mente. A UF vem do nome do ZIP ou de --uf.
 
 Uso:
-  python organizar_car_baixado.py --origem ~/Downloads
-  python organizar_car_baixado.py --origem ~/Downloads --uf MT   # força a UF
-  python organizar_car_baixado.py --status                        # só o que falta
+  python organizar_car_baixado.py --origem <pasta com os ZIPs>
+  python organizar_car_baixado.py --origem <pasta> --uf MT   # força a UF
+  python organizar_car_baixado.py --status --origem <pasta>  # só o que falta
+
+O destino sai de RAW_DIR, que pode apontar para fora do projeto quando o bruto
+não cabe numa pasta sincronizada (ver common.py).
 
 Não apaga nada da origem: move para <origem>/_organizados/ após extrair, para
 que uma segunda execução não reprocesse o mesmo arquivo.

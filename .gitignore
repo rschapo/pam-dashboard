@@ -63,3 +63,6 @@ Thumbs.db
 # colunas em 23 MB — e esse fica versionado. Regenere o CSV localmente se
 # precisar dele em ferramentas que nao leem parquet.
 data/processed/municipality/mapbiomas_municipio.csv
+
+# Aponta o bruto para fora do projeto (caminho local da maquina)
+data/raw_dir.txt
