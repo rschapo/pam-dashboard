@@ -76,13 +76,48 @@ o conteúdo publicado é que é parcial. Baixar de novo não resolve.
 | BA | APP | 4,6% do território | PI 9,1% | cerca de metade dos vizinhos |
 | PE | APP | 5,5% do território | PB 10,5%, AL 11,7% | cerca de metade; semiárido pode explicar parte |
 
-A Bahia opera cadastro estadual próprio (CEFIR/Inema), e a hipótese mais provável é
-que a integração com o SICAR não traga essas camadas delineadas. A reserva legal da
-Bahia, ao contrário, está com densidade normal.
+### Bahia: o que o CEFIR explica (investigado em 2026-09)
 
-Consequência para o painel: essas combinações de UF e camada não podem aparecer como
-medida — mostrariam a Bahia quase sem área consolidada. Devem sair como "não
-disponível na base nacional" até que venham de outra fonte.
+A Bahia opera cadastro próprio, o CEFIR (Inema), e o SICAR da Bahia é o próprio CEFIR:
+as contagens batem camada por camada (vegetação nativa 150.054 no SICAR contra 149.103
+no CEFIR; reserva legal 1.123.045 contra 1.135.108). O CEFIR não esconde dado a mais.
+O que muda é como ele registra o imóvel.
+
+**Vegetação nativa — diferença de definição, não de cobertura.** No padrão nacional
+as camadas se empilham: no MT, 99,3% da reserva legal também aparece como vegetação
+nativa e 78,3% da APP também. Na Bahia, 0,0% e 3,8%: vegetação nativa, reserva legal
+e APP são fatias disjuntas do imóvel. Só a camada "vegetação nativa" dá 9,0 Mi ha (30%
+do natural do MapBiomas); somada à reserva legal, 17,4 Mi ha (57%); com a APP,
+≈20 Mi ha (≈66%), em linha com MG e PI (~72%). Para a Bahia, a vegetação nativa
+comparável é a união das três camadas — todas já baixadas do SICAR.
+
+**Área consolidada — o CEFIR não tem essa camada para imóvel privado.** Só para
+assentamentos (349 feições) e comunidades tradicionais (8), que é o que o SICAR repassa.
+O que o CEFIR registra para o imóvel é a área de **atividades desenvolvidas**: 817.069
+polígonos, 16,0 Mi ha declarados contra 17,5 Mi ha de agropecuária no MapBiomas (92%).
+Não é o mesmo conceito legal — área consolidada é ocupação anterior a 22/07/2008 —,
+mas é o equivalente produtivo, e deve ser rotulado assim.
+
+Oito registros dessa camada têm área declarada absurda (até 96 milhões de ha, mais que
+o estado) e respondem por 92% da soma declarada bruta; as geometrias deles têm de 0 a
+26 ha. É erro de digitação no campo declarado. A medição geométrica não é afetada.
+
+**APP — sem solução no CEFIR.** O CEFIR tem menos APP que o SICAR (213.596 contra
+391.878 feições). A APP da Bahia segue parcial, assim como a de Pernambuco, que não
+tem relação com o CEFIR.
+
+Acesso: GeoServer público do Inema, WFS em
+`http://geoserver.inema.ba.gov.br/geoserver/wfs` (HTTPS não responde), espaço
+`Vetor_Recortes_Tematicos`, camadas `cefir_imovel_rural_*_inema`, com saída em
+SHAPE-ZIP, JSON ou CSV e paginação por `startIndex`. Sem CAPTCHA. A camada de
+limites traz nome do imóvel e do proprietário; só `ide_imovel` e `numero_car` são
+necessários (o código IBGE do município está embutido no `numero_car`), e só esses
+devem ser pedidos.
+
+Consequência para o painel: a Bahia entra com vegetação nativa composta (as três
+camadas) e com área de atividade produtiva no lugar da área consolidada, ambas
+rotuladas como equivalentes. A APP da Bahia e a de Pernambuco saem como "parcial na
+base nacional".
 
 Método da varredura: feições por imóvel cadastrado em cada UF contra a mediana
 nacional, marcando abaixo de um quinto; os casos marcados foram então confirmados
