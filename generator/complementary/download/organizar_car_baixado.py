@@ -27,7 +27,7 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import RAW_DIR, UFS, UF_NAMES  # noqa: E402
+from common import RAW_DIR, PROCESSED_DIR, UFS, UF_NAMES  # noqa: E402
 
 # Trecho que identifica a camada no nome dos shapefiles de dentro do ZIP.
 # A ordem importa: "area_consolidada" antes de "area" evita casar errado.
@@ -87,18 +87,72 @@ def estado_atual() -> dict[str, set[str]]:
     return out
 
 
-def imprimir_status():
-    est = estado_atual()
-    completas = [uf for uf in UFS if all(c in est[uf] for c in CAMADAS_AMBIENTAIS)]
-    print(f"[CAR] camada ambiental completa em {len(completas)}/{len(UFS)} UFs: "
-          f"{', '.join(completas) or 'nenhuma'}")
-    faltam_total = 0
+def _baixados_em(origem: Path) -> dict[str, set[str]]:
+    """Camadas que ainda estão como ZIP na pasta de download, por UF."""
+    out: dict[str, set[str]] = {}
+    if not origem or not origem.exists():
+        return out
+    for z in origem.glob("*.zip"):
+        uf = detectar_uf(z.name)
+        if not uf:
+            continue
+        try:
+            with zipfile.ZipFile(z) as zf:
+                camada = detectar_camada(zf)
+        except zipfile.BadZipFile:
+            continue
+        if camada in CAMADAS_AMBIENTAIS:
+            out.setdefault(uf, set()).add(camada)
+    return out
+
+
+def _dissolvidas() -> dict[str, set[str]]:
+    """Camadas já medidas com dissolve, por UF."""
+    import pandas as pd
+    out: dict[str, set[str]] = {}
+    geo = PROCESSED_DIR / "geospatial"
+    for p in geo.glob("car_ambiental_dissolve_*.parquet"):
+        uf = p.stem.replace("car_ambiental_dissolve_", "")
+        try:
+            cols = pd.read_parquet(p).columns
+        except Exception:
+            continue
+        out[uf] = {c[:-3] for c in cols if c.endswith("_ha")}
+    return out
+
+
+def imprimir_status(origem: Path | None = None):
+    extraido = estado_atual()
+    baixado = _baixados_em(origem) if origem else {}
+    pronto = _dissolvidas()
+    n = len(CAMADAS_AMBIENTAIS)
+
+    print(f"{'uf':4s} {'baixado':>9s} {'extraído':>9s} {'medido':>8s}   situação")
+    print("-" * 58)
+    faltam_baixar = faltam_extrair = faltam_medir = 0
     for uf in UFS:
-        faltam = [c for c in CAMADAS_AMBIENTAIS if c not in est[uf]]
-        faltam_total += len(faltam)
-        if faltam:
-            print(f"  {uf}: faltam {len(faltam)} — {', '.join(faltam)}")
-    print(f"[CAR] {faltam_total} download(s) restante(s).")
+        b = len(baixado.get(uf, set()))
+        e = len([c for c in CAMADAS_AMBIENTAIS if c in extraido.get(uf, set())])
+        d = len([c for c in CAMADAS_AMBIENTAIS if c in pronto.get(uf, set())])
+        if d == n:
+            sit = "pronto"
+        elif e == n:
+            sit = f"falta medir ({n - d} camadas)"
+            faltam_medir += n - d
+        elif b + e >= n:
+            sit = "falta extrair"
+            faltam_extrair += n - e
+        else:
+            sit = f"falta baixar ({n - e - b} camadas)"
+            faltam_baixar += n - e - b
+            faltam_medir += n - d
+        print(f"{uf:4s} {b:>6d}/{n} {e:>6d}/{n} {d:>5d}/{n}   {sit}")
+
+    prontas = sum(1 for uf in UFS if len(pronto.get(uf, set())) == n)
+    print("-" * 58)
+    print(f"{prontas}/{len(UFS)} UFs prontas · "
+          f"{faltam_baixar} download(s), {faltam_extrair} extração(ões), "
+          f"{faltam_medir} medição(ões) pendentes")
 
 
 def processar(origem: Path, uf_forcada: str | None, manter: bool):
@@ -134,7 +188,7 @@ def processar(origem: Path, uf_forcada: str | None, manter: bool):
     if not manter and extraidos:
         print(f"  Originais movidos para {destino_ok}")
     print()
-    imprimir_status()
+    imprimir_status(origem)
 
 
 def main():
@@ -146,7 +200,7 @@ def main():
     args = ap.parse_args()
 
     if args.status or not args.origem:
-        imprimir_status()
+        imprimir_status(args.origem)
         return
     if args.uf and args.uf.upper() not in UFS:
         raise SystemExit(f"UF inválida: {args.uf}")
