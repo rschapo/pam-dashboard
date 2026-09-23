@@ -62,6 +62,33 @@ Antes de publicar qualquer indicador dessas camadas é preciso dissolver cada te
 municipal. Enquanto isso não for feito, os campos `*_ha` e `percentual_*` servem para
 inspeção da base, não para leitura como proporção do município.
 
+## Lacunas da própria base nacional (download de 2026-09)
+
+As 135 camadas (27 UFs × 5) foram baixadas do SICAR e conferidas: todas legíveis,
+fatias sem buraco, extração idêntica ao ZIP byte a byte, CRC íntegro. Ainda assim,
+em alguns estados a base nacional traz só parte da camada — o arquivo está completo,
+o conteúdo publicado é que é parcial. Baixar de novo não resolve.
+
+| UF | camada | CAR (bruto) | referência | leitura |
+|----|--------|-------------|------------|---------|
+| BA | área consolidada | 948 feições, 0,44 Mi ha, 208 de 417 municípios | MapBiomas agro+pasto 17,5 Mi ha | praticamente ausente |
+| BA | vegetação nativa | 9,0 Mi ha | MapBiomas natural 30,4 Mi ha | ~30%; MG e PI ficam em ~72% |
+| BA | APP | 4,6% do território | PI 9,1% | cerca de metade dos vizinhos |
+| PE | APP | 5,5% do território | PB 10,5%, AL 11,7% | cerca de metade; semiárido pode explicar parte |
+
+A Bahia opera cadastro estadual próprio (CEFIR/Inema), e a hipótese mais provável é
+que a integração com o SICAR não traga essas camadas delineadas. A reserva legal da
+Bahia, ao contrário, está com densidade normal.
+
+Consequência para o painel: essas combinações de UF e camada não podem aparecer como
+medida — mostrariam a Bahia quase sem área consolidada. Devem sair como "não
+disponível na base nacional" até que venham de outra fonte.
+
+Método da varredura: feições por imóvel cadastrado em cada UF contra a mediana
+nacional, marcando abaixo de um quinto; os casos marcados foram então confirmados
+pela área. Contagem sozinha não basta, porque um estado de polígonos maiores tem
+menos feições sem estar incompleto.
+
 ## Diferenças entre UFs
 
 O download é por UF e nem todas disponibilizam as mesmas camadas ambientais (área
