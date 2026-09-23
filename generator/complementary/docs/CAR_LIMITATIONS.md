@@ -76,6 +76,18 @@ o conteúdo publicado é que é parcial. Baixar de novo não resolve.
 | BA | APP | 4,6% do território | PI 9,1% | cerca de metade dos vizinhos |
 | PE | APP | 5,5% do território | PB 10,5%, AL 11,7% | cerca de metade; semiárido pode explicar parte |
 
+**Ressalva nas linhas de APP.** A comparação de APP acima foi feita pela soma bruta
+das áreas, e a camada de APP do SICAR traz o tema "APP Total" ao lado das partes
+que o compõem (rios, nascentes, lagos) — na Bahia, 175 mil das 392 mil feições.
+A soma bruta conta a mesma faixa duas vezes, e se a proporção de "APP Total" muda
+de um estado para outro, a comparação distorce. O dissolve elimina essa dupla
+contagem; as duas linhas de APP só valem depois de confirmadas por ele.
+
+**Cadastros cancelados.** O SICAR entrega também os cadastros que ele próprio
+cancelou (`ind_status = CA`): na mediana, 6% da área registrada, e acima de 20%
+em SP, PA, SE, RO, AC e MS. Desde 2026-09-23 a medição os exclui; as UFs medidas
+antes disso foram arquivadas em `processed/geospatial/_arquivo/` e refeitas.
+
 ### Bahia: o que o CEFIR explica (investigado em 2026-09)
 
 A Bahia opera cadastro próprio, o CEFIR (Inema), e o SICAR da Bahia é o próprio CEFIR:

@@ -471,6 +471,7 @@ def rodar_compostas(uf: str, recortar: bool, incluir_cancelados: bool = False):
 
 
 def main():
+    global TETO_GEOMETRIAS
     ap = argparse.ArgumentParser()
     ap.add_argument("--uf")
     ap.add_argument("--camadas", nargs="*", default=CAMADAS)
@@ -482,7 +483,11 @@ def main():
                     help="medidas compostas da UF (hoje só a Bahia)")
     ap.add_argument("--incluir-cancelados", action="store_true",
                     help="mantém cadastros cancelados (método anterior a 2026-09-23)")
+    ap.add_argument("--teto", type=int, default=TETO_GEOMETRIAS,
+                    help="geometrias em memória antes de unir em etapas; menor gasta "
+                         "menos memória e leva mais tempo")
     args = ap.parse_args()
+    TETO_GEOMETRIAS = args.teto
 
     if args.pendentes:
         # --camadas restringe a fila; sem ele, mede as cinco.
