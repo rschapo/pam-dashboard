@@ -28,7 +28,11 @@ Várias filas podem rodar juntas, sobre camadas diferentes ou sobre a mesma
 lista de pendências: cada camada é reservada por quem a pega (em _reservas/,
 com o PID do dono, liberada se ele morrer), e a gravação de cada UF é feita sob
 trava de arquivo, para que uma fila não apague a camada que a outra acabou de
-gravar.
+gravar. O limite é a memória, não a CPU: numa máquina de 32 GB com o uso normal
+de outros programas, quatro filas da APP rodaram a 90% de um núcleo cada; com
+cinco ou seis, a disputa por memória derrubou todas para uns 15%. Um município
+nunca é partido, então o maior vira um bloco sozinho — São Félix do Xingu (PA),
+com 157 mil feições e 1,36 GB de APP, levou 3,4 horas de cálculo.
 
 A Bahia tem medidas compostas, porque o CEFIR registra o imóvel de outro jeito
 (ver docs/CAR_LIMITATIONS.md): vegetação nativa, reserva legal e APP são fatias

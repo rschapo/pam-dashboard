@@ -96,6 +96,29 @@ a diferença não é artefato — mas também não há referência independente 
 se é declaração incompleta ou característica da hidrografia. Fica marcado como
 "abaixo dos vizinhos, sem confirmação".
 
+**APP nas 27 UFs (2026-09-24).** Dissolvida, a APP soma 30,7 Mi ha, 3,6% do
+território. O padrão é regional — Sul 6,8%, Sudeste 6,5%, Centro-Oeste 5,2%,
+Nordeste 2,4%, Norte 2,3% —: relevo e drenagem densa pesam, e no Norte o CAR cobre
+menos do território. Pernambuco segue o menor do Nordeste.
+
+| UF | APP (Mi ha) | % do território | | UF | APP (Mi ha) | % do território |
+|----|-------------|-----------------|-|----|-------------|-----------------|
+| SC | 0,87 | 9,1% | | MS | 1,02 | 2,9% |
+| ES | 0,36 | 7,9% | | AL | 0,08 | 2,8% |
+| PR | 1,50 | 7,5% | | SE | 0,06 | 2,8% |
+| DF | 0,04 | 7,4% | | PA | 3,08 | 2,5% |
+| RJ | 0,29 | 6,7% | | MA | 0,79 | 2,4% |
+| TO | 1,79 | 6,5% | | PI | 0,59 | 2,4% |
+| GO | 2,19 | 6,4% | | BA | 1,22 | 2,2% |
+| MG | 3,76 | 6,4% | | AP | 0,26 | 1,8% |
+| SP | 1,58 | 6,4% | | PE | 0,16 | 1,6% |
+| MT | 5,12 | 5,7% | | AM | 2,27 | 1,5% |
+| RS | 1,49 | 5,5% | | AC | 0,24 | 1,4% |
+| CE | 0,52 | 3,5% | | RR | 0,26 | 1,2% |
+| RO | 0,77 | 3,2% | | | | |
+| PB | 0,18 | 3,2% | | | | |
+| RN | 0,16 | 3,0% | | | | |
+
 **Cadastros cancelados.** O SICAR entrega também os cadastros que ele próprio
 cancelou (`ind_status = CA`): na mediana, 6% da área registrada, e acima de 20%
 em SP, PA, SE, RO, AC e MS. Desde 2026-09-23 a medição os exclui; as UFs medidas
@@ -214,6 +237,10 @@ municípios de PB e ES), a maior foi de 0,037%, em Pombal (PB); as demais ficara
 abaixo de 0,0002%. Somados os 55, o GEOS dá 10.458.460 ha e o Clipper, 10.458.461.
 A perda silenciosa se restringe à APP, fica abaixo de 0,04% por município, e as
 UFs medidas pela união exata não foram refeitas.
+
+Na remedição das 11 UFs em que a união exata tinha falhado, nenhuma camada falhou:
+79 operações precisaram da grade de 1 mm — nenhuma das grades maiores — e 5
+municípios foram medidos pelo Clipper (1 em MG, 2 em GO, 1 no PR, 1 em SC).
 
 ## Validação contra o MapBiomas (2026-09-24)
 
