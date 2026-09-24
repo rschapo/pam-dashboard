@@ -34,7 +34,9 @@ A Bahia tem medidas compostas, porque o CEFIR registra o imóvel de outro jeito
 (ver docs/CAR_LIMITATIONS.md): vegetação nativa, reserva legal e APP são fatias
 disjuntas, e não existe área consolidada para imóvel privado. --compostas gera
 car_ambiental_composta_BA com a vegetação nativa comparável ao padrão nacional
-e a área de atividade produtiva declarada.
+e a área de atividade produtiva declarada. Sergipe tem a vegetação nativa
+composta pelo mesmo motivo: lá a maioria dos imóveis declara reserva legal sem
+declarar a vegetação nativa.
 
 Uso:
   python process_car_dissolve.py --uf MT
@@ -84,6 +86,15 @@ COMPOSTAS = {
         # que o SICAR repassa como área consolidada entram junto.
         "area_atividade": {
             "somar": [("cefir", "atividade_desenvolvida"), ("sicar", "area_consolidada")],
+        },
+    },
+    # Em Sergipe, 82% dos imóveis que declaram reserva legal não declaram
+    # vegetação nativa, e só um terço da reserva legal cai dentro dela: parte da
+    # vegetação nativa só aparece na reserva legal e na APP. Sem camada de área
+    # degradada no SICAR, nada é descontado.
+    "SE": {
+        "vegetacao_nativa_composta": {
+            "somar": [("sicar", "vegetacao_nativa"), ("sicar", "reserva_legal"), ("sicar", "app")],
         },
     },
 }
@@ -729,7 +740,7 @@ def main():
     ap.add_argument("--pendentes", action="store_true",
                     help="mede tudo que está extraído e ainda não foi medido")
     ap.add_argument("--compostas", action="store_true",
-                    help="medidas compostas da UF (hoje só a Bahia)")
+                    help="medidas compostas da UF (Bahia e Sergipe)")
     ap.add_argument("--incluir-cancelados", action="store_true",
                     help="mantém cadastros cancelados (método anterior a 2026-09-23)")
     ap.add_argument("--teto-mb", type=int, default=TETO_MB,

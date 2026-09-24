@@ -20,9 +20,9 @@ território dele sem a área correspondente.
 
 As camadas ambientais vêm de process_car_dissolve.py, não das colunas de mesmo
 nome em car_municipio_summary: aquelas são a soma bruta dos polígonos, que conta
-duas vezes a área de cadastros sobrepostos e estoura o território. A Bahia usa
-as medidas compostas, porque o CEFIR registra o imóvel de outro jeito (ver
-docs/CAR_LIMITATIONS.md).
+duas vezes a área de cadastros sobrepostos e estoura o território. A Bahia e
+Sergipe usam medidas compostas, porque lá o imóvel é declarado de outro jeito
+(ver docs/CAR_LIMITATIONS.md).
 
 A área típica do imóvel sai como média (área ÷ imóveis) e não como mediana: a
 mediana municipal não se recompõe em estado nem em microrregião, e o painel
@@ -63,28 +63,34 @@ ROTULOS = {
     "ac": "Área consolidada",
     "ur": "Uso restrito",
 }
-# Na Bahia a vegetação nativa comparável ao padrão nacional é a composta, e a
-# área de atividade entra no lugar da consolidada, que o CEFIR não tem para
-# imóvel privado.
+# Onde a UF declara de outro jeito, a vegetação nativa comparável ao padrão
+# nacional é a composta: na Bahia, porque o CEFIR registra vegetação nativa,
+# reserva legal e APP como fatias separadas; em Sergipe, porque a maioria dos
+# imóveis declara reserva legal sem declarar a vegetação nativa. Na Bahia, a área
+# de atividade entra no lugar da consolidada, que o CEFIR não tem para imóvel
+# privado.
 COMPOSTAS = {"vn": "vegetacao_nativa_composta", "ac": "area_atividade"}
 NOTA_COMPOSTA = {
-    "vn": "{uf}: vegetação nativa composta (nativa, reserva legal e APP, menos área "
-          "degradada), porque o cadastro estadual registra as três em separado.",
-    "ac": "{uf}: área de atividade declarada no cadastro estadual, no lugar da "
-          "consolidada, que ele não tem para imóvel privado.",
+    "BA": {
+        "vn": "BA: vegetação nativa composta (nativa, reserva legal e APP, menos área "
+              "degradada), porque o cadastro estadual registra as três em separado.",
+        "ac": "BA: área de atividade declarada no cadastro estadual, no lugar da "
+              "consolidada, que ele não tem para imóvel privado.",
+    },
+    "SE": {
+        "vn": "SE: vegetação nativa composta (nativa, reserva legal e APP), porque a "
+              "maioria dos imóveis declara reserva legal sem declarar a vegetação nativa.",
+    },
 }
 # Ressalvas que a medição não resolve; o motivo de cada uma está em
 # docs/CAR_LIMITATIONS.md. A APP de PE fica abaixo dos vizinhos mesmo dissolvida,
 # sem referência que diga se é declaração incompleta ou hidrografia. No RS, o
 # campo nativo pastejado é declarado como área consolidada: somadas, as duas
-# camadas fecham com o MapBiomas, mas a divisão entre elas segue a declaração. Em
-# SE, a maioria dos imóveis declara reserva legal sem declarar vegetação nativa.
+# camadas fecham com o MapBiomas, mas a divisão entre elas segue a declaração.
 RESSALVAS = {
     "app": ["PE: abaixo dos vizinhos, sem confirmação."],
     "vn": ["RS: o campo nativo com pecuária é declarado como área consolidada, "
-           "e não como vegetação nativa.",
-           "SE: 82% dos imóveis que declaram reserva legal não declaram vegetação "
-           "nativa, e a camada fica abaixo do esperado."],
+           "e não como vegetação nativa."],
     "ac": ["RS: inclui o campo nativo com pecuária, que o MapBiomas classifica "
            "como vegetação natural."],
 }
@@ -178,7 +184,7 @@ def build_car() -> dict:
     notas: dict[str, list[str]] = {}
     for uf, campos in substituidas.items():
         for c in campos:
-            notas.setdefault(c, []).append(NOTA_COMPOSTA[c].format(uf=uf))
+            notas.setdefault(c, []).append(NOTA_COMPOSTA[uf][c])
     for c, textos in RESSALVAS.items():
         notas.setdefault(c, []).extend(textos)
     return {

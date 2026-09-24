@@ -81,11 +81,13 @@ cadastros se sobrepõem conta uma vez: `area_consolidada_ha`, `vegetacao_nativa_
 município sem feição na camada não tem linha (é zero). Gerado por
 `process_car_dissolve.py`; limites e validação em `CAR_LIMITATIONS.md`.
 
-## car_ambiental_composta_BA  (`geospatial/`)
-Medidas da Bahia comparáveis ao padrão nacional, porque o CEFIR registra o imóvel
-de outro jeito: `vegetacao_nativa_composta_ha` (vegetação nativa ∪ reserva legal ∪
-APP − áreas degradadas) e `area_atividade_ha` (atividades desenvolvidas do CEFIR ∪
-área consolidada do SICAR), com `uf` e `metodo`.
+## car_ambiental_composta_<UF>  (`geospatial/`, BA e SE)
+Medidas comparáveis ao padrão nacional onde a UF declara de outro jeito. Bahia (o
+CEFIR registra o imóvel em fatias separadas): `vegetacao_nativa_composta_ha`
+(vegetação nativa ∪ reserva legal ∪ APP − áreas degradadas) e `area_atividade_ha`
+(atividades desenvolvidas do CEFIR ∪ área consolidada do SICAR). Sergipe (a maioria
+dos imóveis declara reserva legal sem vegetação nativa): `vegetacao_nativa_composta_ha`
+(vegetação nativa ∪ reserva legal ∪ APP, sem desconto). Com `uf` e `metodo`.
 
 ## car_mapbiomas_uf  (`state/`)
 Validação das camadas dissolvidas contra o MapBiomas, por UF

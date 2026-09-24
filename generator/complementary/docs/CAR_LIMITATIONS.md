@@ -231,8 +231,9 @@ MapBiomas 2024 (Coleção 10.1) e grava a tabela em `processed/state/car_mapbiom
   consolidada.
 
 A UF é sinalizada (negrito) se a razão lida sair de [0,5; 1,5] ou se a correlação por
-município ficar abaixo de 0,7. Na mediana das UFs, a vegetação nativa fica em 72% do
+município ficar abaixo de 0,7. Na mediana das UFs, a vegetação nativa fica em 73% do
 esperado e a área consolidada em 86% da agropecuária, com correlações de 0,90 e 0,94.
+Na Bahia e em Sergipe, a vegetação nativa é a medida composta (ver abaixo).
 
 | UF | cobertura do CAR | vegetação nativa ÷ natural | ÷ cobertura | r | consolidada ÷ agropecuária | r |
 |----|------------------|----------------------------|-------------|---|----------------------------|---|
@@ -260,7 +261,7 @@ esperado e a área consolidada em 86% da agropecuária, com correlações de 0,9
 | **RR** | 33% | 17% | 53% | 0,83 | 119% | 0,52 |
 | **RS** | 87% | 35% | 41% | 0,93 | 130% | 0,93 |
 | **SC** | 85% | 53% | 63% | 0,70 | 102% | 0,84 |
-| **SE** | 81% | 38% | 47% | 0,84 | 73% | 0,99 |
+| SE | 81% | 79% | 97% | 0,91 | 73% | 0,99 |
 | SP | 89% | 71% | 80% | 0,90 | 68% | 0,97 |
 | TO | 82% | 69% | 83% | 0,84 | 82% | 0,97 |
 
@@ -292,8 +293,9 @@ um terço do território. A área consolidada do AP é 4,4 vezes a agropecuária
 MapBiomas, que no estado é mínima. Somadas, as camadas fecham em 58% (AP) e 69% (RR)
 do esperado. Sem conclusão; ficam registradas.
 
-**SE — é declaração, como na Bahia.** A vegetação nativa fica em 47% do esperado,
-sem o excedente de área consolidada que explica o RS. Em Sergipe, 82% dos imóveis
+**SE — é declaração, como na Bahia; resolvido com a medida composta.** Só a camada de
+vegetação nativa dava 47% do esperado, sem o excedente de área consolidada que
+explica o RS. Em Sergipe, 82% dos imóveis
 que declaram reserva legal não declaram vegetação nativa, e só um terço da área de
 reserva legal cai dentro da vegetação nativa declarada pelo próprio imóvel. No padrão
 nacional, a reserva legal está quase toda dentro da vegetação nativa; na Bahia, fora
@@ -309,9 +311,27 @@ camada de reserva legal:
 | SE | 18% | 33% |
 | BA | 13% | 0% |
 
-(Sem cancelados; MT, PE, PB e BA por amostra de 5 mil imóveis.) Para SE, a leitura
-comparável seria a medida composta usada na Bahia — vegetação nativa, reserva legal e
-APP unidas. Por enquanto o painel mostra a camada como declarada, com a ressalva.
+(Sem cancelados; MT, PE, PB e BA por amostra de 5 mil imóveis.) Desde 2026-09-24,
+Sergipe usa a medida composta, como a Bahia: vegetação nativa, reserva legal e APP
+unidas por município (`car_ambiental_composta_SE`). O SICAR não tem camada de área
+degradada, então nada é descontado — diferente da Bahia, onde o CEFIR permite tirar
+a reserva legal e a APP degradadas. O peso de cada parte:
+
+| leitura em SE | área | ÷ natural | ÷ cobertura |
+|---------------|------|-----------|-------------|
+| só vegetação nativa | 190 mil ha | 39% | 47% |
+| vegetação nativa ∪ reserva legal | 363 mil ha | 73% | 90% |
+| ∪ APP (a composta) | 395 mil ha | 80% | 98% |
+
+A reserva legal traz quase todo o ganho. A APP acrescenta 32 mil ha (8% da composta),
+que é o teto do efeito de não descontar APP degradada. Com a composta, Sergipe fica em
+97% do esperado na validação (a tabela considera só municípios com as duas medidas),
+no alto da faixa, junto de RN e MS, e a correlação sobe de 0,84 para 0,91.
+
+AL, PE e PB declaram no meio do caminho e seguem com a camada como declarada: ficam
+dentro da faixa, e ali a reserva legal fora da vegetação nativa pode ser tanto
+vegetação não declarada quanto reserva a recompor — sem camada de área degradada,
+não há como separar as duas.
 Pernambuco, cuja APP ficou abaixo dos vizinhos, também tem a vegetação nativa baixa
 (59%, contra 72% na Paraíba e 63% em Alagoas), mas declara como os vizinhos; a
 diferença na APP segue sem explicação.
