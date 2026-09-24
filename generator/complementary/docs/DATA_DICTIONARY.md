@@ -68,7 +68,31 @@ padronizado; interseção município×imóvel com `area_intersecao_ha`,
 Contagens, `area_declarada_total_ha`, `area_geometrica_bruta_ha`,
 `area_geometrica_uniao_ha`, `area_sobreposta_ha`, `percentual_sobreposicao`,
 `nivel_sobreposicao`, estatísticas de área. Todo indicador informa a base usada
-(bruta/declarada/geométrica/união/distribuída).
+(bruta/declarada/geométrica/união/distribuída). As colunas de camada ambiental
+(`area_consolidada_ha`, `vegetacao_nativa_ha`, `app_ha`...) são **soma bruta** dos
+polígonos, que conta duas vezes a sobreposição; a medida sem dupla contagem está em
+`car_ambiental_dissolve_<UF>`.
+
+## car_ambiental_dissolve_<UF>  (`geospatial/`)
+Área (ha) de cada camada ambiental por município, dissolvida — a área onde
+cadastros se sobrepõem conta uma vez: `area_consolidada_ha`, `vegetacao_nativa_ha`,
+`reserva_legal_ha`, `app_ha`, `uso_restrito_ha`, mais `uf` e `metodo`
+("dissolve, sem cancelados"). O município vem do código IBGE no `cod_imovel`;
+município sem feição na camada não tem linha (é zero). Gerado por
+`process_car_dissolve.py`; limites e validação em `CAR_LIMITATIONS.md`.
+
+## car_ambiental_composta_BA  (`geospatial/`)
+Medidas da Bahia comparáveis ao padrão nacional, porque o CEFIR registra o imóvel
+de outro jeito: `vegetacao_nativa_composta_ha` (vegetação nativa ∪ reserva legal ∪
+APP − áreas degradadas) e `area_atividade_ha` (atividades desenvolvidas do CEFIR ∪
+área consolidada do SICAR), com `uf` e `metodo`.
+
+## car_mapbiomas_uf  (`state/`)
+Validação das camadas dissolvidas contra o MapBiomas, por UF
+(`quality/validate_car_mapbiomas.py`): `cobertura_car`, e para vegetação nativa
+(`vn_*`) e área consolidada (`ac_*`) a área do CAR, a referência, a razão, a razão
+lida (a da vegetação dividida pela cobertura) e a correlação por município; `sinais`
+lista o que ficou fora da faixa.
 
 ## mapbiomas_municipio  (`municipality/`)
 `cod_municipio`, `ano`, `classe_id`, `classe_nome`, `grupo_analitico`, `area_ha`,

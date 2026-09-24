@@ -101,6 +101,14 @@ cancelou (`ind_status = CA`): na mediana, 6% da área registrada, e acima de 20%
 em SP, PA, SE, RO, AC e MS. Desde 2026-09-23 a medição os exclui; as UFs medidas
 antes disso foram arquivadas em `processed/geospatial/_arquivo/` e refeitas.
 
+Nas oito UFs medidas pelos dois métodos (AC, AM, AP, MT, PA, RO, RR, TO), tirar
+os cancelados reduz a área dissolvida em 8% a 10% por camada, somados os
+estados — vegetação nativa de 151,2 para 136,7 Mi ha. Como a camada é
+dissolvida, o cancelado só tira área onde nenhum cadastro ativo declara a mesma
+coisa; o que sai é área que só uma declaração invalidada sustentava. O efeito é
+maior no PA (vegetação nativa −19%, área consolidada −16%) e em RR (vegetação
+nativa −18%, reserva legal −17%), e menor no MT (−2% a −3%).
+
 ### Bahia: o que o CEFIR explica (investigado em 2026-09)
 
 A Bahia opera cadastro próprio, o CEFIR (Inema), e o SICAR da Bahia é o próprio CEFIR:
@@ -195,6 +203,78 @@ falha, pode perder área sem avisar: nos dois municípios testados, 0,004% e 0,0
 A APP de Ji-Paraná ocupa 3,2% do município; errar 0,025% dessa área muda o
 percentual em 0,0008 ponto, duas ordens de grandeza abaixo da casa decimal que o
 painel mostra.
+
+## Validação contra o MapBiomas (2026-09-24)
+
+`quality/validate_car_mapbiomas.py` compara, por UF, as camadas dissolvidas com o
+MapBiomas 2024 (Coleção 10.1) e grava a tabela em `processed/state/car_mapbiomas_uf`.
+
+- **Vegetação nativa × formação natural** — floresta, savana, campo e áreas úmidas.
+  Floresta alagável e campo alagado são vegetação nativa, e sem elas a Amazônia e o
+  Pantanal sairiam distorcidos. A vegetação fora do CAR (terra pública, área não
+  cadastrada) não tem como aparecer nele, então a razão é dividida pela cobertura do
+  CAR na UF antes de ser lida.
+- **Área consolidada × agropecuária** — agricultura, pastagem, mosaico de usos e
+  silvicultura. Lida direto, porque a agropecuária está quase toda em imóvel privado.
+  Fica abaixo de 1 onde houve abertura depois de 22/07/2008, que pela lei não é
+  consolidada.
+
+A UF é sinalizada (negrito) se a razão lida sair de [0,5; 1,5] ou se a correlação por
+município ficar abaixo de 0,7. Na mediana das UFs, a vegetação nativa fica em 73% do
+esperado e a área consolidada em 86% da agropecuária, com correlações de 0,90 e 0,94.
+
+| UF | cobertura do CAR | vegetação nativa ÷ natural | ÷ cobertura | r | consolidada ÷ agropecuária | r |
+|----|------------------|----------------------------|-------------|---|----------------------------|---|
+| AC | 75% | 60% | 80% | 0,84 | 88% | 0,98 |
+| AL | 74% | 51% | 69% | 0,84 | 78% | 0,94 |
+| AM | 55% | 36% | 64% | 0,74 | 102% | 0,92 |
+| **AP** | 36% | 16% | 43% | 0,04 | 442% | 0,55 |
+| BA | 59% | 54% | 92% | 0,95 | 55% | 0,95 |
+| CE | 77% | 56% | 72% | 0,90 | 82% | 0,81 |
+| DF | — | 67% | — | — | 124% | — |
+| ES | 80% | 69% | 87% | 0,97 | 86% | 0,99 |
+| GO | 88% | 78% | 89% | 0,97 | 89% | 0,99 |
+| MA | 87% | 53% | 61% | 0,93 | 112% | 0,94 |
+| MG | 87% | 64% | 73% | 0,96 | 85% | 0,97 |
+| MS | 76% | 88% | 115% | 1,00 | 89% | 0,93 |
+| MT | 82% | 69% | 83% | 0,89 | 91% | 0,96 |
+| PA | 54% | 28% | 52% | 0,74 | 100% | 0,94 |
+| PB | 75% | 58% | 78% | 0,89 | 71% | 0,86 |
+| PE | 76% | 45% | 59% | 0,96 | 84% | 0,91 |
+| PI | 73% | 60% | 82% | 0,95 | 82% | 0,93 |
+| PR | 89% | 70% | 79% | 0,94 | 86% | 0,98 |
+| RJ | 72% | 51% | 70% | 0,91 | 64% | 0,99 |
+| RN | 80% | 78% | 98% | 0,90 | 56% | 0,85 |
+| RO | 67% | 35% | 52% | 0,78 | 83% | 0,98 |
+| **RR** | 33% | 17% | 53% | 0,83 | 119% | 0,52 |
+| **RS** | 87% | 35% | 41% | 0,93 | 130% | 0,93 |
+| **SC** | 84% | 53% | 63% | 0,70 | 102% | 0,84 |
+| SE | 57% | 38% | 67% | 0,84 | 73% | 0,99 |
+| SP | 88% | 71% | 80% | 0,90 | 68% | 0,97 |
+| TO | 80% | 69% | 85% | 0,84 | 82% | 0,97 |
+
+O DF não tem cobertura confiável — a base de imóveis é que está incompleta — nem
+correlação, com um município só. As camadas ambientais dele vieram completas (16 mil
+imóveis declaram área consolidada, 8 mil declaram APP) e entram no painel.
+
+**RS — não é lacuna, é classificação.** A vegetação nativa fica em 41% do esperado e a
+área consolidada passa a agropecuária em 30%. Somadas, as duas camadas fecham em 98%
+do esperado, e o excedente da área consolidada sobre a agropecuária (+4,05 Mi ha)
+acompanha, município a município, a fração de campo e savana nativos (r = 0,79). O
+campo nativo usado para pecuária é declarado como área consolidada, e o MapBiomas o
+classifica como formação campestre. O painel anota isso nas duas camadas do RS.
+
+**SC** — só a correlação da vegetação nativa toca o limite (0,70); as duas camadas
+somadas fecham em 93% do esperado. Sem ressalva.
+
+**AP e RR** — 16 e 15 municípios, poucos para a correlação dizer muito, e o CAR cobre
+um terço do território. A área consolidada do AP é 4,4 vezes a agropecuária do
+MapBiomas, que no estado é mínima. Somadas, as camadas fecham em 58% (AP) e 69% (RR)
+do esperado. Sem conclusão; ficam registradas.
+
+Pernambuco, cuja APP ficou abaixo dos vizinhos, também tem a vegetação nativa na parte
+baixa da faixa (59%, contra 78% na Paraíba e 69% em Alagoas). É coerente com
+declaração mais incompleta no estado, mas não a confirma.
 
 ## Diferenças entre UFs
 

@@ -78,9 +78,18 @@ NOTA_COMPOSTA = {
     "ac": "{uf}: área de atividade declarada no cadastro estadual, no lugar da "
           "consolidada, que ele não tem para imóvel privado.",
 }
-# Abaixo dos vizinhos mesmo dissolvida, sem referência independente que diga se
-# é declaração incompleta ou hidrografia.
-SEM_CONFIRMACAO = {"app": ["PE"]}
+# Ressalvas que a medição não resolve; o motivo de cada uma está em
+# docs/CAR_LIMITATIONS.md. A APP de PE fica abaixo dos vizinhos mesmo dissolvida,
+# sem referência que diga se é declaração incompleta ou hidrografia. No RS, o
+# campo nativo pastejado é declarado como área consolidada: somadas, as duas
+# camadas fecham com o MapBiomas, mas a divisão entre elas segue a declaração.
+RESSALVAS = {
+    "app": ["PE: abaixo dos vizinhos, sem confirmação."],
+    "vn": ["RS: o campo nativo com pecuária é declarado como área consolidada, "
+           "e não como vegetação nativa."],
+    "ac": ["RS: inclui o campo nativo com pecuária, que o MapBiomas classifica "
+           "como vegetação natural."],
+}
 
 
 def _num(v):
@@ -176,8 +185,8 @@ def build_car() -> dict:
     for uf, campos in substituidas.items():
         for c in campos:
             notas.setdefault(c, []).append(NOTA_COMPOSTA[c].format(uf=uf))
-    for c, lista in SEM_CONFIRMACAO.items():
-        notas.setdefault(c, []).append(f"{', '.join(lista)}: abaixo dos vizinhos, sem confirmação.")
+    for c, textos in RESSALVAS.items():
+        notas.setdefault(c, []).extend(textos)
     return {
         "fonte": "SICAR — Cadastro Ambiental Rural",
         "campos": {
