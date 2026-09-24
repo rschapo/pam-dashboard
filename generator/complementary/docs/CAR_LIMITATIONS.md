@@ -126,10 +126,26 @@ limites traz nome do imóvel e do proprietário; só `ide_imovel` e `numero_car`
 necessários (o código IBGE do município está embutido no `numero_car`), e só esses
 devem ser pedidos.
 
-Consequência para o painel: a Bahia entra com vegetação nativa composta (as três
-camadas) e com área de atividade produtiva no lugar da área consolidada, ambas
-rotuladas como equivalentes. A APP da Bahia e a de Pernambuco saem como "parcial na
-base nacional".
+**Resultado da medição composta (2026-09-23, dissolve sem cancelados).**
+
+| medida | CAR | MapBiomas | correlação por município | municípios > 100% |
+|--------|-----|-----------|--------------------------|-------------------|
+| vegetação nativa composta | 16,48 Mi ha | natural 30,42 Mi ha (54%) | r = 0,95 (416) | 0 |
+| área de atividade | 13,70 Mi ha | agro+pasto 17,48 Mi ha (78%) | r = 0,93 (416) | 0 |
+
+Os maiores municípios em área de atividade são o cinturão de grãos do oeste, com
+valores próximos aos do MapBiomas: São Desidério 691 mil ha (MapBiomas 646 mil),
+Formosa do Rio Preto 597 (565), Barreiras 333 (316), Luís Eduardo Magalhães 229 (236).
+
+Os 54% de vegetação não são lacuna: o CAR cobre 59% do território baiano, contra 79%
+do MT (ponderado por área). Divididos pela cobertura, a Bahia fica em 92% e o MT em
+89%. O resto do território baiano — terra pública, fundos de pasto, áreas não
+cadastradas — simplesmente não está no CAR.
+
+Consequência para o painel: a Bahia entra com vegetação nativa composta e com área
+de atividade no lugar da área consolidada, ambas rotuladas como equivalentes, a
+partir de `car_ambiental_composta_BA`. A APP da Bahia e a de Pernambuco dependem da
+confirmação pela medição dissolvida (ver ressalva acima).
 
 Método da varredura: feições por imóvel cadastrado em cada UF contra a mediana
 nacional, marcando abaixo de um quinto; os casos marcados foram então confirmados
