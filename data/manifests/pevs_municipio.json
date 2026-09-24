@@ -1,7 +1,7 @@
 {
   "dataset": "pevs_municipio",
   "source": "IBGE — PEVS (291/289/5930)",
-  "extraction_date": "2026-07-29",
+  "extraction_date": "2026-09-24",
   "reference_date": null,
   "source_files": [
     "PEVS_municipios_completo.csv"
@@ -9,25 +9,25 @@
   "source_hashes": [
     {
       "file": "PEVS_municipios_completo.csv",
-      "sha256": "7f1d285a3c427cc8c0c1a67d83f6db505d979417fd1f694863093179e7c19816"
+      "sha256": "33258d2520089adde6200639eb656396604d9bc747412b20ddfb0cd21ea02ce0"
     }
   ],
   "script_version": "0.1.0",
-  "row_count": 559021,
-  "municipality_count": 5446,
+  "row_count": 647784,
+  "municipality_count": 5474,
   "rejected_rows": 0,
   "warnings": [],
   "output_files": [
     {
       "file": "pevs_municipio.parquet",
-      "sha256": "5d6e5b3bd22762a51b47d406ccf246b112b6f32618527514eb9e0399e6c7c2db",
-      "bytes": 2542189
+      "sha256": "2e58b5c3180d40ff711a6f3ac8967de1c9f04658ae8e049f96d778c1f6092443",
+      "bytes": 2905120
     },
     {
       "file": "pevs_municipio.csv",
-      "sha256": "23893d154ffa8530059bc914beb83e0ef916c480d1659e40ae7d4f9fb724b620",
-      "bytes": 42116425
+      "sha256": "faf6e623df8ee0891abfd5a4786f8e57c2e128d835d0a0405de2671ed85b28bc",
+      "bytes": 48545370
     }
   ],
-  "generated_at": "2026-07-29T13:01:59-04:00"
+  "generated_at": "2026-09-24T18:12:29-04:00"
 }

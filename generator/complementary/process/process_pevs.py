@@ -19,6 +19,7 @@ Descarta a categoria "Total" (soma sem sentido físico). Ausência = null.
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -38,7 +39,15 @@ def _read_pevs() -> pd.DataFrame:
     p = RAW_DIR / "ibge" / "pevs" / "PEVS_municipios_completo.csv"
     if not p.exists():
         raise SystemExit("PEVS consolidado ausente. Rode download/download_pevs.py primeiro.")
-    return pd.read_csv(p, sep=";", encoding="utf-8-sig", dtype={"Cod_Municipio": str})
+    df = pd.read_csv(p, sep=";", encoding="utf-8-sig",
+                     dtype={"Cod_Municipio": str, "Cod_Categoria": str})
+    # Em 2025 o IBGE renumerou produtos (castanhas, erva-mate, carvão, lenha e
+    # madeira por espécie): o rótulo muda, o código interno do SIDRA não. O produto
+    # segue pelo código, com o rótulo mais recente — como no pevs.json do painel.
+    recente = df.sort_values("Ano").groupby(["Tipo", "Cod_Categoria"])["Categoria"].last()
+    df["Categoria"] = [re.sub(r"^(\d+(?:\.\d+)*)\s+(?!-)", r"\1 - ", str(recente.get((t, c), cat)).strip())
+                       for t, c, cat in zip(df["Tipo"], df["Cod_Categoria"], df["Categoria"])]
+    return df
 
 
 def _grupos() -> dict:
