@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Google tag (gtag.js) — carregado somente após consentimento; ver banner de cookies no fim do body -->
 <title>Dashboard PAM — AgroCore Gestão do Agronegócio</title>
-<meta name="description" content="Dashboard dos Dados de Produção Agrícola Municipal com base no estudo do IBGE. Dados disponíveis dos anos 2004 até 2024.">
+<meta name="description" content="Dashboard dos Dados de Produção Agrícola Municipal com base no estudo do IBGE. Dados disponíveis dos anos 2004 até 2025.">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -18,7 +18,7 @@
   </div>
   <div class="loader-title">
     Dashboard dos Dados de Produção Agrícola Municipal<br>
-    <small style="font-weight:400;opacity:.8">Carregando dados do IBGE (2004–2024)…</small>
+    <small style="font-weight:400;opacity:.8">Carregando dados do IBGE (2004–2025)…</small>
   </div>
   <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
   <div class="loader-msg" id="loading-msg">Inicializando…</div>
@@ -139,14 +139,14 @@
           <option value="amed">Área média do imóvel (ha)</option>
           <option value="sobre">Sobreposição entre cadastros (%)</option>
         </optgroup>
-        <optgroup label="Camadas ambientais — área">
+        <optgroup label="Camadas ambientais: área">
           <option value="vn">Vegetação nativa (ha)</option>
           <option value="rl">Reserva legal (ha)</option>
           <option value="app">APP (ha)</option>
           <option value="ac">Área consolidada (ha)</option>
           <option value="ur">Uso restrito (ha)</option>
         </optgroup>
-        <optgroup label="Camadas ambientais — % do território">
+        <optgroup label="Camadas ambientais: % do território">
           <option value="vn_p">Vegetação nativa (%)</option>
           <option value="rl_p">Reserva legal (%)</option>
           <option value="app_p">APP (%)</option>
@@ -208,6 +208,7 @@
     <div class="filter-block dom-silvicultura">
       <label>Produto / Espécie</label>
       <select id="f-categoria-sil"></select>
+      <div class="filter-note" id="sil-nota"></div>
     </div>
 
     <div class="sidebar-section-title">Localização</div>

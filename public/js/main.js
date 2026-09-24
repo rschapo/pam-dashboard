@@ -32,6 +32,7 @@ let rebanho_categorias, producao_categorias, ppm_est_data, ppm_mic_data, ppm_mun
 // PEVS (Silvicultura/Extração) — carregado sob demanda ao abrir o domínio Silvicultura
 let PEVS = null, pevsLoaded = false, pevsLoading = false;
 let sil_tipos, sil_cats, sil_metricas, sil_unidades = {}, sil_sep = '||';
+let sil_periodo = {}, sil_notas = {};
 let pevs_est_data, pevs_mic_data, pevs_mun_data;
 
 // ECON (Economia) — carregado sob demanda ao abrir o domínio Economia
@@ -130,7 +131,31 @@ window.initDashboard = function(pkg, geoUF, geoMic) {
 // HELPERS
 // ═══════════════════════════════════════════════════════════
 function getAnoIdx() { return state.anoIdx; }
-function getAno()    { return anos[state.anoIdx]; }
+
+// PAM, PPM e PEVS saem em datas diferentes. O seletor de ano segue a PAM, e cada
+// domínio acha o ano pelo valor na própria série. O ano que o domínio ainda não
+// publicou vira, nos mapas e indicadores, o último que ele tem — com aviso ao
+// lado do ano —, e na série histórica fica em branco, em vez de cair a zero.
+function anosDoDominio() {
+  if (state.domain === 'pecuaria' && PPM?.anos) return PPM.anos;
+  if (state.domain === 'silvicultura' && PEVS?.anos) return PEVS.anos;
+  return anos;
+}
+function idxDominio(ai) {
+  const ad = anosDoDominio();
+  if (ad === anos) return ai;
+  const i = ad.indexOf(anos[ai]);
+  if (i >= 0) return i;
+  return anos[ai] > ad[ad.length - 1] ? ad.length - 1 : -1;
+}
+function temAno(ai) {
+  const ad = anosDoDominio();
+  return ad === anos || ad.includes(anos[ai]);
+}
+function getAno() {
+  const ad = anosDoDominio(), i = idxDominio(state.anoIdx);
+  return i >= 0 ? ad[i] : anos[state.anoIdx];
+}
 
 function getActiveCulturas() {
   if (state.cultura) return [state.cultura];
@@ -230,11 +255,11 @@ function agregarMunicipios(ids, m, ai) {
 function calcEst(uf, m) {
   if (state.domain === 'pecuaria') {
     const d = ppm_est_data?.[uf]?.[state.categoriaPec]; if (!d) return 0;
-    return d[m]?.[getAnoIdx()] || 0;
+    return d[m]?.[idxDominio(getAnoIdx())] || 0;
   }
   if (state.domain === 'silvicultura') {
     const d = pevs_est_data?.[uf]?.[silKey()]; if (!d) return 0;
-    return d[m]?.[getAnoIdx()] || 0;
+    return d[m]?.[idxDominio(getAnoIdx())] || 0;
   }
   if (baseDominioSimples()) {
     return calcSimplesEscopo('uf:' + uf, indicesMunicipios().uf[uf] || [], m);
@@ -248,11 +273,11 @@ function calcEst(uf, m) {
 function calcMic(mid, m) {
   if (state.domain === 'pecuaria') {
     const d = ppm_mic_data?.[mid]?.[state.categoriaPec]; if (!d) return 0;
-    return d[m]?.[getAnoIdx()] || 0;
+    return d[m]?.[idxDominio(getAnoIdx())] || 0;
   }
   if (state.domain === 'silvicultura') {
     const d = pevs_mic_data?.[mid]?.[silKey()]; if (!d) return 0;
-    return d[m]?.[getAnoIdx()] || 0;
+    return d[m]?.[idxDominio(getAnoIdx())] || 0;
   }
   if (baseDominioSimples()) {
     return calcSimplesEscopo('mic:' + mid, indicesMunicipios().mic[mid] || [], m);
@@ -266,11 +291,11 @@ function calcMic(mid, m) {
 function calcMunVal(munId, m, ai) {
   if (state.domain === 'pecuaria') {
     const d = ppm_mun_data?.[munId]?.[state.categoriaPec]; if (!d) return 0;
-    return d[m]?.[ai] || 0;
+    return d[m]?.[idxDominio(ai)] || 0;
   }
   if (state.domain === 'silvicultura') {
     const d = pevs_mun_data?.[munId]?.[silKey()]; if (!d) return 0;
-    return d[m]?.[ai] || 0;
+    return d[m]?.[idxDominio(ai)] || 0;
   }
   // Fontes de recorte único (sem série histórica): o valor não varia com o ano.
   const base = baseDominioSimples();
@@ -561,6 +586,7 @@ function updateChartMicro() {
   const mid = state.microSel, M = curMetrica();
   if (!mid) { if (chMicro) { chMicro.destroy(); chMicro = null; } return; }
   const series = anos.map((_, ai) => {
+    if (!temAno(ai)) return null;
     const tmp = state.anoIdx; state.anoIdx = ai;
     const v = calcMic(mid, M); state.anoIdx = tmp; return v;
   });
@@ -699,7 +725,7 @@ function hasMunData(munId) {
 function updateMunChartHist(munId) {
   const ctx = document.getElementById('chart-mun-hist')?.getContext('2d'); if (!ctx) return;
   const M = curMetrica();
-  const series = anos.map((_, ai) => calcMunVal(munId, M, ai));
+  const series = anos.map((_, ai) => temAno(ai) ? calcMunVal(munId, M, ai) : null);
   if (chMunHist) chMunHist.destroy();
   chMunHist = new Chart(ctx, {
     type: 'line',
@@ -726,7 +752,7 @@ function updateMunChartHist(munId) {
 function updateMunChartHistUF(uf, M) {
   const ctx = document.getElementById('chart-mun-hist')?.getContext('2d'); if (!ctx) return;
   const ids = Object.keys(mun_info).filter(id => mun_info[id].uf === uf);
-  const series = anos.map((_, ai) => agregarMunicipios(ids, M, ai));
+  const series = anos.map((_, ai) => temAno(ai) ? agregarMunicipios(ids, M, ai) : null);
   if (chMunHist) chMunHist.destroy();
   chMunHist = new Chart(ctx, {
     type: 'line',
@@ -762,18 +788,21 @@ function updateHistorico() {
 
   if (mid) {
     series = anos.map((_, ai) => {
+      if (!temAno(ai)) return null;
       const tmp = state.anoIdx; state.anoIdx = ai;
       const v = calcMic(mid, M); state.anoIdx = tmp; return v;
     });
     label  = mic_info[mid]?.n || mid;
   } else if (uf) {
     series = anos.map((_, ai) => {
+      if (!temAno(ai)) return null;
       const tmp = state.anoIdx; state.anoIdx = ai;
       const v = calcEst(uf, M); state.anoIdx = tmp; return v;
     });
     label = ufs_info[uf]?.n || uf;
   } else {
     series = anos.map((_, ai) => {
+      if (!temAno(ai)) return null;
       const tmp = state.anoIdx; state.anoIdx = ai;
       const v = agregarAgro(M, k =>
         Object.keys(ufs_info).reduce((s, u) => s + calcEst(u, k), 0));
@@ -816,16 +845,16 @@ function updateHistorico() {
   if (dom === 'pecuaria') {
     cultVals = getActiveCategoriasPec().map(c => {
       const v = uf
-        ? (ppm_est_data?.[uf]?.[c]?.[M]?.[ai] || 0)
-        : Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[ai] || 0), 0);
+        ? (ppm_est_data?.[uf]?.[c]?.[M]?.[idxDominio(ai)] || 0)
+        : Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[idxDominio(ai)] || 0), 0);
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else if (dom === 'silvicultura') {
     cultVals = getActiveCategoriasSil().map(c => {
       const k = state.tipoSil + sil_sep + c;
       const v = uf
-        ? (pevs_est_data?.[uf]?.[k]?.[M]?.[ai] || 0)
-        : Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[ai] || 0), 0);
+        ? (pevs_est_data?.[uf]?.[k]?.[M]?.[idxDominio(ai)] || 0)
+        : Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[idxDominio(ai)] || 0), 0);
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else {
@@ -898,13 +927,13 @@ function updateRanking() {
   let cultVals;
   if (dom === 'pecuaria') {
     cultVals = getActiveCategoriasPec().map(c => {
-      const v = Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[ai] || 0), 0);
+      const v = Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[idxDominio(ai)] || 0), 0);
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else if (dom === 'silvicultura') {
     cultVals = getActiveCategoriasSil().map(c => {
       const k = state.tipoSil + sil_sep + c;
-      const v = Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[ai] || 0), 0);
+      const v = Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[idxDominio(ai)] || 0), 0);
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else {
@@ -1005,7 +1034,7 @@ function updateKPIs() {
 
 function updateKPIsPec() {
   if (!ppmLoaded) return;
-  const ai = getAnoIdx(), uf = state.ufSel, cat = state.categoriaPec;
+  const ai = idxDominio(getAnoIdx()), uf = state.ufSel, cat = state.categoriaPec;
   const ufs = uf ? [uf] : Object.keys(ufs_info);
   let qtd = 0, val = 0, munCount = 0;
   ufs.forEach(u => {
@@ -1035,7 +1064,7 @@ function updateKPIsPec() {
 
 function updateKPIsSil() {
   if (!pevsLoaded) return;
-  const ai = getAnoIdx(), uf = state.ufSel, key = silKey(), cat = state.categoriaSil;
+  const ai = idxDominio(getAnoIdx()), uf = state.ufSel, key = silKey(), cat = state.categoriaSil;
   const isArea = state.tipoSil === 'Área plantada';
   const ufs = uf ? [uf] : Object.keys(ufs_info);
   let qtd = 0, val = 0, munCount = 0;
@@ -1097,12 +1126,26 @@ function populateMetricaPecOptions() {
   sel.value = state.metricaPec;
 }
 
+// A PEVS muda a classificação de tempos em tempos (espécies separadas em 2013,
+// produtos novos em 2025): a categoria que não cobre a série inteira mostra o
+// período no seletor, e a nota do tipo explica a quebra.
+function periodoSil(c) {
+  const p = sil_periodo[state.tipoSil + sil_sep + c], anos = PEVS?.anos || [];
+  if (!p || !anos.length) return '';
+  const [ini, fim] = p, primeiro = anos[0], ultimo = anos[anos.length - 1];
+  if (ini > primeiro && fim < ultimo) return ` (${ini}–${fim})`;
+  if (ini > primeiro) return ` (desde ${ini})`;
+  return fim < ultimo ? ` (até ${fim})` : '';
+}
+
 function populateCategoriaSil() {
   const sel = document.getElementById('f-categoria-sil'); if (!sel) return;
   const list = getActiveCategoriasSil();
-  sel.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join('');
+  sel.innerHTML = list.map(c => `<option value="${c}">${c}${periodoSil(c)}</option>`).join('');
   if (!list.includes(state.categoriaSil)) state.categoriaSil = list[0] || '';
   sel.value = state.categoriaSil;
+  const nota = document.getElementById('sil-nota');
+  if (nota) nota.textContent = (sil_notas[state.tipoSil] || []).join(' ');
 }
 
 function populateMetricaSilOptions() {
@@ -1194,6 +1237,8 @@ function loadPEVS() {
       sil_cats     = d.categorias_por_tipo;
       sil_metricas = d.metricas_por_tipo;
       sil_unidades = d.unidades || {};
+      sil_periodo  = d.periodo_categoria || {};
+      sil_notas    = d.notas || {};
       sil_sep      = d.sep || '||';
       pevs_est_data = d.est_data; pevs_mic_data = d.mic_data; pevs_mun_data = d.mun_data;
       if (!sil_tipos.includes(state.tipoSil)) state.tipoSil = sil_tipos[0];
@@ -1516,7 +1561,7 @@ function refreshAll() {
   if (t === 'ranking')   { updateMapBR(); updateRanking(); }
   if (t === 'concentracao') updateConcentracao();
   const al = document.getElementById('ano-label');
-  if (al) al.textContent = getAno();
+  if (al) al.textContent = getAno() + (getAno() !== anos[state.anoIdx] ? ' (último publicado)' : '');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1529,12 +1574,12 @@ function exportCSV() {
   const rows = [['UF', 'Estado', label, metLabel()]];
   ufs.forEach(u => {
     if (dom === 'pecuaria') {
-      const v = ppm_est_data?.[u]?.[state.categoriaPec]?.[M]?.[ai];
+      const v = ppm_est_data?.[u]?.[state.categoriaPec]?.[M]?.[idxDominio(ai)];
       if (v) rows.push([u, ufs_info[u]?.n || u, state.categoriaPec, v]);
       return;
     }
     if (dom === 'silvicultura') {
-      const v = pevs_est_data?.[u]?.[silKey()]?.[M]?.[ai];
+      const v = pevs_est_data?.[u]?.[silKey()]?.[M]?.[idxDominio(ai)];
       if (v) rows.push([u, ufs_info[u]?.n || u, state.categoriaSil, v]);
       return;
     }
@@ -1556,12 +1601,12 @@ function exportJSON() {
   const out = { ano: getAno(), metrica: M, uf: uf || 'BR', data: {} };
   (uf ? [uf] : Object.keys(ufs_info)).forEach(u => {
     if (dom === 'pecuaria') {
-      const v = ppm_est_data?.[u]?.[state.categoriaPec]?.[M]?.[ai];
+      const v = ppm_est_data?.[u]?.[state.categoriaPec]?.[M]?.[idxDominio(ai)];
       if (v) out.data[u] = { [state.categoriaPec]: v };
       return;
     }
     if (dom === 'silvicultura') {
-      const v = pevs_est_data?.[u]?.[silKey()]?.[M]?.[ai];
+      const v = pevs_est_data?.[u]?.[silKey()]?.[M]?.[idxDominio(ai)];
       if (v) out.data[u] = { [state.categoriaSil]: v };
       return;
     }

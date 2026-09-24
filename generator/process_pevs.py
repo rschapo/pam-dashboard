@@ -21,7 +21,7 @@ Rodar a partir da raiz do projeto, depois de generator/download_pevs_ibge.py:
     py generator/process_pevs.py
 """
 
-import sys, json, math
+import sys, json, math, re
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding='utf-8')
@@ -29,7 +29,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 import pandas as pd
 import requests
 
-RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
 CSV     = RAW_IBGE / "pevs" / "PEVS_municipios_completo.csv"
 OUT_DIR = Path(__file__).parent.parent / "public" / "data"
 OUT     = OUT_DIR / "pevs.json"
@@ -49,15 +49,56 @@ TIPO_METRICAS = {
 }
 SEP = "||"  # separador da chave composta tipo||categoria
 
+# Quebras de série conferidas no SIDRA: em 2025 o IBGE passou a separar produtos
+# que antes iam para "outras espécies" ou "Outros". A soma fecha — a categoria
+# genérica cai no mesmo tanto que as novas somam —, então a queda dela é
+# reclassificação, não redução.
+NOTAS = {
+    "Silvicultura": [
+        "Em 2025 o IBGE passou a separar acácia-negra, mogno africano e teca, antes "
+        "em \"outras espécies\"; a queda dessas categorias em 2025 é reclassificação."],
+    "Área plantada": [
+        "Em 2025 o IBGE passou a separar acácia-negra, teca, mogno africano e cedro "
+        "australiano, antes em \"Outras espécies\"; a queda dela em 2025 é reclassificação."],
+    "Extração vegetal": [
+        "Em 2025 o IBGE passou a separar baru, buriti, cajá, cupuaçu, juçara, macaúba, "
+        "pupunha, tucumã, andiroba e murumuru, antes em \"Outros\"; a queda de "
+        "\"Outros\" em 2025 é reclassificação. Barbatimão, ipecacuanha e hévea (látex "
+        "líquido) deixaram de aparecer em separado."],
+}
+
+
+def _rotulo(cat) -> str:
+    """Rótulo padronizado: o SIDRA de 2025 às vezes omite o ' - ' após o código."""
+    return re.sub(r"^(\d+(?:\.\d+)*)\s+(?!-)", r"\1 - ", str(cat).strip())
+
+
+def _ordem(cat):
+    """Ordena pela numeração do IBGE (1.2 antes de 1.10); sem código, pelo nome."""
+    m = re.match(r"^(\d+(?:\.\d+)*)", cat)
+    return (0, tuple(int(p) for p in m.group(1).split(".")), cat) if m else (1, (), cat)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. LOAD CSV
 # ─────────────────────────────────────────────────────────────────────────────
 print("Loading CSV …")
-df = pd.read_csv(CSV, sep=";", encoding="utf-8-sig", dtype={"Cod_Municipio": "str"})
+df = pd.read_csv(CSV, sep=";", encoding="utf-8-sig",
+                 dtype={"Cod_Municipio": "str", "Cod_Categoria": "str"})
 print(f"  Raw rows: {len(df):,}")
 
 # rótulo amigável do tipo
 df["TipoLabel"] = df["Tipo"].map(TIPO_LABEL).fillna(df["Tipo"])
+
+# Em 2025 o IBGE renumerou produtos (castanhas, erva-mate, carvão, lenha e madeira
+# por espécie...): o rótulo mudou, o código interno do SIDRA não. A série segue
+# pelo código, com o rótulo mais recente — senão o carvão de eucalipto viraria
+# uma série até 2024 e outra a partir de 2025.
+recente = df.sort_values("Ano").groupby(["Tipo", "Cod_Categoria"])["Categoria"].last()
+mudaram = int((df.groupby(["Tipo", "Cod_Categoria"])["Categoria"].nunique() > 1).sum())
+df["Categoria"] = [_rotulo(recente.get((t, c), cat))
+                   for t, c, cat in zip(df["Tipo"], df["Cod_Categoria"], df["Categoria"])]
+print(f"  Categorias (pelo código do SIDRA): {len(recente)}; com rótulo trocado ao longo da série: {mudaram}")
 
 # descarta a categoria "Total" (soma sem sentido físico entre produtos de unidades diferentes)
 df = df[df["Categoria"].astype(str).str.strip().str.lower() != "total"].copy()
@@ -78,7 +119,7 @@ tipos = [t for t in ["Silvicultura", "Extração vegetal", "Área plantada"]
 
 categorias_por_tipo, unidades = {}, {}
 for t in tipos:
-    cats = sorted(df.loc[df["TipoLabel"] == t, "Categoria"].dropna().unique().tolist())
+    cats = sorted(df.loc[df["TipoLabel"] == t, "Categoria"].dropna().unique().tolist(), key=_ordem)
     categorias_por_tipo[t] = cats
     for c in cats:
         u = df.loc[(df["TipoLabel"] == t) & (df["Categoria"] == c), "Unidade"].dropna()
@@ -88,6 +129,15 @@ for t in tipos:
 
 # chave composta tipo||categoria (nome sem "_" inicial p/ funcionar no itertuples)
 df["catkey"] = df["TipoLabel"].astype(str) + SEP + df["Categoria"].astype(str)
+
+# Período de cada categoria, quando ela não cobre a série inteira: a que começa
+# depois (espécies separadas em 2013, produtos novos em 2025) ou termina antes
+# (produtos que deixaram de aparecer em separado). O painel mostra no seletor.
+com_valor = df[(df[["q", "v", "a"]] != 0).any(axis=1)]
+extremos = com_valor.groupby("catkey")["Ano"].agg(["min", "max"]).astype(int)
+periodo_categoria = {k: [int(r["min"]), int(r["max"])] for k, r in extremos.iterrows()
+                     if r["min"] > anos[0] or r["max"] < anos[-1]}
+print(f"  Categorias com período parcial: {len(periodo_categoria)}")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. Cod_Microrregiao — a PEVS/SIDRA não devolve na consulta municipal;
@@ -145,6 +195,8 @@ PEVS = {
     "categorias_por_tipo": categorias_por_tipo,
     "metricas_por_tipo":   {t: TIPO_METRICAS.get(t, ["q", "v"]) for t in tipos},
     "unidades":            unidades,
+    "periodo_categoria":   periodo_categoria,
+    "notas":               {t: NOTAS[t] for t in tipos if t in NOTAS and anos[-1] >= 2025},
     "sep":                 SEP,
     "est_data":            EST_DATA,
     "mic_data":            MIC_DATA,

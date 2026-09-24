@@ -18,7 +18,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 import pandas as pd
 import requests
 
-RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
 CSV     = RAW_IBGE / "ppm" / "PPM_municipios_completo.csv"
 OUT_DIR = Path(__file__).parent.parent / "public" / "data"
 OUT_PPM = OUT_DIR / "ppm.json"

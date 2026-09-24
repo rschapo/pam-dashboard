@@ -20,8 +20,8 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 # ── Configuracoes ──────────────────────────────────────────────────────────
 ANO_INICIO  = 2004
 ANO_FIM     = 2024
-# Raiz dos brutos IBGE do projeto: .../pam-dashboard/data/raw/ibge
-RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+# Raiz dos brutos IBGE: PAM_RAW_DIR, data/raw_dir.txt ou data/raw (ibge_common)
+from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
 PASTA_SAIDA = str(RAW_IBGE / "ppm")
 PASTA_RAW   = os.path.join(PASTA_SAIDA, "raw")
 PAUSA_REQ   = 0.8

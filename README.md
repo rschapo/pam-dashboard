@@ -1,7 +1,9 @@
 # PAM Dashboard — AgroCore
 
 Dashboard dos Dados de Produção Agrícola Municipal com base no estudo do IBGE.
-Dados disponíveis dos anos 2004 até 2024.
+Lavouras (PAM) e silvicultura/extração vegetal (PEVS) de 2004 a 2025; pecuária (PPM)
+de 2004 a 2024, porque a PPM 2025 ainda não foi publicada. O seletor de ano segue a PAM, e
+o domínio que não tem o ano escolhido mostra o último que publicou, com aviso.
 
 ## Estrutura do Projeto
 
@@ -26,8 +28,12 @@ pam-dashboard/
 
 Arquivo CSV do IBGE (PAM):
 ```
-data/raw/ibge/pam/PAM_municipios_completo.csv   (relativo à raiz do projeto)
+<brutos>/ibge/pam/PAM_municipios_completo.csv
 ```
+Os brutos ficam fora da pasta sincronizada: `<brutos>` é o caminho em
+`data/raw_dir.txt` (ou na variável `PAM_RAW_DIR`); sem nenhum dos dois, `data/raw`.
+Todos os coletores e processadores (PAM, PPM, PEVS e o pipeline complementar) usam
+essa mesma regra.
 
 ## Como Gerar os Dados
 

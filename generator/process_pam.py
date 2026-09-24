@@ -24,7 +24,7 @@ import requests
 from ibge_common import IBGE2UF, build_ufs_info, build_mic_info, build_mun_info
 
 # ── Paths ────────────────────────────────────────────────────────────────────
-RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
 CSV      = RAW_IBGE / "pam" / "PAM_municipios_completo.csv"
 OUT_DIR  = Path(__file__).parent.parent / "public" / "data"
 OUT_PKG  = OUT_DIR / "pkg.json"

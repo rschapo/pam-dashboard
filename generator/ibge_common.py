@@ -2,6 +2,32 @@
 Shared IBGE lookups and geo-info builders reused by process_pam.py and
 process_ppm.py — kept in one place so both generators stay in sync.
 """
+import os
+from pathlib import Path
+
+_DATA = Path(__file__).resolve().parent.parent / "data"
+
+
+def _raiz_bruta() -> Path:
+    """Onde ficam os brutos — a mesma regra de complementary/common.py.
+
+    O projeto vive numa pasta sincronizada, e os brutos moram fora dela: primeiro
+    PAM_RAW_DIR no ambiente, depois o caminho escrito em data/raw_dir.txt; sem
+    nenhum dos dois, data/raw como antes.
+    """
+    env = os.environ.get("PAM_RAW_DIR")
+    if env:
+        return Path(env).expanduser()
+    ponteiro = _DATA / "raw_dir.txt"
+    if ponteiro.exists():
+        destino = Path(ponteiro.read_text(encoding="utf-8").strip()).expanduser()
+        if destino.is_absolute():
+            return destino
+    return _DATA / "raw"
+
+
+# Raiz dos brutos IBGE (PAM, PPM, PEVS) usada por todos os coletores e processadores.
+RAW_IBGE = _raiz_bruta() / "ibge"
 
 IBGE2UF = {
     "11":"RO","12":"AC","13":"AM","14":"RR","15":"PA","16":"AP","17":"TO",

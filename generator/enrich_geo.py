@@ -11,8 +11,8 @@ import requests
 import pandas as pd
 import time
 
-# Raiz dos brutos IBGE do projeto: .../pam-dashboard/data/raw/ibge
-RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+# Raiz dos brutos IBGE: PAM_RAW_DIR, data/raw_dir.txt ou data/raw (ibge_common)
+from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
 BASE = str(RAW_IBGE / "pam")
 RAW  = str(RAW_IBGE / "pam" / "raw")
 

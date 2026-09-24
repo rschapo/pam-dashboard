@@ -26,9 +26,9 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 # ── Configurações ────────────────────────────────────────────────────────────
 ANO_INICIO  = 2004
-ANO_FIM     = 2024
-# Raiz dos brutos IBGE do projeto: .../pam-dashboard/data/raw/ibge
-RAW_IBGE = Path(__file__).resolve().parent.parent / "data" / "raw" / "ibge"
+ANO_FIM     = 2025
+# Raiz dos brutos IBGE: PAM_RAW_DIR, data/raw_dir.txt ou data/raw (ibge_common)
+from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
 PASTA_SAIDA = str(RAW_IBGE / "pevs")
 PASTA_RAW   = os.path.join(PASTA_SAIDA, "raw")
 PAUSA_REQ   = 0.8
@@ -77,6 +77,7 @@ def descobrir_metadados(tabela, metricas):
     Lê a API de metadados e devolve:
       variaveis: {cod_variavel(str): metrica('q'/'v'/'a')}
       classif  : 'c<id>' da classificação de produto/espécie (ou None)
+      categorias: ids das categorias dessa classificação (para dividir pedidos)
     Casa cada métrica pedida com a variável cujo nome contém o texto-chave.
     """
     url = f"{API_META}/{tabela}/metadados"
@@ -102,15 +103,17 @@ def descobrir_metadados(tabela, metricas):
             print(f"    [AVISO] tabela {tabela}: variável para '{chave}' não encontrada nos metadados")
 
     # classificação de produto/espécie: a PEVS traz exatamente uma por tabela.
-    classif = None
+    # As categorias vêm junto, para poder dividir o pedido que estoura o limite.
+    classif, categorias = None, []
     classes = meta.get("classificacoes", [])
     if classes:
         classif = f"c{classes[0]['id']}"
+        categorias = [str(c["id"]) for c in classes[0].get("categorias", [])]
 
     nome_tab = meta.get("nome", "")
     print(f"    tabela {tabela}: {nome_tab[:70]}")
-    print(f"      variáveis={variaveis}  classif={classif}")
-    return variaveis, classif
+    print(f"      variáveis={variaveis}  classif={classif} ({len(categorias)} categorias)")
+    return variaveis, classif, categorias
 
 
 def descobrir_anos(tabela):
@@ -131,9 +134,14 @@ def descobrir_anos(tabela):
 
 # ── API de valores ───────────────────────────────────────────────────────────
 
-def requisitar(tabela, classif, variaveis, estado_cod, ano):
+def requisitar(tabela, classif, variaveis, estado_cod, ano, categorias=None):
+    """Um estado × ano. O SIDRA recusa pedidos de mais de 50 mil valores (HTTP 400):
+    aí as categorias são divididas ao meio até caber, e as respostas se juntam.
+    Antes, esse 400 era lido como "sem dado" — em 2025, com as categorias novas,
+    MG sumiu da silvicultura e BA da extração vegetal sem nenhum aviso."""
     variaveis_str = ",".join(variaveis.keys())
-    classif_path = f"/{classif}/all" if classif else ""
+    filtro = ",".join(categorias) if categorias else "all"
+    classif_path = f"/{classif}/{filtro}" if classif else ""
     url = (
         f"https://apisidra.ibge.gov.br/values"
         f"/t/{tabela}/n6/in%20n3%20{estado_cod}"
@@ -142,13 +150,25 @@ def requisitar(tabela, classif, variaveis, estado_cod, ano):
     for tent in range(1, MAX_TENT + 1):
         try:
             r = requests.get(url, timeout=TIMEOUT_SEG)
-            if r.status_code == 400: return []      # sem dado p/ o recorte
+            if r.status_code == 400:
+                if "excedeu o limite" not in r.text:
+                    return []                        # sem dado p/ o recorte
+                if not categorias or len(categorias) < 2:
+                    tqdm.write(f"  [ERRO] {tabela}/{ano}/UF {estado_cod}: {r.text[:90]}")
+                    return []
+                meio = len(categorias) // 2
+                partes = [requisitar(tabela, classif, variaveis, estado_cod, ano, c)
+                          for c in (categorias[:meio], categorias[meio:])]
+                partes = [p for p in partes if len(p) > 1]
+                return partes[0][:1] + [linha for p in partes for linha in p[1:]] if partes else []
             if r.status_code == 429:
                 time.sleep(60); continue
             r.raise_for_status()
             return r.json()
-        except Exception:
-            if tent == MAX_TENT: return []
+        except Exception as e:
+            if tent == MAX_TENT:
+                tqdm.write(f"  [ERRO] {tabela}/{ano}/UF {estado_cod}: {type(e).__name__}: {e}")
+                return []
             time.sleep(5 * tent)
     return []
 
@@ -211,7 +231,7 @@ def baixar_tabela(cfg):
     print(f"Tabela {tabela} ({tipo})")
     print(f"{'='*64}")
 
-    variaveis, classif = descobrir_metadados(tabela, metricas)
+    variaveis, classif, categorias = descobrir_metadados(tabela, metricas)
     if not variaveis:
         print(f"  [X] Sem variáveis identificadas; pulando tabela {tabela}.")
         return
@@ -232,7 +252,7 @@ def baixar_tabela(cfg):
             frames_ano = []
             for cod_est in ESTADOS:
                 uf = SIGLA_UF[cod_est]
-                dados = requisitar(tabela, classif, variaveis, cod_est, ano)
+                dados = requisitar(tabela, classif, variaveis, cod_est, ano, categorias)
                 if dados and len(dados) > 1:
                     df_bloco = parsear(dados, tipo, uf, variaveis)
                     if not df_bloco.empty:
@@ -262,9 +282,18 @@ def pivotar(df):
     for c in idx:
         if c in df.columns:
             df[c] = df[c].fillna("")
-    pv = df.pivot_table(index=idx, columns="Metrica", values="Valor",
-                        aggfunc="first", dropna=False).reset_index()
+    # groupby + unstack em vez de pivot_table(dropna=False): no pandas 3 o
+    # dropna=False do pivot_table reindexa pelo produto cartesiano de todos os
+    # níveis do índice (município × categoria × ano…), o que pediu 138 TiB. Aqui
+    # só existem as combinações presentes.
+    pv = (df.groupby(idx + ["Metrica"], dropna=False, sort=False)["Valor"].first()
+            .unstack("Metrica").reset_index())
     pv.columns.name = None
+    # O SIDRA devolve todo município × produto, com "-" onde não há produção:
+    # linha sem nenhum valor não entra (são 88% das linhas, e o consolidado de
+    # 2004–2024 nunca as teve).
+    metricas = [c for c in ("q", "v", "a") if c in pv.columns]
+    pv = pv[pv[metricas].notna().any(axis=1)]
     for col in ("q","v","a"):
         if col not in pv.columns:
             pv[col] = None
