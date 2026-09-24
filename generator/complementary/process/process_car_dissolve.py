@@ -17,11 +17,16 @@ O método vai gravado na saída, e trocar de método invalida as medições
 anteriores da UF — elas vão para _arquivo/ e são refeitas, para que o painel
 nunca compare estados medidos de jeitos diferentes.
 
-A leitura é paginada porque uma camada pode passar de 2 GB por shapefile — o
-SICAR fatia em _1.._N justamente por isso. A união também é feita em etapas
-quando o volume em memória passa de um teto: unir uniões parciais dá o mesmo
-resultado (o que não se pode é somar as áreas delas), e a APP de MG tem 5,4
-milhões de feições.
+A memória fica limitada a um bloco de municípios por vez. Primeiro se leem só
+os atributos, para saber de que município é cada feição, e o índice .shx dá o
+tamanho exato de cada uma; os municípios são agrupados em blocos até um teto em
+MB, e cada bloco é lido por identificador, unido, medido e descartado. Sem isso
+a APP de SP, com 21,7 GB, não caberia: a união de todos os municípios ficaria em
+memória até o fim.
+
+Duas filas podem rodar juntas — as camadas leves e a APP, por exemplo. A
+gravação de cada UF é feita sob trava de arquivo, para que uma não apague a
+camada que a outra acabou de gravar.
 
 A Bahia tem medidas compostas, porque o CEFIR registra o imóvel de outro jeito
 (ver docs/CAR_LIMITATIONS.md): vegetação nativa, reserva legal e APP são fatias
@@ -35,14 +40,17 @@ Uso:
   python process_car_dissolve.py --pendentes [--camadas ...]
   python process_car_dissolve.py --compostas --uf BA
   python process_car_dissolve.py --uf MT --incluir-cancelados     # método antigo
+  python process_car_dissolve.py --pendentes --camadas app --teto-mb 700
 """
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 import time
-from dataclasses import dataclass, field
+from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
@@ -57,8 +65,7 @@ GEO = PROCESSED_DIR / "geospatial"
 ARQUIVO = GEO / "_arquivo"
 REGISTRO = GEO / "car_dissolve_fila.log"
 CAMADAS = ["area_consolidada", "vegetacao_nativa", "reserva_legal", "app", "uso_restrito"]
-LOTE = 100_000
-TETO_GEOMETRIAS = 1_500_000
+TETO_MB = 1000
 
 COMPOSTAS = {
     "BA": {
@@ -98,7 +105,7 @@ def anotar(msg: str):
 class Fonte:
     rotulo: str
     arquivos: list[Path]
-    ler: Callable  # (arquivo, inicio, lote, estatisticas) -> GeoDataFrame[cod_municipio, geometry]
+    atributos: Callable  # (arquivo, estatisticas) -> DataFrame indexado por fid, coluna cod_municipio
 
 
 def _mun_do_car(v) -> str | None:
@@ -121,23 +128,19 @@ def _metrico(g):
 
 def _fonte_sicar(uf: str, camada: str, incluir_cancelados: bool) -> Fonte:
     import pyogrio
-    campos_por_arquivo: dict[Path, list[str]] = {}
 
-    def ler(arq, inicio, lote, est):
-        if arq not in campos_por_arquivo:
-            campos_por_arquivo[arq] = list(pyogrio.read_info(arq)["fields"])
-        filtrar = not incluir_cancelados and "ind_status" in campos_por_arquivo[arq]
-        g = pyogrio.read_dataframe(arq, columns=["cod_imovel"] + (["ind_status"] if filtrar else []),
-                                   skip_features=inicio, max_features=lote)
+    def atributos(arq, est):
+        filtrar = not incluir_cancelados and "ind_status" in pyogrio.read_info(arq)["fields"]
+        a = pyogrio.read_dataframe(arq, columns=["cod_imovel"] + (["ind_status"] if filtrar else []),
+                                   read_geometry=False, fid_as_index=True)
         if filtrar:
-            cancelado = g["ind_status"].astype(str).str.upper().eq("CA")
+            cancelado = a["ind_status"].astype(str).str.upper().eq("CA")
             est["canceladas"] += int(cancelado.sum())
-            g = g[~cancelado]
-        g["cod_municipio"] = g["cod_imovel"].map(_mun_do_car)
-        return g
+            a = a[~cancelado]
+        return a["cod_imovel"].map(_mun_do_car).rename("cod_municipio").to_frame()
 
     d = RAW_DIR / "car" / uf / camada
-    return Fonte(f"SICAR/{uf}/{camada}", sorted(d.rglob("*.shp")) if d.exists() else [], ler)
+    return Fonte(f"SICAR/{uf}/{camada}", sorted(d.rglob("*.shp")) if d.exists() else [], atributos)
 
 
 _MAPA_CEFIR: dict[str, str] | None = None
@@ -160,14 +163,13 @@ def _mapa_cefir() -> dict[str, str]:
 def _fonte_cefir(camada: str) -> Fonte:
     import pyogrio
 
-    def ler(arq, inicio, lote, est):
+    def atributos(arq, est):
         mapa = _mapa_cefir()
-        g = pyogrio.read_dataframe(arq, columns=["ide_imovel"], skip_features=inicio, max_features=lote)
-        g["cod_municipio"] = g["ide_imovel"].map(lambda x: mapa.get(_id(x)))
-        return g
+        a = pyogrio.read_dataframe(arq, columns=["ide_imovel"], read_geometry=False, fid_as_index=True)
+        return a["ide_imovel"].map(lambda x: mapa.get(_id(x))).rename("cod_municipio").to_frame()
 
     d = RAW_DIR / "cefir" / "BA" / camada
-    return Fonte(f"CEFIR/BA/{camada}", sorted(d.rglob("*.shp")) if d.exists() else [], ler)
+    return Fonte(f"CEFIR/BA/{camada}", sorted(d.rglob("*.shp")) if d.exists() else [], atributos)
 
 
 def _fonte(origem: str, uf: str, camada: str, incluir_cancelados: bool) -> Fonte:
@@ -233,48 +235,103 @@ def _preparar(geoms, est) -> list:
     return prontas
 
 
-def _acumular(fontes: list[Fonte]) -> tuple[dict, dict]:
-    """União por município de todas as feições das fontes, com memória limitada."""
+def _tamanhos(arq: Path):
+    """Bytes de geometria de cada feição, lidos do índice .shx do shapefile."""
+    import numpy as np
+    shx = arq.with_suffix(".shx")
+    if shx.exists():
+        return np.fromfile(shx, dtype=">i4", offset=100)[1::2].astype("int64") * 2
     import pyogrio
-    from shapely import union_all
+    n = pyogrio.read_info(arq)["features"]
+    return np.full(n, arq.stat().st_size // max(n, 1), dtype="int64")
 
-    est = {"lidas": 0, "invalidas": 0, "descartadas": 0, "canceladas": 0,
-           "sem_municipio": 0, "inicio": time.time()}
-    pendentes: dict[str, list] = {}
-    unidos: dict[str, object] = {}
-    em_memoria = 0
 
-    def colapsar(com_progresso: bool = False):
-        nonlocal em_memoria
-        itens = [(c, l) for c, l in pendentes.items() if l]
-        for i, (cod, lista) in enumerate(itens, 1):
-            base = [unidos[cod]] if cod in unidos else []
-            unidos[cod] = union_all(base + lista)
-            if com_progresso and i % 50 == 0:
-                print(f"    dissolvidos {i}/{len(itens)} municípios "
-                      f"({time.time() - est['inicio']:.0f}s)", flush=True)
-        pendentes.clear()
-        em_memoria = 0
-
+def _indice(fontes: list[Fonte], est: dict) -> tuple[pd.DataFrame, list[Path]]:
+    """Uma linha por feição — arquivo, fid, município e bytes — sem ler geometria."""
+    arquivos, partes = [], []
     for fonte in fontes:
         for arq in fonte.arquivos:
-            total = pyogrio.read_info(arq)["features"]
-            for inicio in range(0, total, LOTE):
-                g = fonte.ler(arq, inicio, LOTE, est)
-                est["lidas"] += len(g)
-                sem = g["cod_municipio"].isna()
-                est["sem_municipio"] += int(sem.sum())
-                g = _metrico(g[~sem])
-                for cod, idx in g.groupby("cod_municipio").indices.items():
-                    lista = _preparar(g.geometry.values[idx], est)
-                    pendentes.setdefault(cod, []).extend(lista)
-                    em_memoria += len(lista)
-                if em_memoria > TETO_GEOMETRIAS:
-                    colapsar()
-            print(f"    {fonte.rotulo} · {arq.name}: {total:,} feições lidas "
-                  f"({time.time() - est['inicio']:.0f}s)", flush=True)
-    colapsar(com_progresso=True)
-    return unidos, est
+            a = fonte.atributos(arq, est)
+            a["bytes"] = _tamanhos(arq)[a.index.to_numpy()]
+            a["arq"] = len(arquivos)
+            arquivos.append(arq)
+            partes.append(a.rename_axis("fid").reset_index())
+    if not partes:
+        return pd.DataFrame(columns=["fid", "cod_municipio", "bytes", "arq"]), arquivos
+    idx = pd.concat(partes, ignore_index=True)
+    sem = idx["cod_municipio"].isna()
+    est["sem_municipio"] += int(sem.sum())
+    return idx[~sem], arquivos
+
+
+def _blocos(idx: pd.DataFrame, teto_bytes: int) -> list[list[str]]:
+    """Municípios agrupados em ordem, cada bloco até o teto de bytes de geometria."""
+    pesos = idx.groupby("cod_municipio")["bytes"].sum().sort_index()
+    blocos, atual, soma = [], [], 0
+    for cod, b in pesos.items():
+        if atual and soma + b > teto_bytes:
+            blocos.append(atual)
+            atual, soma = [], 0
+        atual.append(cod)
+        soma += b
+    if atual:
+        blocos.append(atual)
+    return blocos
+
+
+def _ler_bloco(linhas: pd.DataFrame, arquivos: list[Path], est: dict) -> dict[str, list]:
+    """Geometrias das linhas pedidas, lidas por fid e agrupadas por município."""
+    import numpy as np
+    import pyogrio
+    por_mun: dict[str, list] = {}
+    for i_arq, sub in linhas.groupby("arq"):
+        sub = sub.set_index("fid")
+        g = pyogrio.read_dataframe(arquivos[i_arq], fids=np.sort(sub.index.to_numpy()),
+                                   columns=[], fid_as_index=True)
+        g["cod_municipio"] = sub["cod_municipio"].reindex(g.index).to_numpy()
+        g = _metrico(g)
+        est["lidas"] += len(g)
+        for cod, ix in g.groupby("cod_municipio").indices.items():
+            por_mun.setdefault(cod, []).extend(_preparar(g.geometry.values[ix], est))
+    return por_mun
+
+
+def _novo_est() -> dict:
+    return {"lidas": 0, "invalidas": 0, "descartadas": 0, "canceladas": 0,
+            "sem_municipio": 0, "inicio": time.time()}
+
+
+def _medir_fontes(fontes: list[Fonte], subtrair: list[Fonte] | None = None,
+                  recortar: bool = False) -> tuple[dict[str, float], dict]:
+    """Área (ha) por município da união das fontes, menos a união de subtrair."""
+    from shapely import union_all
+    est = _novo_est()
+    idx, arquivos = _indice(fontes, est)
+    if subtrair:
+        idx_sub, arq_sub = _indice(subtrair, _novo_est())
+    blocos = _blocos(idx, TETO_MB * 1_000_000)
+    print(f"    {len(idx):,} feições em {idx['cod_municipio'].nunique()} municípios, "
+          f"{idx['bytes'].sum() / 1e9:.1f} GB de geometria, {len(blocos)} bloco(s)", flush=True)
+    areas: dict[str, float] = {}
+    for i, bloco in enumerate(blocos, 1):
+        linhas = idx[idx["cod_municipio"].isin(bloco)]
+        geoms = _ler_bloco(linhas, arquivos, est)
+        tirar = (_ler_bloco(idx_sub[idx_sub["cod_municipio"].isin(bloco)], arq_sub, _novo_est())
+                 if subtrair else {})
+        malha = _malha_municipal(geoms.keys()) if recortar else None
+        for cod, lista in geoms.items():
+            if not lista:
+                continue
+            u = union_all(lista)
+            if tirar.get(cod):
+                u = u.difference(union_all(tirar[cod]))
+            if malha is not None and cod in malha.index:
+                u = u.intersection(malha.loc[cod])
+            areas[cod] = u.area / 10_000.0
+        del geoms, tirar
+        print(f"    bloco {i}/{len(blocos)}: {len(bloco)} municípios, {len(linhas):,} feições, "
+              f"{linhas['bytes'].sum() / 1e6:,.0f} MB ({time.time() - est['inicio']:.0f}s)", flush=True)
+    return areas, est
 
 
 def _malha_municipal(codigos):
@@ -288,17 +345,6 @@ def _malha_municipal(codigos):
     m = gpd.read_parquet(p)
     m = m[m["cod_municipio"].astype(str).isin(set(codigos))]
     return m.to_crs(CRS_AREA).set_index("cod_municipio")["geometry"]
-
-
-def _medir(unidos: dict, subtrair: dict | None = None, malha=None) -> dict[str, float]:
-    areas = {}
-    for cod, u in unidos.items():
-        if subtrair and cod in subtrair:
-            u = u.difference(subtrair[cod])
-        if malha is not None and cod in malha.index:
-            u = u.intersection(malha.loc[cod])
-        areas[cod] = u.area / 10_000.0
-    return areas
 
 
 def _resumo(rotulo: str, areas: dict, est: dict):
@@ -319,11 +365,9 @@ def dissolver_camada(uf: str, camada: str, recortar: bool,
     fonte = _fonte_sicar(uf, camada, incluir_cancelados)
     if not fonte.arquivos:
         return None
-    unidos, est = _acumular([fonte])
-    if not unidos:
+    areas, est = _medir_fontes([fonte], recortar=recortar)
+    if not areas:
         return None
-    malha = _malha_municipal(unidos.keys()) if recortar else None
-    areas = _medir(unidos, malha=malha)
     _resumo(camada, areas, est)
     return pd.Series(areas, name=f"{camada}_ha").rename_axis("cod_municipio")
 
@@ -336,15 +380,37 @@ def medir_composta(uf: str, nome: str, recortar: bool,
     faltam = [f.rotulo for f in somar + tirar if not f.arquivos]
     if faltam:
         raise SystemExit(f"{nome}: sem arquivos para {', '.join(faltam)}")
-    unidos, est = _acumular(somar)
-    subtrair = _acumular(tirar)[0] if tirar else None
-    malha = _malha_municipal(unidos.keys()) if recortar else None
-    areas = _medir(unidos, subtrair, malha)
+    areas, est = _medir_fontes(somar, subtrair=tirar or None, recortar=recortar)
     _resumo(nome, areas, est)
     return pd.Series(areas, name=f"{nome}_ha").rename_axis("cod_municipio")
 
 
 # ─── gravação e fila ─────────────────────────────────────────────────────────
+
+@contextmanager
+def _trava(alvo: Path, abandono_s: int = 900):
+    """Exclusão mútua na gravação de uma UF entre filas que rodam juntas."""
+    trava = alvo.parent / f"{alvo.name}.lock"
+    while True:
+        try:
+            fd = os.open(trava, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.write(fd, str(os.getpid()).encode())
+            os.close(fd)
+            break
+        except FileExistsError:
+            try:
+                # Gravar leva segundos; uma trava tão velha é de processo morto no meio.
+                if time.time() - trava.stat().st_mtime > abandono_s:
+                    trava.unlink(missing_ok=True)
+                    continue
+            except FileNotFoundError:
+                continue
+            time.sleep(0.5)
+    try:
+        yield
+    finally:
+        trava.unlink(missing_ok=True)
+
 
 def _metodo_do_arquivo(p: Path) -> str | None:
     d = pd.read_parquet(p, columns=["metodo"])
@@ -363,22 +429,23 @@ def _arquivar(alvo: Path, motivo: str):
 
 def _gravar(out: pd.DataFrame, uf: str, met: str, prefixo: str = "car_ambiental_dissolve"):
     alvo = GEO / f"{prefixo}_{uf}"
-    anterior = alvo.with_suffix(".parquet")
-    if anterior.exists():
-        antigo = _metodo_do_arquivo(anterior)
-        if antigo != met:
-            _arquivar(alvo, f"medido por '{antigo}', agora '{met}'")
-        else:
-            velho = pd.read_parquet(anterior)
-            novas = [c for c in out.columns if c.endswith("_ha")]
-            velho = velho.drop(columns=[c for c in novas if c in velho.columns])
-            out = velho.drop(columns=["uf", "metodo"], errors="ignore").merge(
-                out.drop(columns=["uf", "metodo"], errors="ignore"), on="cod_municipio", how="outer")
-    out["uf"] = uf
-    out["metodo"] = met
-    colunas = ["cod_municipio"] + sorted(c for c in out.columns if c.endswith("_ha"))
-    out = out[colunas + ["uf", "metodo"]]
-    save_table(out, alvo)
+    with _trava(alvo):
+        anterior = alvo.with_suffix(".parquet")
+        if anterior.exists():
+            antigo = _metodo_do_arquivo(anterior)
+            if antigo != met:
+                _arquivar(alvo, f"medido por '{antigo}', agora '{met}'")
+            else:
+                velho = pd.read_parquet(anterior)
+                novas = [c for c in out.columns if c.endswith("_ha")]
+                velho = velho.drop(columns=[c for c in novas if c in velho.columns])
+                out = velho.drop(columns=["uf", "metodo"], errors="ignore").merge(
+                    out.drop(columns=["uf", "metodo"], errors="ignore"), on="cod_municipio", how="outer")
+        out["uf"] = uf
+        out["metodo"] = met
+        colunas = ["cod_municipio"] + sorted(c for c in out.columns if c.endswith("_ha"))
+        out = out[colunas + ["uf", "metodo"]]
+        save_table(out, alvo)
     print(f"  [{uf}] {len(out)} municípios · {', '.join(c[:-3] for c in colunas[1:])}", flush=True)
 
 
@@ -394,9 +461,10 @@ def salvar_camada(uf: str, camada: str, recortar: bool, incluir_cancelados: bool
 def _invalidar_metodo_antigo(met: str):
     """Arquiva de uma vez as UFs medidas por outro método, antes de a fila começar."""
     for p in sorted(GEO.glob("car_ambiental_dissolve_*.parquet")):
-        antigo = _metodo_do_arquivo(p)
-        if antigo != met:
-            _arquivar(p.with_suffix(""), f"medido por '{antigo}', agora '{met}'")
+        with _trava(p.with_suffix("")):
+            antigo = _metodo_do_arquivo(p) if p.exists() else met
+            if antigo != met:
+                _arquivar(p.with_suffix(""), f"medido por '{antigo}', agora '{met}'")
 
 
 def pendencias(quais: list[str] | None = None, met: str | None = None) -> dict[str, list[str]]:
@@ -471,7 +539,7 @@ def rodar_compostas(uf: str, recortar: bool, incluir_cancelados: bool = False):
 
 
 def main():
-    global TETO_GEOMETRIAS
+    global TETO_MB
     ap = argparse.ArgumentParser()
     ap.add_argument("--uf")
     ap.add_argument("--camadas", nargs="*", default=CAMADAS)
@@ -483,11 +551,11 @@ def main():
                     help="medidas compostas da UF (hoje só a Bahia)")
     ap.add_argument("--incluir-cancelados", action="store_true",
                     help="mantém cadastros cancelados (método anterior a 2026-09-23)")
-    ap.add_argument("--teto", type=int, default=TETO_GEOMETRIAS,
-                    help="geometrias em memória antes de unir em etapas; menor gasta "
-                         "menos memória e leva mais tempo")
+    ap.add_argument("--teto-mb", type=int, default=TETO_MB,
+                    help="MB de geometria por bloco de municípios; menor gasta menos "
+                         "memória, e um município sozinho nunca é partido")
     args = ap.parse_args()
-    TETO_GEOMETRIAS = args.teto
+    TETO_MB = args.teto_mb
 
     if args.pendentes:
         # --camadas restringe a fila; sem ele, mede as cinco.
