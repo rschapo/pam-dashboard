@@ -18,12 +18,18 @@ Parâmetros (execução incremental — comece por 1 município, depois 1 UF):
   --malha <path>         malha municipal (default data/raw/ibge/malha_municipios.gpkg)
   --sample N             amostra N imóveis (teste rápido)
   --force                reprocessa mesmo se a saída existir
+  --consolidar           só refaz o resumo dos municípios de divisa, com todas as UFs
 
 Saídas (por UF):
   car_imoveis_validos_<UF>.parquet          (geometria + flags)
   car_imovel_municipio_intersection_<UF>.parquet
   car_municipio_summary.parquet             (acumulativo por UF)
   car_layer_availability.csv
+
+O imóvel entra no resumo do município onde está a maior parte dele, que pode ser
+de outra UF. Cada UF grava só os próprios municípios; os de divisa, que recebem
+imóveis de mais de uma UF, são refeitos com todos eles ao fim de cada UF e por
+--consolidar. Assim a ordem de processamento das UFs não muda o resultado.
 """
 from __future__ import annotations
 
@@ -184,7 +190,8 @@ def process_uf(uf, input_path, out_dir, malha_path, sample, force):
 
     # Resumo municipal + sobreposições (§7.5, §7.7)
     summ = _municipio_summary(gval, inter)
-    _append_summary(summ, out_dir / "car_municipio_summary.parquet")
+    _append_summary(summ, out_dir / "car_municipio_summary.parquet", uf)
+    consolidar_divisas({uf.upper()}, out_dir)
 
     # Disponibilidade de camadas ambientais (§7.6)
     _layer_availability(uf, cols, out_dir)
@@ -268,8 +275,6 @@ def _safe_union_ha(geoms):
 
 
 def _municipio_summary(gval, inter):
-    import geopandas as gpd
-    from _stats import resumo_area
     if inter is None:
         # sem malha: atribui pelo município declarado (documentar a limitação)
         base = gval.copy()
@@ -278,6 +283,13 @@ def _municipio_summary(gval, inter):
     else:
         principal = inter[inter["municipio_principal"]][["id_car_hash", "cod_municipio"]]
         grouped = gval.merge(principal, on="id_car_hash", how="left")
+    return _resumir(grouped)
+
+
+def _resumir(grouped):
+    """Uma linha por município a partir de imóveis com `cod_municipio` já atribuído."""
+    import geopandas as gpd
+    from _stats import resumo_area
 
     rows = []
     for cod, g in grouped.groupby("cod_municipio"):
@@ -317,15 +329,70 @@ def _nivel_sobre(pct):
     return "mais_20_percentual"
 
 
-def _append_summary(new_df, path):
+def _append_summary(new_df, path, uf):
+    """Grava no resumo os municípios da própria UF.
+
+    Se a UF gravasse também o município vizinho onde cai a maior parte de alguns
+    imóveis dela, a linha com esses poucos imóveis substituiria o resumo inteiro
+    do vizinho — foi assim que Brasília ficou com 1 imóvel de 21 mil, e 70 outros
+    municípios de divisa com menos de 10% dos seus. Esses municípios são refeitos
+    por consolidar_divisas, com os imóveis de todas as UFs.
+    """
+    new_df = new_df[new_df["cod_municipio"].map(uf_from_cod) == uf.upper()]
+    _gravar_resumo(new_df, path)
+
+
+def _gravar_resumo(new_df, path):
+    """Substitui as linhas dos municípios de new_df, mantendo as colunas que outros
+    scripts acrescentam ao resumo (process_car_layers) para esses municípios."""
     if new_df.empty:
         return
     if path.exists():
         old = pd.read_parquet(path)
+        extras = [c for c in old.columns if c not in new_df.columns]
+        if extras:
+            new_df = new_df.merge(old[["cod_municipio"] + extras], on="cod_municipio", how="left")
         old = old[~old["cod_municipio"].isin(new_df["cod_municipio"])]
         new_df = pd.concat([old, new_df], ignore_index=True)
-    new_df.sort_values("cod_municipio").to_parquet(path, index=False)
+    new_df = new_df.sort_values("cod_municipio")
+    new_df.to_parquet(path, index=False)
     new_df.to_csv(path.with_suffix(".csv"), sep=";", index=False, encoding="utf-8")
+
+
+def consolidar_divisas(ufs: set[str] | None = None, out_dir=None):
+    """Refaz o resumo dos municípios que recebem imóveis de mais de uma UF.
+
+    Lê só as interseções já gravadas e, das camadas válidas, só os imóveis desses
+    municípios. Com `ufs`, limita-se aos municípios que envolvem essas UFs — como
+    destino ou como origem de algum imóvel.
+    """
+    import geopandas as gpd
+    out_dir = Path(out_dir or (PROCESSED_DIR / "geospatial"))
+    partes = []
+    for p in sorted(out_dir.glob("car_imovel_municipio_intersection_*.parquet")):
+        i = pd.read_parquet(p, columns=["id_car_hash", "cod_municipio", "municipio_principal"])
+        i = i[i["municipio_principal"]][["id_car_hash", "cod_municipio"]].copy()
+        i["uf_origem"] = p.stem.rsplit("_", 1)[1]
+        partes.append(i)
+    if not partes:
+        return
+    princ = pd.concat(partes, ignore_index=True)
+    origens = princ.groupby("cod_municipio")["uf_origem"].agg(set)
+    alvo = {c for c, s in origens.items() if s != {uf_from_cod(c)}}
+    if ufs:
+        alvo = {c for c in alvo if (origens[c] | {uf_from_cod(c)}) & set(ufs)}
+    if not alvo:
+        return
+    sel = princ[princ["cod_municipio"].isin(alvo)]
+    blocos = []
+    for uf, g in sel.groupby("uf_origem"):
+        val = gpd.read_parquet(out_dir / f"car_imoveis_validos_{uf}.parquet",
+                               filters=[("id_car_hash", "in", sorted(set(g["id_car_hash"])))])
+        blocos.append(val.merge(g[["id_car_hash", "cod_municipio"]], on="id_car_hash"))
+    base = gpd.GeoDataFrame(pd.concat(blocos, ignore_index=True), geometry="geometry", crs=CRS_STORAGE)
+    _gravar_resumo(_resumir(base), out_dir / "car_municipio_summary.parquet")
+    print(f"[CAR] divisas: {len(alvo)} município(s) refeito(s) com {len(base):,} imóveis "
+          f"de {sel['uf_origem'].nunique()} UF(s)")
 
 
 def _layer_availability(uf, cols, out_dir):
@@ -356,7 +423,12 @@ def main():
     ap.add_argument("--malha")
     ap.add_argument("--sample", type=int)
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--consolidar", action="store_true",
+                    help="refaz o resumo dos municípios de divisa com os imóveis de todas as UFs")
     args = ap.parse_args()
+    if args.consolidar:
+        consolidar_divisas({args.uf.upper()} if args.uf else None, args.output)
+        return
     if not args.uf and not args.input:
         raise SystemExit("Informe --uf (piloto) ou --input.")
     process_uf(args.uf, args.input, args.output, args.malha, args.sample, args.force)

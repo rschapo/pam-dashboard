@@ -159,10 +159,12 @@ Os maiores municípios em área de atividade são o cinturão de grãos do oeste
 valores próximos aos do MapBiomas: São Desidério 691 mil ha (MapBiomas 646 mil),
 Formosa do Rio Preto 597 (565), Barreiras 333 (316), Luís Eduardo Magalhães 229 (236).
 
-Os 54% de vegetação não são lacuna: o CAR cobre 59% do território baiano, contra 79%
-do MT (ponderado por área). Divididos pela cobertura, a Bahia fica em 92% e o MT em
-89%. O resto do território baiano — terra pública, fundos de pasto, áreas não
-cadastradas — simplesmente não está no CAR.
+Os 54% de vegetação não são lacuna: o CAR cobre 71% do território baiano, contra 82%
+do MT. Divididos pela cobertura, a Bahia fica em 77% e o MT em 84%, perto da mediana
+nacional (72%). O resto do território baiano — terra pública, fundos de pasto, áreas
+não cadastradas — simplesmente não está no CAR. (A primeira versão desta conta usava
+cobertura de 59%, tirada de um resumo municipal com os municípios de divisa
+corrompidos; ver a validação contra o MapBiomas.)
 
 Consequência para o painel: a Bahia entra com vegetação nativa composta e com área
 de atividade no lugar da área consolidada, ambas rotuladas como equivalentes, a
@@ -229,42 +231,51 @@ MapBiomas 2024 (Coleção 10.1) e grava a tabela em `processed/state/car_mapbiom
   consolidada.
 
 A UF é sinalizada (negrito) se a razão lida sair de [0,5; 1,5] ou se a correlação por
-município ficar abaixo de 0,7. Na mediana das UFs, a vegetação nativa fica em 73% do
+município ficar abaixo de 0,7. Na mediana das UFs, a vegetação nativa fica em 72% do
 esperado e a área consolidada em 86% da agropecuária, com correlações de 0,90 e 0,94.
 
 | UF | cobertura do CAR | vegetação nativa ÷ natural | ÷ cobertura | r | consolidada ÷ agropecuária | r |
 |----|------------------|----------------------------|-------------|---|----------------------------|---|
-| AC | 75% | 60% | 80% | 0,84 | 88% | 0,98 |
-| AL | 74% | 51% | 69% | 0,84 | 78% | 0,94 |
-| AM | 55% | 36% | 64% | 0,74 | 102% | 0,92 |
+| AC | 78% | 60% | 77% | 0,84 | 88% | 0,98 |
+| AL | 80% | 51% | 63% | 0,84 | 78% | 0,94 |
+| AM | 56% | 36% | 63% | 0,74 | 102% | 0,92 |
 | **AP** | 36% | 16% | 43% | 0,04 | 442% | 0,55 |
-| BA | 59% | 54% | 92% | 0,95 | 55% | 0,95 |
+| BA | 71% | 54% | 77% | 0,95 | 55% | 0,95 |
 | CE | 77% | 56% | 72% | 0,90 | 82% | 0,81 |
-| DF | — | 67% | — | — | 124% | — |
-| ES | 80% | 69% | 87% | 0,97 | 86% | 0,99 |
-| GO | 88% | 78% | 89% | 0,97 | 89% | 0,99 |
-| MA | 87% | 53% | 61% | 0,93 | 112% | 0,94 |
+| DF | 92% | 67% | 73% | — | 124% | — |
+| ES | 83% | 69% | 83% | 0,97 | 86% | 0,99 |
+| GO | 93% | 78% | 84% | 0,97 | 89% | 0,99 |
+| MA | 88% | 53% | 60% | 0,93 | 112% | 0,94 |
 | MG | 87% | 64% | 73% | 0,96 | 85% | 0,97 |
-| MS | 76% | 88% | 115% | 1,00 | 89% | 0,93 |
+| MS | 95% | 88% | 92% | 1,00 | 89% | 0,93 |
 | MT | 82% | 69% | 83% | 0,89 | 91% | 0,96 |
 | PA | 54% | 28% | 52% | 0,74 | 100% | 0,94 |
-| PB | 75% | 58% | 78% | 0,89 | 71% | 0,86 |
+| PB | 80% | 58% | 72% | 0,89 | 71% | 0,86 |
 | PE | 76% | 45% | 59% | 0,96 | 84% | 0,91 |
-| PI | 73% | 60% | 82% | 0,95 | 82% | 0,93 |
+| PI | 79% | 60% | 76% | 0,95 | 82% | 0,93 |
 | PR | 89% | 70% | 79% | 0,94 | 86% | 0,98 |
-| RJ | 72% | 51% | 70% | 0,91 | 64% | 0,99 |
-| RN | 80% | 78% | 98% | 0,90 | 56% | 0,85 |
-| RO | 67% | 35% | 52% | 0,78 | 83% | 0,98 |
+| RJ | 73% | 51% | 70% | 0,91 | 64% | 0,99 |
+| RN | 80% | 78% | 97% | 0,90 | 56% | 0,85 |
+| RO | 69% | 35% | 51% | 0,78 | 83% | 0,98 |
 | **RR** | 33% | 17% | 53% | 0,83 | 119% | 0,52 |
 | **RS** | 87% | 35% | 41% | 0,93 | 130% | 0,93 |
-| **SC** | 84% | 53% | 63% | 0,70 | 102% | 0,84 |
-| SE | 57% | 38% | 67% | 0,84 | 73% | 0,99 |
-| SP | 88% | 71% | 80% | 0,90 | 68% | 0,97 |
-| TO | 80% | 69% | 85% | 0,84 | 82% | 0,97 |
+| **SC** | 85% | 53% | 63% | 0,70 | 102% | 0,84 |
+| **SE** | 81% | 38% | 47% | 0,84 | 73% | 0,99 |
+| SP | 89% | 71% | 80% | 0,90 | 68% | 0,97 |
+| TO | 82% | 69% | 83% | 0,84 | 82% | 0,97 |
 
-O DF não tem cobertura confiável — a base de imóveis é que está incompleta — nem
-correlação, com um município só. As camadas ambientais dele vieram completas (16 mil
-imóveis declaram área consolidada, 8 mil declaram APP) e entram no painel.
+**Cobertura refeita (2026-09-24).** A primeira versão desta tabela saiu de um resumo
+municipal corrompido: a UF processada por último substituía o resumo inteiro de um
+município de divisa pela linha com os poucos imóveis dela que caíam ali. Setenta e
+um municípios ficaram com menos de 10% dos imóveis — Brasília com 1 de 21 mil, e
+Correntina, São Desidério, Barreiras e Formosa do Rio Preto, no oeste baiano, com 1 a
+8 cada. Por isso o DF parecia ter a base de imóveis incompleta. O resumo foi refeito
+com os imóveis de todas as UFs (`process_car.py --consolidar`), e a cobertura mudou:
+BA de 59% para 71%, SE de 57% para 81%, MS de 76% para 95%.
+
+O DF tem a maior sobreposição de cadastros do país: 56% da área declarada se
+sobrepõe (AC, o segundo, tem 42%), e a soma bruta dos imóveis passa de duas vezes o
+território. Com um município só, não tem correlação.
 
 **RS — não é lacuna, é classificação.** A vegetação nativa fica em 41% do esperado e a
 área consolidada passa a agropecuária em 30%. Somadas, as duas camadas fecham em 98%
@@ -281,9 +292,29 @@ um terço do território. A área consolidada do AP é 4,4 vezes a agropecuária
 MapBiomas, que no estado é mínima. Somadas, as camadas fecham em 58% (AP) e 69% (RR)
 do esperado. Sem conclusão; ficam registradas.
 
-Pernambuco, cuja APP ficou abaixo dos vizinhos, também tem a vegetação nativa na parte
-baixa da faixa (59%, contra 78% na Paraíba e 69% em Alagoas). É coerente com
-declaração mais incompleta no estado, mas não a confirma.
+**SE — é declaração, como na Bahia.** A vegetação nativa fica em 47% do esperado,
+sem o excedente de área consolidada que explica o RS. Em Sergipe, 82% dos imóveis
+que declaram reserva legal não declaram vegetação nativa, e só um terço da área de
+reserva legal cai dentro da vegetação nativa declarada pelo próprio imóvel. No padrão
+nacional, a reserva legal está quase toda dentro da vegetação nativa; na Bahia, fora
+dela. O Nordeste fica entre os dois — lá, parte da vegetação nativa aparece só na
+camada de reserva legal:
+
+| UF | imóveis com reserva legal que também declaram vegetação nativa | reserva legal dentro da vegetação nativa do imóvel |
+|----|------------------------------|---------------------------|
+| MT | 96% | 97,5% |
+| AL | 35% | 62% |
+| PE | 48% | 56% |
+| PB | 50% | 51% |
+| SE | 18% | 33% |
+| BA | 13% | 0% |
+
+(Sem cancelados; MT, PE, PB e BA por amostra de 5 mil imóveis.) Para SE, a leitura
+comparável seria a medida composta usada na Bahia — vegetação nativa, reserva legal e
+APP unidas. Por enquanto o painel mostra a camada como declarada, com a ressalva.
+Pernambuco, cuja APP ficou abaixo dos vizinhos, também tem a vegetação nativa baixa
+(59%, contra 72% na Paraíba e 63% em Alagoas), mas declara como os vizinhos; a
+diferença na APP segue sem explicação.
 
 ## Diferenças entre UFs
 

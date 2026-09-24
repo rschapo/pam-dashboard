@@ -42,7 +42,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "process"))
 from common import PROCESSED_DIR, save_table  # noqa: E402
-from export_car import UF_EXCLUIDA, camadas_ambientais  # noqa: E402
+from export_car import camadas_ambientais  # noqa: E402
 
 FAIXA = (0.5, 1.5)
 R_MIN = 0.7
@@ -82,9 +82,7 @@ def run() -> pd.DataFrame:
 
     linhas = []
     for uf, g in d.groupby("uf"):
-        # A base de imóveis do DF está incompleta: sem cobertura confiável.
-        cobertura = (math.nan if uf == UF_EXCLUIDA
-                     else g["area_geometrica_uniao_ha"].sum() / g["area_municipal_ha"].sum())
+        cobertura = g["area_geometrica_uniao_ha"].sum() / g["area_municipal_ha"].sum()
         lin = {"uf": uf, "municipios": len(g), "cobertura_car": cobertura}
         sinais = []
         for campo, (ref, normaliza) in PARES.items():
@@ -97,7 +95,7 @@ def run() -> pd.DataFrame:
             r = g.loc[ok, campo].corr(g.loc[ok, ref])
             lin.update({f"{campo}_ha": car_ha, f"{campo}_ref_ha": ref_ha,
                         f"{campo}_razao": razao, f"{campo}_lida": lida, f"{campo}_r": r})
-            # Sem cobertura (DF) ou com um município só, não há o que ler: não é sinal.
+            # Com um município só (DF) não há correlação, e sem cobertura não há razão lida: não é sinal.
             if pd.notna(lida) and not (FAIXA[0] <= lida <= FAIXA[1]):
                 sinais.append(f"{campo} {lida:.2f}")
             if pd.notna(r) and r < R_MIN:

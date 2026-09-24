@@ -7,15 +7,11 @@ declarado e quanto os cadastros se sobrepõem entre si. E, das camadas ambientai
 quanto de vegetação nativa, reserva legal, APP, área consolidada e uso restrito
 foi declarado em cada município.
 
-Dois cortes de qualidade, porque o dado bruto não se sustenta em todos os casos:
-
-  1. O Distrito Federal sai dos números de imóveis. A base de imóveis traz 1
-     único imóvel para Brasília, o que indica download incompleto, não ausência
-     de agricultura. As camadas ambientais do DF vieram completas e entram.
-  2. A área é omitida onde passa de 105% da área do município. Um imóvel que
-     cruza divisas é atribuído por inteiro a um município só, então municípios
-     vizinhos de grandes propriedades acumulam área que fisicamente não cabe
-     neles. Vale para a área declarada e para cada camada ambiental.
+Um corte de qualidade, porque o dado bruto não se sustenta em todos os casos: a
+área é omitida onde passa de 105% da área do município. Um imóvel que cruza
+divisas é atribuído por inteiro a um município só, então municípios vizinhos de
+grandes propriedades acumulam área que fisicamente não cabe neles. Vale para a
+área declarada e para cada camada ambiental.
 
 Omitir é deliberado: o campo ausente aparece como "sem dado" no painel, em vez
 de um número que o usuário leria como medição. O município omitido sai também
@@ -49,7 +45,6 @@ from common import PROCESSED_DIR, now_iso  # noqa: E402
 PUBLIC_DATA = Path(__file__).resolve().parents[3] / "public" / "data"
 GEO = PROCESSED_DIR / "geospatial"
 
-UF_EXCLUIDA = "DF"
 COBERTURA_MAX = 1.05
 METODO = "dissolve, sem cancelados"
 
@@ -82,11 +77,14 @@ NOTA_COMPOSTA = {
 # docs/CAR_LIMITATIONS.md. A APP de PE fica abaixo dos vizinhos mesmo dissolvida,
 # sem referência que diga se é declaração incompleta ou hidrografia. No RS, o
 # campo nativo pastejado é declarado como área consolidada: somadas, as duas
-# camadas fecham com o MapBiomas, mas a divisão entre elas segue a declaração.
+# camadas fecham com o MapBiomas, mas a divisão entre elas segue a declaração. Em
+# SE, a maioria dos imóveis declara reserva legal sem declarar vegetação nativa.
 RESSALVAS = {
     "app": ["PE: abaixo dos vizinhos, sem confirmação."],
     "vn": ["RS: o campo nativo com pecuária é declarado como área consolidada, "
-           "e não como vegetação nativa."],
+           "e não como vegetação nativa.",
+           "SE: 82% dos imóveis que declaram reserva legal não declaram vegetação "
+           "nativa, e a camada fica abaixo do esperado."],
     "ac": ["RS: inclui o campo nativo com pecuária, que o MapBiomas classifica "
            "como vegetação natural."],
 }
@@ -142,11 +140,7 @@ def build_car() -> dict:
     car = pd.read_parquet(GEO / "car_municipio_summary.parquet")
     dim = pd.read_parquet(PROCESSED_DIR / "dimensions" / "dim_municipio.parquet")
     area_mun = dim.set_index("cod_municipio")["area_municipal_ha"]
-    d = car.merge(dim[["cod_municipio", "uf"]], on="cod_municipio", how="left")
-
-    n_total = len(d)
-    d = d[d["uf"] != UF_EXCLUIDA].set_index("cod_municipio")
-    n_uf_fora = n_total - len(d)
+    d = car.set_index("cod_municipio")
 
     area_implausivel = d["area_geometrica_uniao_ha"] / area_mun.reindex(d.index) > COBERTURA_MAX
 
@@ -206,8 +200,6 @@ def build_car() -> dict:
                for c in CAMADAS},
         },
         "ressalvas": {
-            "uf_excluida": UF_EXCLUIDA,
-            "municipios_sem_uf": int(n_uf_fora),
             "area_omitida": int(area_implausivel.sum()),
             "metodo_camadas": METODO,
             "camadas_omitidas": {c: int(amb_implausivel[c].sum()) for c in CAMADAS if c in amb},
@@ -228,7 +220,6 @@ def main():
     p.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     r = obj["ressalvas"]
     print(f"  car.json: {len(obj['mun']):,} municípios · {p.stat().st_size / 1_048_576:.2f} MB")
-    print(f"    {r['municipios_sem_uf']} municípios de {r['uf_excluida']} fora dos imóveis (base incompleta)")
     print(f"    área omitida em {r['area_omitida']} municípios (soma excede o território)")
     print(f"    camadas omitidas: " + ", ".join(f"{c} {n}" for c, n in r["camadas_omitidas"].items()))
     faltam = {c: u for c, u in r["ufs_sem_camada"].items() if u}

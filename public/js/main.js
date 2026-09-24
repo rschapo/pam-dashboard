@@ -1256,8 +1256,8 @@ function atualizarNotaCar() {
   if (!(c in (r.ufs_sem_camada || {}))) {
     nota.textContent =
       `SICAR. Área omitida em ${r.area_omitida} municípios onde o total ` +
-      `declarado excede o território, e o ${r.uf_excluida} ficou de fora ` +
-      `por base incompleta.`;
+      `declarado excede o território.` +
+      (r.uf_excluida ? ` O ${r.uf_excluida} ficou de fora por base incompleta.` : '');
     return;
   }
   const partes = ['SICAR, camada dissolvida por município (área sobreposta ' +
