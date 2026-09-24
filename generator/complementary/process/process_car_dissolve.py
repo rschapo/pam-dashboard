@@ -192,7 +192,7 @@ def _so_area(g):
     partes = [p for p in get_parts(g) if p.geom_type in ("Polygon", "MultiPolygon")]
     if not partes:
         return None
-    return partes[0] if len(partes) == 1 else union_all(partes)
+    return partes[0] if len(partes) == 1 else _robusto(union_all, partes)
 
 
 def _sanear(g):
@@ -214,6 +214,81 @@ def _sanear(g):
         except GEOSException:
             return None
     return _so_area(g)
+
+
+GRADES_M = (0.001, 0.01, 0.1)
+
+
+def _na_grade(x, grade: float):
+    """Geometria (ou lista) arredondada à grade e válida nela."""
+    import numpy as np
+    from shapely import set_precision
+    if isinstance(x, (list, tuple)):
+        x = np.asarray(x, dtype=object)
+    return set_precision(x, grade)
+
+
+def _robusto(operacao, *args, est: dict | None = None):
+    """Operação do GEOS que, se falhar em precisão exata, refaz em grade fixa.
+
+    Unir centenas de milhares de polígonos quase coincidentes — a APP traz o
+    "APP Total" colado às partes que o compõem — esbarra na aritmética de ponto
+    flutuante ("non-noded intersection", "Ring edge missing"), mesmo com toda a
+    geometria válida. Pedir a grade só na operação não basta: arredondar colapsa
+    polígonos finos, que ficam inválidos na nova precisão, e o OverlayNG só é
+    robusto com entradas válidas nela. Por isso cada geometria é arredondada de
+    forma válida antes (set_precision). Em Água Azul do Norte (PA), a exata e a
+    grade pura falham até 1 m; arredondada válida a 1 mm, mede. A grade só entra
+    quando a exata falha, então o que já media continua medindo igual.
+    """
+    from shapely.errors import GEOSException
+    try:
+        return operacao(*args)
+    except GEOSException as e:
+        erro = e
+    for grade in GRADES_M:
+        try:
+            resultado = operacao(*(_na_grade(a, grade) for a in args), grid_size=grade)
+        except GEOSException as e:
+            erro = e
+            continue
+        if est is not None:
+            est["arredondadas"] += 1
+            est["grade_max"] = max(est.get("grade_max", 0), grade)
+        return resultado
+    raise erro
+
+
+def _area_clipper(somar: list, tirar: list | None = None, escala: int = 1000) -> float:
+    """Área (ha) da união de somar, menos a de tirar, em aritmética inteira (mm).
+
+    Último recurso para quando o GEOS falha em todas as grades: o Clipper não
+    usa ponto flutuante na interseção de arestas, então não tem como esbarrar
+    nesse limite. Devolve só a área, que é o que a medição precisa.
+    """
+    import numpy as np
+    import pyclipper
+    import shapely
+
+    pc = pyclipper.Pyclipper()
+
+    def adicionar(geoms, papel):
+        for g in geoms:
+            for p in shapely.get_parts(shapely.orient_polygons(g)):
+                for anel in (p.exterior, *p.interiors):
+                    c = np.round(np.asarray(anel.coords)[:-1] * escala).astype(np.int64)
+                    if len(c) >= 3:
+                        try:
+                            pc.AddPath(c.tolist(), papel, True)
+                        except pyclipper.ClipperException:
+                            pass  # anel degenerado depois do arredondamento: área zero
+
+    adicionar(somar, pyclipper.PT_SUBJECT)
+    if tirar:
+        adicionar(tirar, pyclipper.PT_CLIP)
+    tipo = pyclipper.CT_DIFFERENCE if tirar else pyclipper.CT_UNION
+    sol = pc.Execute(tipo, pyclipper.PFT_NONZERO, pyclipper.PFT_NONZERO)
+    return sum(pyclipper.Area(s) for s in sol) / escala ** 2 / 10_000.0
 
 
 def _preparar(geoms, est) -> list:
@@ -298,13 +373,14 @@ def _ler_bloco(linhas: pd.DataFrame, arquivos: list[Path], est: dict) -> dict[st
 
 def _novo_est() -> dict:
     return {"lidas": 0, "invalidas": 0, "descartadas": 0, "canceladas": 0,
-            "sem_municipio": 0, "inicio": time.time()}
+            "sem_municipio": 0, "arredondadas": 0, "clipper": 0, "inicio": time.time()}
 
 
 def _medir_fontes(fontes: list[Fonte], subtrair: list[Fonte] | None = None,
                   recortar: bool = False) -> tuple[dict[str, float], dict]:
     """Área (ha) por município da união das fontes, menos a união de subtrair."""
-    from shapely import union_all
+    from shapely import difference, intersection, union_all
+    from shapely.errors import GEOSException
     est = _novo_est()
     idx, arquivos = _indice(fontes, est)
     if subtrair:
@@ -322,12 +398,19 @@ def _medir_fontes(fontes: list[Fonte], subtrair: list[Fonte] | None = None,
         for cod, lista in geoms.items():
             if not lista:
                 continue
-            u = union_all(lista)
-            if tirar.get(cod):
-                u = u.difference(union_all(tirar[cod]))
-            if malha is not None and cod in malha.index:
-                u = u.intersection(malha.loc[cod])
-            areas[cod] = u.area / 10_000.0
+            try:
+                u = _robusto(union_all, lista, est=est)
+                if tirar.get(cod):
+                    u = _robusto(difference, u, _robusto(union_all, tirar[cod], est=est), est=est)
+                if malha is not None and cod in malha.index:
+                    u = _robusto(intersection, u, malha.loc[cod], est=est)
+                areas[cod] = u.area / 10_000.0
+            except GEOSException as e:
+                if recortar:
+                    raise RuntimeError(f"município {cod}: {e}") from e
+                areas[cod] = _area_clipper(lista, tirar.get(cod))
+                est["clipper"] += 1
+                print(f"      {cod}: GEOS falhou em todas as grades, medido pelo Clipper", flush=True)
         del geoms, tirar
         print(f"    bloco {i}/{len(blocos)}: {len(bloco)} municípios, {len(linhas):,} feições, "
               f"{linhas['bytes'].sum() / 1e6:,.0f} MB ({time.time() - est['inicio']:.0f}s)", flush=True)
@@ -350,8 +433,12 @@ def _malha_municipal(codigos):
 def _resumo(rotulo: str, areas: dict, est: dict):
     extras = [f"{est[k]:,} {nome}" for k, nome in
               (("canceladas", "canceladas fora"), ("invalidas", "saneadas"),
-               ("descartadas", "sem área"), ("sem_municipio", "sem município"))
+               ("descartadas", "sem área"), ("sem_municipio", "sem município"),
+               ("arredondadas", "operações em grade fixa"),
+               ("clipper", "municípios pelo Clipper"))
               if est[k]]
+    if est.get("grade_max"):
+        extras.append(f"grade máxima {est['grade_max']} m")
     print(f"  {rotulo}: {len(areas)} municípios, {sum(areas.values()):,.0f} ha de "
           f"{est['lidas']:,} feições em {time.time() - est['inicio']:.0f}s"
           + (f" ({'; '.join(extras)})" if extras else ""), flush=True)

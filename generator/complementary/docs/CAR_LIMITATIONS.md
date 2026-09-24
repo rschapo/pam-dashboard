@@ -76,12 +76,25 @@ o conteúdo publicado é que é parcial. Baixar de novo não resolve.
 | BA | APP | 4,6% do território | PI 9,1% | cerca de metade dos vizinhos |
 | PE | APP | 5,5% do território | PB 10,5%, AL 11,7% | cerca de metade; semiárido pode explicar parte |
 
-**Ressalva nas linhas de APP.** A comparação de APP acima foi feita pela soma bruta
-das áreas, e a camada de APP do SICAR traz o tema "APP Total" ao lado das partes
-que o compõem (rios, nascentes, lagos) — na Bahia, 175 mil das 392 mil feições.
-A soma bruta conta a mesma faixa duas vezes, e se a proporção de "APP Total" muda
-de um estado para outro, a comparação distorce. O dissolve elimina essa dupla
-contagem; as duas linhas de APP só valem depois de confirmadas por ele.
+**APP: confirmado pelo dissolve (2026-09-24).** A comparação de APP acima foi feita
+pela soma bruta, e a camada de APP do SICAR traz o tema "APP Total" ao lado das
+partes que o compõem (rios, nascentes, lagos) — na Bahia, 175 mil das 392 mil
+feições. A soma bruta contava a mesma faixa duas ou mais vezes: dissolvida, a APP
+cai para um quarto a metade do valor bruto em todos os estados.
+
+| UF | APP dissolvida (% do território) | soma bruta |
+|----|----------------------------------|------------|
+| BA | 2,2% | 4,6% |
+| PE | 1,6% | 5,5% |
+| PB | 3,2% | 10,5% |
+| AL | 2,8% | 11,7% |
+| SE, RN, MA | 2,8%, 3,0%, 2,4% | — |
+
+A Bahia fica dentro da faixa regional: a lacuna de APP era artefato da soma bruta.
+Pernambuco segue em cerca de metade de Paraíba e Alagoas depois do dissolve, então
+a diferença não é artefato — mas também não há referência independente para dizer
+se é declaração incompleta ou característica da hidrografia. Fica marcado como
+"abaixo dos vizinhos, sem confirmação".
 
 **Cadastros cancelados.** O SICAR entrega também os cadastros que ele próprio
 cancelou (`ind_status = CA`): na mediana, 6% da área registrada, e acima de 20%
@@ -114,9 +127,10 @@ Oito registros dessa camada têm área declarada absurda (até 96 milhões de ha
 o estado) e respondem por 92% da soma declarada bruta; as geometrias deles têm de 0 a
 26 ha. É erro de digitação no campo declarado. A medição geométrica não é afetada.
 
-**APP — sem solução no CEFIR.** O CEFIR tem menos APP que o SICAR (213.596 contra
-391.878 feições). A APP da Bahia segue parcial, assim como a de Pernambuco, que não
-tem relação com o CEFIR.
+**APP — o CEFIR não acrescenta, e não faz falta.** O CEFIR tem menos APP que o SICAR
+(213.596 contra 391.878 feições). A lacuna que parecia haver era da soma bruta:
+dissolvida, a APP da Bahia fica na faixa dos vizinhos (ver acima). Pernambuco, que
+não tem relação com o CEFIR, é o caso que continua abaixo.
 
 Acesso: GeoServer público do Inema, WFS em
 `http://geoserver.inema.ba.gov.br/geoserver/wfs` (HTTPS não responde), espaço
@@ -144,13 +158,43 @@ cadastradas — simplesmente não está no CAR.
 
 Consequência para o painel: a Bahia entra com vegetação nativa composta e com área
 de atividade no lugar da área consolidada, ambas rotuladas como equivalentes, a
-partir de `car_ambiental_composta_BA`. A APP da Bahia e a de Pernambuco dependem da
-confirmação pela medição dissolvida (ver ressalva acima).
+partir de `car_ambiental_composta_BA`. A APP da Bahia entra normalmente; a de
+Pernambuco entra com a marca "abaixo dos vizinhos, sem confirmação".
 
 Método da varredura: feições por imóvel cadastrado em cada UF contra a mediana
 nacional, marcando abaixo de um quinto; os casos marcados foram então confirmados
 pela área. Contagem sozinha não basta, porque um estado de polígonos maiores tem
 menos feições sem estar incompleto.
+
+## Medição dissolvida: limite de precisão da geometria
+
+Unir centenas de milhares de polígonos quase coincidentes esbarra no limite da
+aritmética de ponto flutuante do GEOS ("non-noded intersection", "Ring edge
+missing"), mesmo com toda a geometria válida. Na APP isso é comum, porque o tema
+"APP Total" vem colado às partes que o compõem: na primeira rodada, a união exata
+falhou em ao menos um município de 11 das 27 UFs (PA, TO, PI, CE, MG, SP, PR, SC,
+RS, MT, GO), e a camada inteira dessas UFs ficou sem medir.
+
+Nesses municípios, a medição refaz a operação com as coordenadas arredondadas a
+1 mm de forma válida (`set_precision`); se ainda falhar, sobe a grade até 10 cm e,
+por último, mede a área pelo Clipper, que trabalha em inteiros e não tem esse
+limite. Onde a união exata funciona, nada muda. O resumo de cada camada informa
+quantas operações precisaram de grade e quantos municípios foram pelo Clipper.
+
+Validação cruzada na APP (2026-09-24):
+
+| município | união exata | arredondada a 1 mm | Clipper |
+|-----------|-------------|--------------------|---------|
+| Água Azul do Norte (PA) | falha | 23.461,305 ha | 23.461,327 ha |
+| Abaetetuba (PA) | falha | 13.431,964 ha | 13.431,969 ha |
+| Porto Velho (RO) | 71.204,675 ha (−0,004%) | 71.207,685 ha | 71.207,719 ha |
+| Ji-Paraná (RO) | 22.316,611 ha (−0,025%) | 22.321,729 ha (−0,002%) | 22.322,140 ha |
+
+A arredondada e o Clipper concordam em até 0,002%. A união exata, quando não
+falha, pode perder área sem avisar: nos dois municípios testados, 0,004% e 0,025%.
+A APP de Ji-Paraná ocupa 3,2% do município; errar 0,025% dessa área muda o
+percentual em 0,0008 ponto, duas ordens de grandeza abaixo da casa decimal que o
+painel mostra.
 
 ## Diferenças entre UFs
 
