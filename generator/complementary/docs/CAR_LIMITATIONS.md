@@ -204,6 +204,15 @@ A APP de Ji-Paraná ocupa 3,2% do município; errar 0,025% dessa área muda o
 percentual em 0,0008 ponto, duas ordens de grandeza abaixo da casa decimal que o
 painel mostra.
 
+Para ver se isso se repete, o valor gravado foi remedido pelo Clipper em 55
+municípios de 10 UFs — em cada camada, os três de mais feições, onde o erro é mais
+provável, e dois sorteados. Nas camadas de vegetação nativa, reserva legal e área
+consolidada (45 municípios), a diferença máxima foi de 0,00003%. Na APP (10
+municípios de PB e ES), a maior foi de 0,037%, em Pombal (PB); as demais ficaram
+abaixo de 0,0002%. Somados os 55, o GEOS dá 10.458.460 ha e o Clipper, 10.458.461.
+A perda silenciosa se restringe à APP, fica abaixo de 0,04% por município, e as
+UFs medidas pela união exata não foram refeitas.
+
 ## Validação contra o MapBiomas (2026-09-24)
 
 `quality/validate_car_mapbiomas.py` compara, por UF, as camadas dissolvidas com o
