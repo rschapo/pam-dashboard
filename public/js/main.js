@@ -188,7 +188,11 @@ function agregarDominioSimples(ids, m) {
     let num = 0, den = 0;
     for (const id of ids) {
       const d = base[id];
-      if (d) { num += d[razao.num] || 0; den += d[razao.den] || 0; }
+      // Pareado: o numerador foi omitido onde não cabe no município, e aí o
+      // município sai também do denominador — senão o estado somaria o
+      // território dele sem a área correspondente.
+      if (!d || (razao.pareado && d[razao.num] == null)) continue;
+      num += d[razao.num] || 0; den += d[razao.den] || 0;
     }
     return den ? (num * razao.fator) / den : 0;
   }
@@ -321,6 +325,8 @@ function metLabel() {
     if (M === 'cob') return 'Território declarado no CAR (%)';
     if (M === 'amed') return 'Área média do imóvel (ha)';
     if (M === 'sobre') return 'Sobreposição entre cadastros (%)';
+    // Camadas ambientais: o rótulo vem do car.json ("APP (ha)" → "APP no CAR (ha)").
+    if (CAR?.campos?.[M]) return CAR.campos[M].replace(' (', ' no CAR (');
   }
   if (state.domain === 'credito') {
     const ano = CRED?.ano || 2024;
@@ -1235,16 +1241,33 @@ const DOMINIOS_SIMPLES = {
     arquivo: 'car.json', rotulo: 'cadastro ambiental rural',
     aplicar: d => {
       CAR = d; car_mun = d.mun || {}; car_razoes = d.razoes || {};
-      const r = d.ressalvas, nota = document.getElementById('car-ressalva');
-      if (r && nota) nota.textContent =
-        `SICAR. Área omitida em ${r.area_omitida} municípios onde o total ` +
-        `declarado excede o território, e o ${r.uf_excluida} ficou de fora ` +
-        `por base incompleta.`;
+      atualizarNotaCar();
     },
     pronto: () => carLoaded, marcar: v => carLoaded = v,
     pendente: () => carLoading, guardar: p => carLoading = p,
   },
 };
+
+// Imóveis e camadas ambientais têm ressalvas diferentes: a nota acompanha a métrica.
+function atualizarNotaCar() {
+  const nota = document.getElementById('car-ressalva'), r = CAR?.ressalvas;
+  if (!nota || !r) return;
+  const c = (state.metricaCar || '').replace(/_p$/, '');
+  if (!(c in (r.ufs_sem_camada || {}))) {
+    nota.textContent =
+      `SICAR. Área omitida em ${r.area_omitida} municípios onde o total ` +
+      `declarado excede o território, e o ${r.uf_excluida} ficou de fora ` +
+      `por base incompleta.`;
+    return;
+  }
+  const partes = ['SICAR, camada dissolvida por município (área sobreposta ' +
+                  'contada uma vez), sem cadastros cancelados.', ...(r.notas?.[c] || [])];
+  const omit = r.camadas_omitidas?.[c];
+  if (omit) partes.push(`Omitida em ${omit} município${omit > 1 ? 's' : ''} onde excede o território.`);
+  const faltam = r.ufs_sem_camada[c];
+  if (faltam.length) partes.push(`Ainda sem medir: ${faltam.join(', ')}.`);
+  nota.textContent = partes.join(' ');
+}
 
 function loadDominio(dom) {
   const cfg = DOMINIOS_SIMPLES[dom];
@@ -1614,7 +1637,7 @@ function bindEvents() {
     state.metricaCred = e.target.value; refreshAll();
   });
   document.getElementById('f-metrica-car')?.addEventListener('change', e => {
-    state.metricaCar = e.target.value; refreshAll();
+    state.metricaCar = e.target.value; atualizarNotaCar(); refreshAll();
   });
   document.querySelectorAll('.dom-btn').forEach(btn => btn.addEventListener('click', () => {
     switchDomain(btn.dataset.dom);

@@ -132,11 +132,27 @@
     <div class="filter-block dom-car">
       <label>Métrica</label>
       <select id="f-metrica-car">
-        <option value="imov" selected>Imóveis rurais cadastrados</option>
-        <option value="area">Área declarada (ha)</option>
-        <option value="cob">Território declarado (%)</option>
-        <option value="amed">Área média do imóvel (ha)</option>
-        <option value="sobre">Sobreposição entre cadastros (%)</option>
+        <optgroup label="Imóveis">
+          <option value="imov" selected>Imóveis rurais cadastrados</option>
+          <option value="area">Área declarada (ha)</option>
+          <option value="cob">Território declarado (%)</option>
+          <option value="amed">Área média do imóvel (ha)</option>
+          <option value="sobre">Sobreposição entre cadastros (%)</option>
+        </optgroup>
+        <optgroup label="Camadas ambientais — área">
+          <option value="vn">Vegetação nativa (ha)</option>
+          <option value="rl">Reserva legal (ha)</option>
+          <option value="app">APP (ha)</option>
+          <option value="ac">Área consolidada (ha)</option>
+          <option value="ur">Uso restrito (ha)</option>
+        </optgroup>
+        <optgroup label="Camadas ambientais — % do território">
+          <option value="vn_p">Vegetação nativa (%)</option>
+          <option value="rl_p">Reserva legal (%)</option>
+          <option value="app_p">APP (%)</option>
+          <option value="ac_p">Área consolidada (%)</option>
+          <option value="ur_p">Uso restrito (%)</option>
+        </optgroup>
       </select>
       <div class="filter-note" id="car-ressalva">SICAR — Cadastro Ambiental Rural</div>
     </div>
