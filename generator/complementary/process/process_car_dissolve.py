@@ -24,9 +24,11 @@ MB, e cada bloco é lido por identificador, unido, medido e descartado. Sem isso
 a APP de SP, com 21,7 GB, não caberia: a união de todos os municípios ficaria em
 memória até o fim.
 
-Duas filas podem rodar juntas — as camadas leves e a APP, por exemplo. A
-gravação de cada UF é feita sob trava de arquivo, para que uma não apague a
-camada que a outra acabou de gravar.
+Várias filas podem rodar juntas, sobre camadas diferentes ou sobre a mesma
+lista de pendências: cada camada é reservada por quem a pega (em _reservas/,
+com o PID do dono, liberada se ele morrer), e a gravação de cada UF é feita sob
+trava de arquivo, para que uma fila não apague a camada que a outra acabou de
+gravar.
 
 A Bahia tem medidas compostas, porque o CEFIR registra o imóvel de outro jeito
 (ver docs/CAR_LIMITATIONS.md): vegetação nativa, reserva legal e APP são fatias
@@ -41,6 +43,7 @@ Uso:
   python process_car_dissolve.py --compostas --uf BA
   python process_car_dissolve.py --uf MT --incluir-cancelados     # método antigo
   python process_car_dissolve.py --pendentes --camadas app --teto-mb 700
+  python process_car_dissolve.py --pendentes --camadas app --maiores-primeiro   # em N terminais
 """
 from __future__ import annotations
 
@@ -580,26 +583,92 @@ def pendencias(quais: list[str] | None = None, met: str | None = None) -> dict[s
     return out
 
 
-def _executar(tarefas: list[tuple[str, str, Callable]]):
-    """Roda uma lista de (uf, nome, função), registrando cada uma; falha não para a fila."""
+def _rodar_tarefa(rotulo: str, uf: str, nome: str, fazer: Callable) -> bool:
+    """Roda uma tarefa registrando início, fim ou falha; a falha não derruba a fila."""
     import traceback
+    t1 = time.time()
+    anotar(f"[{rotulo}] {uf}/{nome} iniciada")
+    try:
+        fazer()
+    except Exception as e:
+        anotar(f"[{rotulo}] {uf}/{nome} FALHOU: {type(e).__name__}: {e}")
+        with open(REGISTRO, "a", encoding="utf-8") as f:
+            f.write(traceback.format_exc() + "\n")
+        return False
+    anotar(f"[{rotulo}] {uf}/{nome} ok em {(time.time() - t1) / 60:.0f} min")
+    return True
+
+
+def _executar(tarefas: list[tuple[str, str, Callable]]):
+    """Roda uma lista de (uf, nome, função) em ordem."""
     total, falhas, t0 = len(tarefas), 0, time.time()
     for i, (uf, nome, fazer) in enumerate(tarefas, 1):
-        t1 = time.time()
-        anotar(f"[{i}/{total}] {uf}/{nome} iniciada")
-        try:
-            fazer()
-            anotar(f"[{i}/{total}] {uf}/{nome} ok em {(time.time() - t1) / 60:.0f} min")
-        except Exception as e:
-            falhas += 1
-            anotar(f"[{i}/{total}] {uf}/{nome} FALHOU: {type(e).__name__}: {e}")
-            with open(REGISTRO, "a", encoding="utf-8") as f:
-                f.write(traceback.format_exc() + "\n")
+        falhas += not _rodar_tarefa(f"{i}/{total}", uf, nome, fazer)
     anotar(f"fila concluída em {(time.time() - t0) / 3600:.1f} h, {falhas} falha(s)")
 
 
+def _vivo(pid: int) -> bool:
+    """O processo ainda existe? No Windows, os.kill(pid, 0) mataria o processo."""
+    if os.name == "nt":
+        import ctypes
+        k = ctypes.windll.kernel32
+        k.OpenProcess.restype = ctypes.c_void_p
+        k.GetExitCodeProcess.argtypes = (ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong))
+        k.CloseHandle.argtypes = (ctypes.c_void_p,)
+        h = k.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return False
+        codigo = ctypes.c_ulong()
+        ok = k.GetExitCodeProcess(h, ctypes.byref(codigo))
+        k.CloseHandle(h)
+        return bool(ok) and codigo.value == 259  # STILL_ACTIVE
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        pass
+    return True
+
+
+def _reservar(uf: str, camada: str) -> Path | None:
+    """Reserva a camada para esta fila; None se outra fila viva já a pegou."""
+    p = GEO / "_reservas" / f"{uf}_{camada}"
+    p.parent.mkdir(exist_ok=True)
+    for _ in range(100):
+        try:
+            fd = os.open(p, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+        except FileExistsError:
+            try:
+                dono = int(p.read_text() or 0)
+            except (FileNotFoundError, ValueError):
+                dono = 0
+            if dono and _vivo(dono):
+                return None
+            if dono or time.time() - p.stat().st_mtime > 5:
+                p.unlink(missing_ok=True)  # dono morreu no meio da camada
+            else:
+                time.sleep(0.1)  # recém-criada, o PID ainda está sendo gravado
+            continue
+        os.write(fd, str(os.getpid()).encode())
+        os.close(fd)
+        return p
+    return None
+
+
+def _peso(uf: str, camada: str) -> int:
+    return sum(f.stat().st_size for f in (RAW_DIR / "car" / uf / camada).rglob("*.shp"))
+
+
 def rodar_pendentes(recortar: bool, quais: list[str] | None = None,
-                    incluir_cancelados: bool = False):
+                    incluir_cancelados: bool = False, maiores_primeiro: bool = False):
+    """Mede o que está pendente, dividindo o trabalho com outras filas que rodem juntas.
+
+    Cada camada é reservada por quem a pega e as pendências são relidas antes de
+    cada uma, então várias filas podem ser disparadas sobre a mesma lista: nenhuma
+    repete o que outra já mediu ou está medindo. Com várias filas, começar pelas
+    maiores equilibra o fim; com uma só, começar pelas leves devolve resultado cedo.
+    """
     met = metodo(recortar, incluir_cancelados)
     _invalidar_metodo_antigo(met)
     pend = pendencias(quais, met)
@@ -607,9 +676,34 @@ def rodar_pendentes(recortar: bool, quais: list[str] | None = None,
         print("[CAR dissolve] nada pendente: tudo que está extraído já foi medido.")
         return
     total = sum(len(v) for v in pend.values())
-    anotar(f"fila iniciada ({met}): {total} camada(s) em {len(pend)} UF(s): {', '.join(pend)}")
-    _executar([(uf, c, (lambda uf=uf, c=c: salvar_camada(uf, c, recortar, incluir_cancelados)))
-               for uf, camadas in pend.items() for c in camadas])
+    eu = f"fila {os.getpid()}"
+    anotar(f"{eu} iniciada ({met}): {total} camada(s) pendente(s) em {len(pend)} UF(s): {', '.join(pend)}")
+    tentadas: set[tuple[str, str]] = set()
+    falhas, t0 = 0, time.time()
+    while True:
+        ordem = [(uf, c) for uf, cs in pendencias(quais, met).items() for c in cs
+                 if (uf, c) not in tentadas]
+        if maiores_primeiro:
+            ordem.sort(key=lambda t: -_peso(*t))
+        pega = None
+        for uf, c in ordem:
+            reserva = _reservar(uf, c)
+            if reserva is None:
+                continue
+            # Outra fila pode ter terminado a camada entre a leitura e a reserva.
+            if c in pendencias([c], met).get(uf, []):
+                pega = (uf, c, reserva)
+                break
+            reserva.unlink(missing_ok=True)
+        if pega is None:
+            break
+        uf, c, reserva = pega
+        tentadas.add((uf, c))
+        try:
+            falhas += not _rodar_tarefa(eu, uf, c, lambda: salvar_camada(uf, c, recortar, incluir_cancelados))
+        finally:
+            reserva.unlink(missing_ok=True)
+    anotar(f"{eu} concluída em {(time.time() - t0) / 3600:.1f} h, {len(tentadas)} camada(s), {falhas} falha(s)")
 
 
 def rodar_compostas(uf: str, recortar: bool, incluir_cancelados: bool = False):
@@ -641,13 +735,15 @@ def main():
     ap.add_argument("--teto-mb", type=int, default=TETO_MB,
                     help="MB de geometria por bloco de municípios; menor gasta menos "
                          "memória, e um município sozinho nunca é partido")
+    ap.add_argument("--maiores-primeiro", action="store_true",
+                    help="com várias filas juntas, pega as camadas mais pesadas antes")
     args = ap.parse_args()
     TETO_MB = args.teto_mb
 
     if args.pendentes:
         # --camadas restringe a fila; sem ele, mede as cinco.
         escolhidas = args.camadas if args.camadas != CAMADAS else None
-        rodar_pendentes(args.recortar, escolhidas, args.incluir_cancelados)
+        rodar_pendentes(args.recortar, escolhidas, args.incluir_cancelados, args.maiores_primeiro)
         return
     if not args.uf:
         raise SystemExit("informe --uf ou use --pendentes")
