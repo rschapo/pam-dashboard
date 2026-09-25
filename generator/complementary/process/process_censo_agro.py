@@ -83,17 +83,25 @@ def harmonizar_area_groups(area_df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _summary(temas_data: dict) -> pd.DataFrame:
-    """Resumo municipal enxuto: nº estabelecimentos e área total (quando disponíveis)."""
+    """Resumo municipal enxuto: nº estabelecimentos e área total (quando disponíveis).
+
+    Vem da categoria "Total" da area_groups, que traz o Total e as faixas de área da
+    mesma variável: somar tudo contaria cada estabelecimento duas vezes. Bruto sem
+    subcategoria não separa o Total, e o município fica com o valor nulo, não dobrado.
+    """
     ag = temas_data.get("area_groups")
     if ag is None or ag.empty:
         return pd.DataFrame(columns=["cod_municipio", "ano_referencia"])
     a = ag.copy()
     a["valor"] = pd.to_numeric(a["valor"], errors="coerce")
-    est = (a[a["variavel"].str.contains("estabeleciment", case=False, na=False)]
-           .groupby("cod_municipio")["valor"].sum().rename("numero_estabelecimentos"))
-    area = (a[a["variavel"].str.contains("área|area", case=False, na=False)]
-            .groupby("cod_municipio")["valor"].sum().rename("area_estabelecimentos_ha"))
-    out = pd.concat([est, area], axis=1).reset_index()
+    tot = a[a["subcategoria"].astype(str).str.strip().str.lower() == "total"]
+    var = tot["variavel"].str.lower()
+    est = (tot[var.str.startswith("número de estabelecimentos")]
+           .groupby("cod_municipio")["valor"].sum(min_count=1).rename("numero_estabelecimentos"))
+    area = (tot[var.str.startswith("área")]
+            .groupby("cod_municipio")["valor"].sum(min_count=1).rename("area_estabelecimentos_ha"))
+    mun = pd.Index(sorted(a["cod_municipio"].dropna().unique()), name="cod_municipio")
+    out = pd.DataFrame(index=mun).join(est).join(area).reset_index()
     out["ano_referencia"] = ANO
     return out
 

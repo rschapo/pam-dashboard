@@ -154,6 +154,48 @@ def test_tabelas_reais_trazem_a_unidade():
     }
 
 
+NUM_6778 = "Número de estabelecimentos agropecuários"
+
+
+def _area_groups(*linhas):
+    """Linhas da area_groups como o processamento as lê: (município, subcategoria, variável, valor)."""
+    return pd.DataFrame([{"cod_municipio": m, "ano_referencia": 2017, "categoria": "area_groups",
+                          "subcategoria": s, "variavel": var, "valor": v, "unidade": "Unidades",
+                          "fonte_tabela_sidra": 6778} for m, s, var, v in linhas])
+
+
+def test_resumo_conta_so_o_total_dos_estabelecimentos():
+    """A area_groups traz o Total e as faixas de área da mesma variável; o resumo somava
+    tudo e contava cada estabelecimento duas vezes."""
+    s = pc._summary({"area_groups": _area_groups(
+        ("1200013", "Total", NUM_6778, "1462"),
+        ("1200013", "De 1 a menos de 2 ha", NUM_6778, "17"),
+        ("1200013", "De 10 a menos de 20 ha", NUM_6778, "1445"),
+    )}).set_index("cod_municipio")
+    assert s.loc["1200013", "numero_estabelecimentos"] == 1462
+
+
+def test_resumo_nao_soma_a_area_na_contagem():
+    # "Área dos estabelecimentos" também contém "estabelecimentos"
+    s = pc._summary({"area_groups": _area_groups(
+        ("5107925", "Total", NUM_6778, "828"),
+        ("5107925", "Total", AREA_ESTAB, "827833"),
+        ("5107925", "De 1 a menos de 2 ha", AREA_ESTAB, "12"),
+    )}).set_index("cod_municipio")
+    assert s.loc["5107925", "numero_estabelecimentos"] == 828
+    assert s.loc["5107925", "area_estabelecimentos_ha"] == 827833
+
+
+def test_resumo_sem_rotulo_fica_nulo_e_nao_dobra():
+    """Bruto sem subcategoria (baixado antes de o coletor gravá-la) não separa o Total
+    das faixas: o município fica no resumo, com o valor nulo."""
+    s = pc._summary({"area_groups": _area_groups(
+        ("1200013", None, NUM_6778, "1462"),
+        ("1200013", None, NUM_6778, "1462"),
+    )}).set_index("cod_municipio")
+    assert pd.isna(s.loc["1200013", "numero_estabelecimentos"])
+
+
 def test_harmoniza_faixas_soma_compativeis():
     # duas classes originais que devem cair na mesma faixa harmonizada (ate_10_ha)
     area = pd.DataFrame([
