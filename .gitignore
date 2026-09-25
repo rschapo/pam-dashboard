@@ -38,7 +38,8 @@ tmp/
 
 # Mantidas versionadas (leves, de conferência): as tabelas municipais/dimensões
 # em data/processed/dimensions e data/processed/municipality (parquet + csv) e os
-# manifestos data/manifests/*.json. Use 'git add -f' se necessário.
+# manifestos data/manifests/*.json. Use 'git add -f' se necessário. Os CSVs
+# grandes demais ficam de fora e só o parquet é versionado (ver o fim do arquivo).
 
 # Python
 __pycache__/
@@ -63,6 +64,12 @@ Thumbs.db
 # colunas em 23 MB — e esse fica versionado. Regenere o CSV localmente se
 # precisar dele em ferramentas que nao leem parquet.
 data/processed/municipality/mapbiomas_municipio.csv
+
+# pevs_municipio.csv passou dos 50 MB recomendados pelo GitHub (59 MB em
+# 25/09/2026, com grupo e unidade preenchidos). O .parquet ao lado carrega as
+# mesmas 647.784 linhas e 10 colunas em 3 MB e fica versionado; o
+# process_pevs.py continua gravando o CSV localmente, para conferência.
+data/processed/municipality/pevs_municipio.csv
 
 # Aponta o bruto para fora do projeto (caminho local da maquina)
 data/raw_dir.txt
