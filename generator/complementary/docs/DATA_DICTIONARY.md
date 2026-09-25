@@ -72,6 +72,21 @@ Perfil municipal agregado. Stage 1: módulo fiscal, SNCR, Censo, PEVS (sem cruza
 PAM/PPM). Stage 2: acrescenta CAR (cadastros, área união, sobreposição) e MapBiomas
 (agricultura/pastagem/silvicultura, ha).
 
+Da PEVS entra só a silvicultura (tabela 291), no **último ano** da `pevs_municipio` e só
+no **nível de produto**, as linhas com `grupo` (ver pevs_municipio): subtotais e espécies
+repetiriam produção. O último ano, e não uma média, porque fecha com o Total do IBGE e
+não mistura preços de anos diferentes; a série inteira fica na `pevs_municipio`. O corte
+é cíclico: o município que colheu nos anos anteriores e não no de referência fica sem
+silvicultura no perfil. O teste `test_perfil_real_fecha_com_o_total_do_ibge` refaz a
+conta contra o consolidado.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| valor_producao_florestal | float | Valor da produção da silvicultura no ano, R$ mil nominais; em cada município e somado no Brasil, é o Total do IBGE. `0` quando a fonte informa zero (valor arredondado); `null` sem silvicultura no ano ou sem informação |
+| produto_florestal_predominante | str | Produto de maior valor no ano, com o rótulo do SIDRA ("1.2 - Lenha", "2.3 - Resina"). É o `produto`, e não o `grupo`: o grupo só junta casca de acácia-negra, folha de eucalipto e resina, e o produto diz qual deles. No empate, o primeiro rótulo; `null` sem valor positivo |
+| silvicultura_presente | bool | O município tem valor da silvicultura no ano (o zero conta) |
+| ano_referencia_pevs | int | Ano da PEVS dos três campos acima, o mesmo em todos os municípios; avança quando um ano novo entra na `pevs_municipio` |
+
 ## car_imoveis_validos_<UF> / _intersection_<UF>  (`geospatial/`)
 Geometrias tratadas (EPSG:4674), áreas (declarada × geométrica), flags e status
 padronizado; interseção município×imóvel com `area_intersecao_ha`,

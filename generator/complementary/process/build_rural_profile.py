@@ -3,7 +3,7 @@ build_rural_profile.py — Perfil estrutural municipal (Etapas 1 e 2, §6.9 e §
 
 rural_profile_stage1: reúne SOMENTE agregados da Etapa 1 (módulo fiscal, SNCR,
 Censo Agro, PEVS) por município. NÃO cruza com PAM/PPM (fica pronto p/ isso na fase
-de integração).
+de integração). Da PEVS entra a silvicultura do último ano, só no nível de produto.
 
 rural_profile_stage2: acrescenta os agregados do CAR e do MapBiomas (Etapa 2).
 
@@ -32,6 +32,28 @@ def _load(path, cols=None):
         return None
     df = pd.read_parquet(p)
     return df[cols] if cols else df
+
+
+def silvicultura_ultimo_ano(pevs: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Valor da silvicultura e produto predominante por município no último ano da PEVS.
+
+    A pevs_municipio mistura subtotais do IBGE ("1.3 - Madeira em tora" = 1.3.1 + 1.3.2),
+    produtos e, desde 2013, a abertura de cada produto por espécie. Só o nível produto tem
+    `grupo`, e a soma dessas linhas fecha com o Total do IBGE em cada ano; somar tudo
+    contaria a mesma produção duas ou três vezes. O predominante é o produto de maior
+    valor (no empate, o primeiro rótulo); sem valor positivo, fica nulo.
+    """
+    sil = pevs[(pevs["tipo_atividade"] == "Silvicultura") & pevs["grupo"].notna()]
+    ano = int(sil["ano"].max())
+    sil = sil[sil["ano"] == ano]
+    val = sil.groupby("cod_municipio")["valor_producao_mil_reais"].sum(min_count=1)
+    por_produto = sil.groupby(["cod_municipio", "produto"], as_index=False)["valor_producao_mil_reais"].sum()
+    pred = (por_produto[por_produto["valor_producao_mil_reais"] > 0]
+            .sort_values(["valor_producao_mil_reais", "produto"], ascending=[False, True])
+            .drop_duplicates("cod_municipio").set_index("cod_municipio")["produto"])
+    out = val.rename("valor_producao_florestal").to_frame().join(
+        pred.rename("produto_florestal_predominante"))
+    return out.reset_index(), ano
 
 
 def stage1() -> pd.DataFrame:
@@ -65,14 +87,10 @@ def stage1() -> pd.DataFrame:
 
     pevs = _load(MUN / "pevs_municipio.parquet")
     if pevs is not None and not pevs.empty:
-        sil = pevs[pevs["tipo_atividade"] == "Silvicultura"]
-        val = sil.groupby("cod_municipio")["valor_producao_mil_reais"].sum().rename("valor_producao_florestal")
-        pred = (sil.groupby(["cod_municipio", "produto"])["valor_producao_mil_reais"].sum()
-                   .reset_index().sort_values("valor_producao_mil_reais", ascending=False)
-                   .drop_duplicates("cod_municipio").set_index("cod_municipio")["produto"]
-                   .rename("produto_florestal_predominante"))
-        prof = prof.merge(val, on="cod_municipio", how="left").merge(pred, on="cod_municipio", how="left")
+        sil, ano = silvicultura_ultimo_ano(pevs)
+        prof = prof.merge(sil, on="cod_municipio", how="left")
         prof["silvicultura_presente"] = prof["valor_producao_florestal"].notna()
+        prof["ano_referencia_pevs"] = ano
     return prof
 
 
