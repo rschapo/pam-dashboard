@@ -61,22 +61,34 @@ def _read_tema(tema: str) -> pd.DataFrame:
 
 
 def harmonizar_area_groups(area_df: pd.DataFrame) -> pd.DataFrame:
-    """Soma classes originais nas faixas harmonizadas, marcando incompatíveis."""
+    """Soma classes originais nas faixas harmonizadas, marcando incompatíveis.
+
+    O coletor grava como nulo tanto o "-" do SIDRA (zero) quanto o "X" (sigilo). Uma
+    faixa com classe nula só se reconstrói quando as classes do município fecham com o
+    Total da variável, e aí todo nulo era zero; senão algum nulo esconde valor, e a
+    faixa que tem classe nula fica nula.
+    """
     if area_df.empty:
         return pd.DataFrame()
     mapa = pd.read_csv(CONFIG_DIR / "area_groups.csv", sep=";", dtype=str)
     m = {r["classe_original"].strip().lower(): (r["faixa_harmonizada"], r["compativel"])
          for _, r in mapa.iterrows()}
     df = area_df.copy()
-    df["faixa_harmonizada"] = df["subcategoria"].astype(str).str.strip().str.lower().map(
-        lambda s: m.get(s, (None, "0"))[0])
-    df["compativel"] = df["subcategoria"].astype(str).str.strip().str.lower().map(
-        lambda s: m.get(s, (None, "0"))[1])
+    sub = df["subcategoria"].astype(str).str.strip().str.lower()
+    df["faixa_harmonizada"] = sub.map(lambda s: m.get(s, (None, "0"))[0])
+    df["compativel"] = sub.map(lambda s: m.get(s, (None, "0"))[1])
+    df["valor"] = pd.to_numeric(df["valor"], errors="coerce")
+    chave = ["cod_municipio", "variavel"]
+    total = df[sub == "total"].groupby(chave)["valor"].sum(min_count=1)
+    partes = df[sub != "total"].groupby(chave)["valor"].sum()
+    fecha = partes.eq(total.reindex(partes.index)).rename("fecha").reset_index()
     # mantém a original; agrega harmonizado apenas onde compativel==1
-    comp = df[df["compativel"] == "1"].copy()
-    comp["valor"] = pd.to_numeric(comp["valor"], errors="coerce")
-    harm = (comp.groupby(["cod_municipio", "variavel", "faixa_harmonizada"], as_index=False)
-                .agg(valor=("valor", "sum")))
+    comp = df[df["compativel"] == "1"].assign(nula=lambda d: d["valor"].isna())
+    harm = (comp.groupby(chave + ["faixa_harmonizada"], as_index=False)
+                .agg(valor=("valor", "sum"), nula=("nula", "any"))
+                .merge(fecha, on=chave, how="left"))
+    harm.loc[harm["nula"] & ~harm["fecha"].fillna(False).astype(bool), "valor"] = float("nan")
+    harm = harm.drop(columns=["nula", "fecha"])
     harm["ano_referencia"] = ANO
     harm["classificacao"] = "harmonizada"
     return harm

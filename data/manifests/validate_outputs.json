@@ -34,10 +34,10 @@
       "artefato": "municipality/pevs_municipio",
       "obrigatorio": false,
       "existe": true,
-      "linhas": 559021,
+      "linhas": 647784,
       "cod_7dig": true,
       "zeros_suspeitos_em_ha": {
-        "area_ha": 602
+        "area_ha": 630
       },
       "status": "OK"
     },
@@ -52,20 +52,37 @@
     {
       "artefato": "geospatial/car_municipio_summary",
       "obrigatorio": false,
-      "existe": false,
-      "status": "AUSENTE (pendente)"
+      "existe": true,
+      "linhas": 5562,
+      "cod_7dig": true,
+      "zeros_suspeitos_em_ha": {
+        "area_sobreposta_ha": 6
+      },
+      "status": "OK"
     },
     {
       "artefato": "municipality/mapbiomas_municipio",
       "obrigatorio": false,
-      "existe": false,
-      "status": "AUSENTE (pendente)"
+      "existe": true,
+      "linhas": 3152720,
+      "cod_7dig": false,
+      "zeros_suspeitos_em_ha": {
+        "area_ha": 341884
+      },
+      "status": "OK"
     },
     {
       "artefato": "municipality/rural_profile_stage2",
       "obrigatorio": false,
-      "existe": false,
-      "status": "AUSENTE (pendente)"
+      "existe": true,
+      "linhas": 5571,
+      "cod_7dig": true,
+      "zeros_suspeitos_em_ha": {
+        "mapbiomas_agricultura_ha": 149,
+        "mapbiomas_pastagem_ha": 6,
+        "mapbiomas_silvicultura_ha": 67
+      },
+      "status": "OK"
     }
   ]
 }

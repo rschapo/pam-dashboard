@@ -13,9 +13,9 @@
   "output_files": [
     {
       "file": "perfil_rural.json",
-      "sha256": "558bf1760f72dee5ac27d0d1a82098d5669c1fa6dbe9e7a2f235d7cb9dc43d88",
-      "bytes": 2282242
+      "sha256": "69919e87a970b7daea483becb61f219e18ea58b64f13af506384478a1938b951",
+      "bytes": 3454375
     }
   ],
-  "generated_at": "2026-09-25T06:57:16-04:00"
+  "generated_at": "2026-09-25T10:36:20-04:00"
 }

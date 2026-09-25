@@ -143,7 +143,7 @@ foi auditada, migrada e apagada nesta mesma sessão de trabalho).
 | `credito_rural.csv` | 5.406–5.396 mun (Custeio/Investimento) | Custeio **R$ 208,7 bi** + Investimento **R$ 105,1 bi** (2024). **Bug real corrigido**: o recurso "Investimento" do SICOR/BCB não tem o campo `codIbge` (só código interno do BCB) — a coleta antiga (Base_Municipios_Brasil) vinha sempre 100% nula para essa finalidade. Resolvido por join nome+UF, 99,9% de correspondência |
 | `financas.csv` | 5.570 municípios | Receita corrente **R$ 1,17 tri** · Receita total **R$ 1,59 tri** · Transferências correntes **R$ 762 bi** (2023). **Bug real corrigido**: cada conta do DCA-Anexo I-C do SICONFI vem repetida em várias "colunas" do relatório (Receitas Brutas Realizadas / Deduções FUNDEB / Outras Deduções) — a lógica antiga sobrescrevia com a última que aparecesse, pegando valores errados (uma dedução, não o valor bruto). Corrigido filtrando `coluna == "Receitas Brutas Realizadas"` e casando por `cod_conta` exato |
 
-### 3.5 Estrutural — Censo Agropecuário 2017 — ⚠️ achado bônus, com alerta de qualidade
+### 3.5 Estrutural — Censo Agropecuário 2017 — achado bônus (alerta de qualidade resolvido)
 
 Localizado durante a consolidação — **não fazia parte do escopo original
 desta sessão**, já estava processado de antes:
@@ -156,13 +156,14 @@ desta sessão**, já estava processado de antes:
 | `censo_agro_finance.csv`, `_technical_assistance.csv`, `_irrigation.csv`, `_storage.csv`, `_activity.csv` | Financiamento, assistência técnica, irrigação, armazenagem, atividades |
 | `censo_agro_municipio_summary.csv` | Resumo por município |
 
-**⚠️ Alerta de qualidade encontrado agora:** o total nacional de
-`numero_estabelecimentos` no summary soma **10,15 milhões** — o número
-oficial do Censo Agropecuário 2017 é **~5,07 milhões** de estabelecimentos.
-Parece dupla contagem (provavelmente somando categorias/subgrupos junto com
-um total). **Não usar esse total nacional até revisar** — os dados por
-município podem estar corretos individualmente, mas a agregação não bate.
-`area_estabelecimentos_ha` está **100% nula** nesta tabela.
+**Alerta de qualidade resolvido em 25/09/2026.** O `numero_estabelecimentos` do
+summary somava **10,15 milhões** porque o resumo somava as faixas de área junto com o
+Total, e a `area_estabelecimentos_ha` vinha 100% nula. Havia mais: 9 dos 10 temas
+tinham perdido a categoria (linhas de um município indistinguíveis), e a armazenagem
+vinha da tabela de veículos. Os temas foram baixados de novo com as categorias e com as
+tabelas certas (ver `generator/complementary/docs/DATA_DICTIONARY.md`), e o resumo usa
+só a linha Total: no Brasil, **5.073.324** estabelecimentos, o número oficial do Censo
+2017, e **351,29 milhões de ha** (a área de 6 municípios pequenos é suprimida pelo IBGE).
 
 ### 3.6 Governança — TSE (prefeitos eleitos) — ✅ migrado, com limitação conhecida
 
@@ -225,10 +226,10 @@ nenhuma cópia paralela de dado de produção agro em nenhum outro projeto.
 2. **CAR — colunas ambientais** (vegetação nativa, reserva legal, APP,
    área consolidada) parecem incompletas nacionalmente — revisar antes de
    usar para qualquer análise de "pegada ambiental".
-3. **Censo Agropecuário — `numero_estabelecimentos`** está com total
-   nacional ~2× o valor oficial — investigar dupla contagem antes de citar
-   esse agregado (os dados de máquinas/frota parecem OK, é especificamente
-   o resumo de estabelecimentos que está suspeito).
+3. **Censo Agropecuário — resolvido em 25/09/2026.** O `numero_estabelecimentos`
+   do resumo tinha o dobro do valor oficial; agora soma os 5.073.324
+   estabelecimentos do Censo 2017, e os temas trazem as categorias (ver a
+   seção 3.5).
 4. **Gestão (TSE)** não tem `cod_ibge` — só isolado por enquanto; precisa de
    um de-para TSE↔IBGE para entrar nos cruzamentos.
 5. **SNCR, INCRA, Módulo Fiscal** — scripts prontos, nada baixado ainda.

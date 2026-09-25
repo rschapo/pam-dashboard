@@ -1,0 +1,26 @@
+{
+  "dataset": "rural_profile_stage2",
+  "source": "Composição Etapa 2 (+CAR/MapBiomas)",
+  "extraction_date": "2026-09-25",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 5571,
+  "municipality_count": 5571,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "rural_profile_stage2.parquet",
+      "sha256": "75395cdf8579649708a0499c59203ca9e85fdb8c08842aeb479ad7e9484743dc",
+      "bytes": 333587
+    },
+    {
+      "file": "rural_profile_stage2.csv",
+      "sha256": "3070db7d18d8bfb581c6c19428496ccb8be574cb453a03fe72ea86b869685594",
+      "bytes": 592102
+    }
+  ],
+  "generated_at": "2026-09-25T10:35:59-04:00"
+}

@@ -30,13 +30,39 @@ Acompanha `dim_municipio_codigos_historicos.csv` (correspondência histórico→
 `zona_tipica_modulo`, `zona_pecuaria`, `data_referencia`, `fonte`, `observacao`.
 
 ## censo_agro_<tema>  (`municipality/`)
-Temas: area_groups, family_farming, land_condition, machinery, storage, irrigation,
-finance, technical_assistance, land_use, activity. Colunas: `cod_municipio`,
-`ano_referencia`, `categoria`, `subcategoria`, `variavel`, `valor`, `unidade`,
-`fonte_tabela_sidra`. Harmonização em `censo_agro_area_groups_harmonizado`
-(mantém a original; soma só compatíveis). Resumo em `censo_agro_municipio_summary`.
-`unidade` é a da variável no SIDRA (Unidades nas contagens, Hectares nas áreas); as
-variáveis baixadas hoje são todas contagens, em Unidades.
+Colunas: `cod_municipio`, `ano_referencia`, `categoria` (o tema), `subcategoria`,
+`variavel`, `valor`, `unidade`, `fonte_tabela_sidra`. Cada tema vem de uma tabela do
+Censo Agropecuário 2017 e abre por uma classificação; `subcategoria` é a categoria dela,
+sempre com a linha `Total`:
+
+| Tema | Tabela | Classificação | Variáveis |
+|---|---|---|---|
+| area_groups | 6754 | Grupos de área total | estabelecimentos; área (ha) |
+| family_farming | 6778 | Tipologia | estabelecimentos |
+| land_condition | 6853 | Condição do produtor em relação às terras | estabelecimentos |
+| machinery | 6870 | Potência dos tratores | estabelecimentos com tratores; tratores |
+| irrigation | 6859 | Método utilizado para irrigação | estabelecimentos com irrigação; área irrigada (ha) |
+| storage | 6866 | Tipo de unidade armazenadora | estabelecimentos com unidades armazenadoras; unidades; capacidade (t) |
+| finance | 6895 | Agente financeiro responsável pelo financiamento | estabelecimentos que obtiveram financiamento |
+| technical_assistance | 6780 | Origem da orientação técnica recebida | estabelecimentos |
+| land_use | 6881 | Utilização das terras | estabelecimentos com área; área (ha) |
+| activity | 6778 | Grupos de atividade econômica | estabelecimentos |
+
+Não somar as subcategorias: o `Total` já é a soma, e há categorias que se sobrepõem. Na
+Tipologia, o familiar se abre em Pronaf B, Pronaf V e não pronafiano, e o Pronamp é outro
+recorte do Total; um estabelecimento conta em cada método de irrigação, agente financeiro,
+origem da orientação técnica ou tipo de unidade armazenadora que tem. `valor` nulo é o "-"
+do SIDRA (zero) ou o "X" (sigilo, comum nas áreas e na capacidade em municípios com poucos
+estabelecimentos). `unidade` é a da variável: Unidades, Hectares ou Toneladas.
+
+`censo_agro_municipio_summary`: `numero_estabelecimentos` e `area_estabelecimentos_ha` são a
+linha Total da area_groups (no Brasil, 5.073.324 estabelecimentos e 351.289.816 ha); a área
+fica nula onde o IBGE a suprime. `censo_agro_area_groups_harmonizado`: as 18 classes de área
+somadas em 6 faixas (`config/area_groups.csv`; o "Produtor sem área" fica de fora), para as
+duas variáveis. A faixa com classe nula só se reconstrói quando as classes do município
+fecham com o Total, e aí todo nulo era zero; senão fica nula, e ela não é deduzida por
+diferença do Total, o que desfaria o sigilo. Na contagem, todas as faixas fecham; na área,
+14.310 das 33.378 ficam nulas.
 
 ## sncr_imoveis_validos  (`municipality/`)
 `id_imovel_hash` (SHA-256, **sem** dado nominal), `cod_municipio`, `uf`,

@@ -6,33 +6,33 @@
   "source_files": [],
   "source_hashes": [],
   "script_version": "0.1.0",
-  "row_count": 453972,
+  "row_count": 857790,
   "municipality_count": 0,
   "rejected_rows": 0,
   "warnings": [
-    "area_groups: tabela 6778",
+    "area_groups: tabela 6754",
     "family_farming: tabela 6778",
     "land_condition: tabela 6853",
     "machinery: tabela 6870",
     "irrigation: tabela 6859",
-    "storage: tabela 6875",
+    "storage: tabela 6866",
     "finance: tabela 6895",
-    "technical_assistance: tabela 6847",
+    "technical_assistance: tabela 6780",
     "land_use: tabela 6881",
     "activity: tabela 6778"
   ],
   "output_files": [],
-  "generated_at": "2026-09-25T07:00:26-04:00",
+  "generated_at": "2026-09-25T10:34:45-04:00",
   "temas": [
     {
       "tema": "area_groups",
-      "tabela": 6778,
-      "linhas": 111260
+      "tabela": 6754,
+      "linhas": 222520
     },
     {
       "tema": "family_farming",
       "tabela": 6778,
-      "linhas": 5563
+      "linhas": 44504
     },
     {
       "tema": "land_condition",
@@ -47,12 +47,12 @@
     {
       "tema": "irrigation",
       "tabela": 6859,
-      "linhas": 65700
+      "linhas": 131400
     },
     {
       "tema": "storage",
-      "tabela": 6875,
-      "linhas": 5524
+      "tabela": 6866,
+      "linhas": 71055
     },
     {
       "tema": "finance",
@@ -61,13 +61,13 @@
     },
     {
       "tema": "technical_assistance",
-      "tabela": 6847,
-      "linhas": 5563
+      "tabela": 6780,
+      "linhas": 61193
     },
     {
       "tema": "land_use",
       "tabela": 6881,
-      "linhas": 66756
+      "linhas": 133512
     },
     {
       "tema": "activity",

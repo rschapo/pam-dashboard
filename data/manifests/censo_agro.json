@@ -13,40 +13,40 @@
     }
   ],
   "script_version": "0.1.0",
-  "row_count": 453972,
+  "row_count": 857790,
   "municipality_count": 0,
   "rejected_rows": 0,
   "warnings": [],
   "output_files": [
     {
       "file": "censo_agro_area_groups.parquet",
-      "sha256": "255e2e0f4e32343870a02104df2af240c84d02b178fc4b90d3b8b984004ee726",
-      "bytes": 203150
+      "sha256": "3294ddc06c2092f6cda332e13c21cbd437501b31d6b786edc1fbdfe826741dff",
+      "bytes": 458512
     },
     {
       "file": "censo_agro_area_groups.csv",
-      "sha256": "2fdd5d59bc5a182a32c95a1ddc09bb8d05c8f922e314b47e5d1ccf02f3e6e8a4",
-      "bytes": 9806235
+      "sha256": "e56b851d7af8a0b3ff98619f9d081e58e64578809ed7f88af1f278f30446885e",
+      "bytes": 24395292
     },
     {
       "file": "censo_agro_family_farming.parquet",
-      "sha256": "7b319b770d9784eb294c1e582b8656fa1b416cdc6ba7dbb3a68cd86c1b7310bb",
-      "bytes": 58221
+      "sha256": "c1b7659fdc04b446e70d8724f9c50bbbc90f5f822d13a9e718dafd5bf9644ddc",
+      "bytes": 129398
     },
     {
       "file": "censo_agro_family_farming.csv",
-      "sha256": "0a9d6b66683e7601ad0b07545201c06e9b9cbd61f1f971efcffc691eed53d55c",
-      "bytes": 518805
+      "sha256": "9e466f229d79c7bfbb2c513a2e7187976cd0828866875d8f625fe61cb332d79e",
+      "bytes": 5146796
     },
     {
       "file": "censo_agro_land_condition.parquet",
-      "sha256": "70ed19e08376f7051ac6a07b521ffa780a588f00849c0ae4f0e81a7a5e5f901e",
-      "bytes": 120276
+      "sha256": "ead52a928c096112d996381f427dcd6fdf86a0ecccdf52ca458492496d960c29",
+      "bytes": 121362
     },
     {
       "file": "censo_agro_land_condition.csv",
-      "sha256": "1457a2eb3c9569224afceaf4f159addd173ea6b9b57f2f8a43564417059a198c",
-      "bytes": 4061834
+      "sha256": "33e36d0b9298c365b2319b2fea3612357c6cb7145a7bea0db70eaae082430fff",
+      "bytes": 4935225
     },
     {
       "file": "censo_agro_machinery.parquet",
@@ -60,74 +60,84 @@
     },
     {
       "file": "censo_agro_irrigation.parquet",
-      "sha256": "7ab94209b59ed20b90822c03362e3658254d3919b532a514e1f7ada13039bf58",
-      "bytes": 105237
+      "sha256": "feb0cd55294489658656fedb5e770690caa3a662af475684658805c2e23cff8a",
+      "bytes": 162344
     },
     {
       "file": "censo_agro_irrigation.csv",
-      "sha256": "1779f2e237f7abe56021b6ad82ae32419ad9425fd3efbfd37b65180ceb62dd2b",
-      "bytes": 7148670
+      "sha256": "f1e4eb871733ec762308f32a9ebb50659d02004d3cc3c1352e3f63f9a754d6ac",
+      "bytes": 18564420
     },
     {
       "file": "censo_agro_storage.parquet",
-      "sha256": "a422685da41bd4a54c4b7c10a039c4ae7638b13c421404764daea22abb0778e5",
-      "bytes": 51637
+      "sha256": "150d96667a5fb3c67a949ff7f7cd8f39d5c0605595d15c67f6d7d99c0948e58e",
+      "bytes": 121072
     },
     {
       "file": "censo_agro_storage.csv",
-      "sha256": "e244366afcf862f1112482f67de9a46a2dc293ac64ec49c6b9900567edc8761e",
-      "bytes": 550008
+      "sha256": "3f4f04be85632cd251b7b105f4262ebe5fdf306ef0b2c1d50d41509fe24f4806",
+      "bytes": 8413008
     },
     {
       "file": "censo_agro_finance.parquet",
-      "sha256": "cbbbdc187c29637c7b6228511d5616822ff6f3e025189dffef3a6d8976b72bad",
-      "bytes": 92751
+      "sha256": "de8853fa4374ef4d24ebc07444833cc763c76189a296f3a5c03cafd98d80712b",
+      "bytes": 94767
     },
     {
       "file": "censo_agro_finance.csv",
-      "sha256": "c355744fa9600a0f9c4142a27e122ca85c458f6c63d5c369af69990c90e8e7bb",
-      "bytes": 6706917
+      "sha256": "c9668fc607f18b71c5eda94abe57072a27ae6cbd1d369d8acc278eab75b9f763",
+      "bytes": 8163141
     },
     {
       "file": "censo_agro_technical_assistance.parquet",
-      "sha256": "9bec64e5578a7d0f04e9127e55bfdaa94f929d7597dd9687c85983b050759402",
-      "bytes": 58251
+      "sha256": "641ca370ac071848e32d9128f64108af79e0308ccbda5c6a66e98faaaf408864",
+      "bytes": 139044
     },
     {
       "file": "censo_agro_technical_assistance.csv",
-      "sha256": "3e8222ce3a24b5b84b1393cef9d59be6f9d1c5ff88fbd924111cff91713624a7",
-      "bytes": 552183
+      "sha256": "16b62b3c33ba76487ac147c65b901242e943010adc801123ed73c3a1a28f8aad",
+      "bytes": 7118761
     },
     {
       "file": "censo_agro_land_use.parquet",
-      "sha256": "a32103a0a9e507b8bf9b797a0703001caf84174bc01fdf451f718022a9d97f61",
-      "bytes": 162868
+      "sha256": "ba9cb30977c5ad1cfd39be2f4036db322e5a210ff8c1b29d6b7422dc3b7e73c5",
+      "bytes": 362880
     },
     {
       "file": "censo_agro_land_use.csv",
-      "sha256": "969e82728372562bb4ef67a33264eec9f99786f2782a23716d91578e048dc6c4",
-      "bytes": 6418173
+      "sha256": "3b250962e178c8a545f1e23bac5256b037c56f416f2054f18c039c92a1ebe701",
+      "bytes": 19826819
     },
     {
       "file": "censo_agro_activity.parquet",
-      "sha256": "489aaa290b38e3860c16c4dbfd5e0887c036503baa377dc29cb98c0890a372c1",
-      "bytes": 123470
+      "sha256": "6e2733a21b1b1ff4667578125a217a60ce7749dceaabeda90b1fa4b4ae1f31d6",
+      "bytes": 125186
     },
     {
       "file": "censo_agro_activity.csv",
-      "sha256": "45230fcc6cb7449d91862e3673b62acdd50b66152c55579fcae3acddc0fca6e4",
-      "bytes": 4719304
+      "sha256": "e322786ec8c844f82f62fa1d8f98dad35df4a934178706e18db6d4ca96c50a67",
+      "bytes": 6282507
+    },
+    {
+      "file": "censo_agro_area_groups_harmonizado.parquet",
+      "sha256": "c3f0594c40da1450fa70b7e15850cadde77ee7892d4b4190c74eb9f169733554",
+      "bytes": 202679
+    },
+    {
+      "file": "censo_agro_area_groups_harmonizado.csv",
+      "sha256": "46bbbd1d10e387046fe36f9397745b27392980876b614f06ec78b5f5db8ff9b8",
+      "bytes": 6014730
     },
     {
       "file": "censo_agro_municipio_summary.parquet",
-      "sha256": "0e750dd9ffb5c0b67bee80078ee2e1a793d475117218b6a4e0a5a2bef081ab9d",
-      "bytes": 56622
+      "sha256": "76bce9a4805f6c7350aab4d8df9866f2ec7bb6dc7ef2631c2ea72f7ae170c40a",
+      "bytes": 92380
     },
     {
       "file": "censo_agro_municipio_summary.csv",
-      "sha256": "5132e0d7baf6bf7e3a946eb1186637a783b8f980ccd20ba51353bfd222c56ff7",
-      "bytes": 120005
+      "sha256": "c73f6760c1a944a2adbf0a801f1462a94388fe52b12492645b8892199effbbed",
+      "bytes": 156719
     }
   ],
-  "generated_at": "2026-09-25T07:00:51-04:00"
+  "generated_at": "2026-09-25T10:35:00-04:00"
 }

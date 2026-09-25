@@ -20,14 +20,16 @@ censo_agro_2017:
   temas:
     area_groups:
       descricao: "Número e área de estabelecimentos por grupos de área total"
-      tabelas_candidatas: [6778, 6779]
+      # a 6778 e a 6779 não têm a área; a 6754 tem as duas variáveis por grupo
+      tabelas_candidatas: [6754]
       metricas: {estabelecimentos: "Número de estabelecimentos", area: "Área dos estabelecimentos"}
       classificacao_busca: ["grupos de área total"]
       validar: true
     family_farming:
       descricao: "Agricultura familiar x não familiar (Lei 11.326)"
       tabelas_candidatas: [6778, 6846]
-      classificacao_busca: ["agricultura familiar"]
+      # a abertura familiar/não familiar é a classificação "Tipologia" (c829)
+      classificacao_busca: ["tipologia"]
       validar: true
     land_condition:
       descricao: "Condição legal das terras / condição do produtor"
@@ -45,12 +47,20 @@ censo_agro_2017:
     irrigation:
       descricao: "Estabelecimentos que utilizam irrigação e área irrigada"
       tabelas_candidatas: [6859]
+      metricas:
+        estabelecimentos: "Número de estabelecimentos agropecuários com uso de irrigação"
+        area: "Área irrigada"
       classificacao_busca: ["irrigação"]
       validar: true
     storage:
-      descricao: "Depósitos, silos e capacidade de armazenagem"
-      tabelas_candidatas: [6875]
-      classificacao_busca: ["armazenagem", "silo", "depósito"]
+      descricao: "Unidades armazenadoras (armazéns e silos): estabelecimentos, quantidade e capacidade"
+      # a 6875 é de veículos; a armazenagem do Censo 2017 está na 6866-6868
+      tabelas_candidatas: [6866, 6867]
+      metricas:
+        estabelecimentos: "Número de estabelecimentos agropecuários com unidades armazenadoras"
+        unidades: "Número de unidades armazenadoras"
+        capacidade: "Capacidade das unidades armazenadoras"
+      classificacao_busca: ["tipo de unidade armazenadora"]
       validar: true
     finance:
       descricao: "Estabelecimentos que obtiveram financiamento"
@@ -59,12 +69,16 @@ censo_agro_2017:
       validar: true
     technical_assistance:
       descricao: "Estabelecimentos com orientação/assistência técnica"
-      tabelas_candidatas: [6847]
-      classificacao_busca: ["assistência técnica", "orientação técnica"]
+      # a 6847 não abre pela orientação técnica; a 6780 abre (c12567, recebe/não recebe e origem)
+      tabelas_candidatas: [6780, 6779]
+      classificacao_busca: ["origem da orientação técnica"]
       validar: true
     land_use:
       descricao: "Utilização das terras (lavouras, pastagens, matas)"
       tabelas_candidatas: [6881]
+      metricas:
+        estabelecimentos: "Número de estabelecimentos agropecuários com área"
+        area: "Área dos estabelecimentos"
       classificacao_busca: ["utilização das terras"]
       validar: true
     activity:

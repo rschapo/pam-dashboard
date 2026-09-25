@@ -196,6 +196,21 @@ def test_resumo_sem_rotulo_fica_nulo_e_nao_dobra():
     assert pd.isna(s.loc["1200013", "numero_estabelecimentos"])
 
 
+def test_resumo_real_conta_os_estabelecimentos_do_censo_2017():
+    """No resumo gerado, um município por linha, e o Brasil soma o total de
+    estabelecimentos agropecuários publicado pelo IBGE para o Censo 2017. A área, que
+    vinha nula, fecha com a do Brasil a menos dos poucos municípios em que o IBGE a suprime."""
+    p = pc.PROCESSED_DIR / "municipality" / "censo_agro_municipio_summary.parquet"
+    if not p.exists():
+        pytest.skip("resumo do Censo ausente")
+    s = pd.read_parquet(p)
+    assert s["cod_municipio"].is_unique
+    assert s["numero_estabelecimentos"].sum() == 5_073_324
+    area = s["area_estabelecimentos_ha"]
+    assert area.notna().mean() > 0.99
+    assert 351_289_816 * 0.999 < area.sum() < 351_289_816
+
+
 def test_harmoniza_faixas_soma_compativeis():
     # duas classes originais que devem cair na mesma faixa harmonizada (ate_10_ha)
     area = pd.DataFrame([
