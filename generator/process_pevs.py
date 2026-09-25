@@ -48,6 +48,9 @@ TIPO_METRICAS = {
     "Área plantada":    ["a"],
 }
 SEP = "||"  # separador da chave composta tipo||categoria
+# Unidade curta para o painel (o consolidado traz o nome do SIDRA)
+UNIDADE_CURTA = {"Toneladas": "t", "Metros cúbicos": "m³", "Mil árvores": "mil árvores",
+                 "Hectares": "ha"}
 
 # Quebras de série conferidas no SIDRA: em 2025 o IBGE passou a separar produtos
 # que antes iam para "outras espécies" ou "Outros". A soma fecha — a categoria
@@ -124,8 +127,12 @@ for t in tipos:
     for c in cats:
         u = df.loc[(df["TipoLabel"] == t) & (df["Categoria"] == c), "Unidade"].dropna()
         if len(u):
-            unidades[c] = str(u.mode().iat[0]) if len(u.mode()) else str(u.iloc[0])
+            nome = str(u.mode().iat[0]) if len(u.mode()) else str(u.iloc[0])
+            unidades[c] = UNIDADE_CURTA.get(nome, nome)
     print(f"  {t}: {len(cats)} categorias")
+    sem_unidade = [c for c in cats if c not in unidades]
+    if sem_unidade:
+        print(f"  [AVISO] {t}: {len(sem_unidade)} categoria(s) sem unidade, ex.: {sem_unidade[:3]}")
 
 # chave composta tipo||categoria (nome sem "_" inicial p/ funcionar no itertuples)
 df["catkey"] = df["TipoLabel"].astype(str) + SEP + df["Categoria"].astype(str)

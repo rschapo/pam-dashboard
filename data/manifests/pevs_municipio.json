@@ -1,7 +1,7 @@
 {
   "dataset": "pevs_municipio",
   "source": "IBGE — PEVS (291/289/5930)",
-  "extraction_date": "2026-09-24",
+  "extraction_date": "2026-09-25",
   "reference_date": null,
   "source_files": [
     "PEVS_municipios_completo.csv"
@@ -9,7 +9,7 @@
   "source_hashes": [
     {
       "file": "PEVS_municipios_completo.csv",
-      "sha256": "33258d2520089adde6200639eb656396604d9bc747412b20ddfb0cd21ea02ce0"
+      "sha256": "c6db2448e9b127a788117db7404544b9f683a23c6041c69b622ef19fb28b8f49"
     }
   ],
   "script_version": "0.1.0",
@@ -20,16 +20,16 @@
   "output_files": [
     {
       "file": "pevs_municipio.parquet",
-      "sha256": "8acb447b651f70412ba52b3745cf709a9e7e71100cf0f7793c0e5fcd6d286fca",
-      "bytes": 3018784
+      "sha256": "b1c54a5018629759b58228b15c104c4416c53622fa5aa9c29e63a42727e8e626",
+      "bytes": 3070431
     },
     {
       "file": "pevs_municipio.csv",
-      "sha256": "dff22c325d0f736e2ebc661b9a8a45a0385b69f8e7be3e8710b14386cd2f93ed",
-      "bytes": 55225795
+      "sha256": "d103b3b02faf784bbef18e9dcbc99a3ed97c6e6cd93c6e908cdd37e1dc374d05",
+      "bytes": 62576911
     }
   ],
-  "generated_at": "2026-09-24T21:57:14-04:00",
+  "generated_at": "2026-09-25T06:06:11-04:00",
   "linhas_com_grupo": {
     "Extração vegetal": {
       "linhas": 300964,

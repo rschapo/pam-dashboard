@@ -10,8 +10,9 @@ Cobre as três tabelas SIDRA da PEVS:
 
 Os códigos de variável e de classificação NÃO são fixos no arquivo: são
 descobertos em tempo de execução na API de metadados do IBGE (v3/agregados),
-o que deixa o coletor robusto a mudanças de numeração. A silvicultura é a "terceira
-perna" do tripé do IBGE ao lado do PAM (lavouras) e da PPM (pecuária).
+o que deixa o coletor robusto a mudanças de numeração. A unidade de cada
+categoria também vem de lá. A silvicultura é a "terceira perna" do tripé do
+IBGE ao lado do PAM (lavouras) e da PPM (pecuária).
 
 Rodar a partir da raiz do projeto (na sua máquina — o IBGE não é alcançável em
 ambientes com allowlist de rede):
@@ -78,6 +79,7 @@ def descobrir_metadados(tabela, metricas):
       variaveis: {cod_variavel(str): metrica('q'/'v'/'a')}
       classif  : 'c<id>' da classificação de produto/espécie (ou None)
       categorias: ids das categorias dessa classificação (para dividir pedidos)
+      unidades : {id da categoria: unidade da quantidade ou da área}
     Casa cada métrica pedida com a variável cujo nome contém o texto-chave.
     """
     url = f"{API_META}/{tabela}/metadados"
@@ -103,17 +105,24 @@ def descobrir_metadados(tabela, metricas):
             print(f"    [AVISO] tabela {tabela}: variável para '{chave}' não encontrada nos metadados")
 
     # classificação de produto/espécie: a PEVS traz exatamente uma por tabela.
-    # As categorias vêm junto, para poder dividir o pedido que estoura o limite.
-    classif, categorias = None, []
+    # As categorias vêm junto, para poder dividir o pedido que estoura o limite, e
+    # com elas a unidade: a de cada produto (toneladas, metros cúbicos, mil árvores);
+    # na área (5930) a classificação não traz, e vale a da variável (hectares). O
+    # Total da quantidade soma unidades diferentes e fica sem.
+    classif, categorias, unidades = None, [], {}
     classes = meta.get("classificacoes", [])
     if classes:
         classif = f"c{classes[0]['id']}"
         categorias = [str(c["id"]) for c in classes[0].get("categorias", [])]
+        unid_area = next((v.get("unidade") for v in meta.get("variaveis", [])
+                          if variaveis.get(str(v.get("id"))) == "a"), None)
+        unidades = {str(c["id"]): c.get("unidade") or unid_area or ""
+                    for c in classes[0].get("categorias", [])}
 
     nome_tab = meta.get("nome", "")
     print(f"    tabela {tabela}: {nome_tab[:70]}")
     print(f"      variáveis={variaveis}  classif={classif} ({len(categorias)} categorias)")
-    return variaveis, classif, categorias
+    return variaveis, classif, categorias, unidades
 
 
 def descobrir_anos(tabela):
@@ -198,7 +207,7 @@ def parsear(dados, tipo, uf, variaveis):
     # "produto extrativo", "espécie florestal") — pega o D*C/D*N remanescente
     col_cc = achar(lambda v: ("produto" in v.lower() or "esp" in v.lower()) and "digo" in v) or "D4C"
     col_cn = achar(lambda v: ("produto" in v.lower() or "esp" in v.lower()) and "Nome" in v) or "D4N"
-    col_un = achar(lambda v: "Unidade de Medida" in v and "Nome" in v)
+    # a unidade não vem da linha (ver carregar_tabela)
 
     linhas = []
     for row in dados[1:]:
@@ -212,7 +221,6 @@ def parsear(dados, tipo, uf, variaveis):
             "Tipo"         : tipo,
             "Cod_Categoria": row.get(col_cc, ""),
             "Categoria"    : row.get(col_cn, ""),
-            "Unidade"      : row.get(col_un, "") if col_un else "",
             "Metrica"      : variaveis.get(cod_var, cod_var),
             "Valor"        : limpar(row.get("V", "")),
         })
@@ -231,12 +239,13 @@ def baixar_tabela(cfg):
     print(f"Tabela {tabela} ({tipo})")
     print(f"{'='*64}")
 
-    variaveis, classif, categorias = descobrir_metadados(tabela, metricas)
+    variaveis, classif, categorias, unidades = descobrir_metadados(tabela, metricas)
     if not variaveis:
         print(f"  [X] Sem variáveis identificadas; pulando tabela {tabela}.")
         return
     anos = descobrir_anos(tabela)
     cfg["_variaveis"], cfg["_classif"], cfg["_anos"] = variaveis, classif, anos
+    cfg["_unidades"] = unidades
 
     anos_pendentes = [a for a in anos if not os.path.exists(caminho_raw(tabela, a))]
     anos_prontos   = len(anos) - len(anos_pendentes)
@@ -276,9 +285,9 @@ def pivotar(df):
     if df.empty: return df
     idx = ["Cod_Municipio","Municipio","UF","Regiao","Ano",
            "Tipo","Cod_Categoria","Categoria","Unidade"]
-    # IMPORTANTE: o SIDRA pode não retornar coluna de unidade -> 'Unidade' vem vazia (NaN).
-    # Com NaN no índice, o pivot_table (dropna=True padrão) descarta TODAS as linhas.
-    # Preenche os campos de índice vazios antes de pivotar.
+    # IMPORTANTE: NaN num campo do índice fazia o pivot_table (dropna=True padrão)
+    # descartar TODAS as linhas — foi assim com a 'Unidade', quando o coletor a
+    # deixava vazia. Preenche os campos de índice vazios antes de pivotar.
     for c in idx:
         if c in df.columns:
             df[c] = df[c].fillna("")
@@ -313,7 +322,13 @@ def carregar_tabela(cfg):
         except Exception:
             pass
     if not frames: return pd.DataFrame()
-    return pivotar(pd.concat(frames, ignore_index=True))
+    df = pd.concat(frames, ignore_index=True)
+    # A unidade é da categoria e vem dos metadados, pelo código. A da linha do
+    # /values ("MN") não serve: no valor ela é "Mil Reais", e a quantidade e o valor
+    # iriam para linhas separadas no pivot. Aplicada aqui, vale também para os
+    # brutos gravados até 25/09/2026, que têm a Unidade vazia.
+    df["Unidade"] = df["Cod_Categoria"].astype(str).map(cfg.get("_unidades", {})).fillna("")
+    return pivotar(df)
 
 
 # ── Exportação ────────────────────────────────────────────────────────────────

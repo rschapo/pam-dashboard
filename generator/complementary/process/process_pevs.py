@@ -105,7 +105,7 @@ def _montar() -> tuple[pd.DataFrame, list[str]]:
             "quantidade": q if tipo_raw != "AreaSilvicultura" else None,
             "area_ha": a if tipo_raw == "AreaSilvicultura" else None,
             "valor_producao_mil_reais": v,
-            "unidade_quantidade": r.get("Unidade") or None,
+            "unidade_quantidade": (r.get("Unidade") or None) if tipo_raw != "AreaSilvicultura" else None,
             "grupo": grupo,
             "fonte_tabela_sidra": TIPO_TABELA.get(tipo_raw),
         })

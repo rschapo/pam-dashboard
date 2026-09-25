@@ -13,9 +13,9 @@ def _consolidado(tmp_path, monkeypatch, linhas):
     monkeypatch.setattr(pp, "RAW_DIR", tmp_path)
 
 
-def _linha(ano, tipo, cod, categoria, q="", v="", a=""):
+def _linha(ano, tipo, cod, categoria, q="", v="", a="", unidade=""):
     return {"Cod_Municipio": "5107925", "Ano": ano, "Tipo": tipo, "Cod_Categoria": cod,
-            "Categoria": categoria, "Unidade": "", "q": q, "v": v, "a": a}
+            "Categoria": categoria, "Unidade": unidade, "q": q, "v": v, "a": a}
 
 
 def test_grupos_casam_pelo_codigo_do_sidra():
@@ -70,6 +70,35 @@ def test_build_casa_pelo_codigo_com_rotulo_renumerado(tmp_path, monkeypatch):
     assert pd.isna(g[(2025, "1.3 - Madeira em tora")])
     assert g[(2025, "1.2 - Baru ou Cumaru (amêndoa)")] == "extracao_nao_madeireira"
     assert g[(2025, "Teca")] == "outras_especies"
+
+
+def test_build_leva_a_unidade_da_quantidade(tmp_path, monkeypatch):
+    _consolidado(tmp_path, monkeypatch, [
+        _linha(2025, "Silvicultura", "3455", "1.1 - Carvão vegetal", "120", "60", unidade="Toneladas"),
+        _linha(2025, "Extracao", "3449", "9.2 - Pinheiro brasileiro (árvores abatidas)", "2",
+               unidade="Mil árvores"),
+        _linha(2025, "AreaSilvicultura", "39326", "Eucalipto", a="40", unidade="Hectares"),
+    ])
+    u = pp.build().set_index("produto")["unidade_quantidade"]
+    assert u["1.1 - Carvão vegetal"] == "Toneladas"
+    assert u["9.2 - Pinheiro brasileiro (árvores abatidas)"] == "Mil árvores"
+    assert pd.isna(u["Eucalipto"])                  # sem quantidade: a área vem em area_ha
+
+
+def test_consolidado_real_traz_a_unidade_de_cada_categoria():
+    """O coletor deixava a Unidade vazia em todas as linhas. Fora o Total, toda
+    categoria tem uma unidade, a mesma em todos os anos e municípios."""
+    if not (pp.RAW_DIR / "ibge" / "pevs" / "PEVS_municipios_completo.csv").exists():
+        pytest.skip("consolidado PEVS ausente (os brutos ficam fora do repositório)")
+    df = pp._read_pevs()
+    df = df[df["Cod_Categoria"].astype(str) != "0"]
+    unid = df.groupby(["Tipo", "Cod_Categoria"])["Unidade"].agg(lambda s: set(s.dropna()))
+    assert (unid.map(len) == 1).all(), unid[unid.map(len) != 1].to_dict()
+    u = unid.map(lambda s: s.pop())
+    assert u[("Silvicultura", "3455")] == "Toneladas"          # 1.1 - Carvão vegetal
+    assert u[("Silvicultura", "3456")] == "Metros cúbicos"     # 1.2 - Lenha
+    assert u[("Extracao", "3449")] == "Mil árvores"            # pinheiro, árvores abatidas
+    assert set(u.loc["AreaSilvicultura"]) == {"Hectares"}
 
 
 def test_consolidado_real_soma_por_grupo_fecha_com_o_total():

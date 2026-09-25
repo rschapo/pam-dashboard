@@ -53,6 +53,9 @@ p10/p25/p75/p90, máxima, total), `coeficiente_gini_area`, `indice_concentracao_
 `cod_municipio`, `ano`, `tipo_atividade` (Silvicultura / Extração vegetal / Área
 plantada), `produto`, `quantidade`, `area_ha`, `valor_producao_mil_reais`,
 `unidade_quantidade`, `grupo`, `fonte_tabela_sidra`. Categoria "Total" descartada.
+`unidade_quantidade` é a do SIDRA para a `quantidade` (Toneladas, Metros cúbicos ou,
+no pinheiro brasileiro em árvores abatidas, Mil árvores) e fica nula na área
+plantada, que vem em `area_ha`.
 
 `produto` traz o rótulo do SIDRA com a numeração do IBGE ("1.2 - Lenha") e **mistura
 níveis**: subtotais ("1.3 - Madeira em tora", "1 - Alimentícios"), produtos e, na
