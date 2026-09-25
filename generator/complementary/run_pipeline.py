@@ -64,7 +64,7 @@ def stage1(download: bool):
     _run(PROCESS / "process_sncr.py")
     _run(PROCESS / "process_pevs.py")
     _run(QUALITY / "validate_fundiary_data.py")
-    _run(PROCESS / "build_rural_profile.py", ["--stage", "1"])
+    _run(PROCESS / "build_rural_profile.py")
 
 
 def stage2(download: bool, uf: str | None):
@@ -75,7 +75,7 @@ def stage2(download: bool, uf: str | None):
         _run(PROCESS / "process_car.py", ["--uf", uf])
         _run(QUALITY / "validate_car_geometry.py")
     _run(PROCESS / "process_mapbiomas.py")
-    _run(PROCESS / "build_rural_profile.py", ["--stage", "2"])
+    _run(PROCESS / "build_rural_profile.py")
 
 
 def stage3():

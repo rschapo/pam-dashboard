@@ -1,7 +1,10 @@
+import sys
+
 import pandas as pd
 import pytest
 
 import build_rural_profile as brp
+import common
 from common import RAW_DIR, uf_from_cod
 
 SEM_PEVS = "1100015"   # município da dim_municipio sem nenhuma linha na PEVS
@@ -103,3 +106,32 @@ def test_perfil_real_fecha_com_o_total_do_ibge():
                 "1.3.2 - Madeira em tora para outras finalidades",
                 "2.1 - Acácia-negra (casca)", "2.2 - Eucalipto (folha)", "2.3 - Resina"}
     assert set(p["produto_florestal_predominante"].dropna()) <= produtos
+
+
+def test_rodar_o_perfil_regrava_o_stage2_junto_com_o_stage1(tmp_path, monkeypatch):
+    """Depois que uma fonte da Etapa 1 muda (aqui, o Censo corrigido), rodar o script de novo
+    regrava também o stage2: o export_frontend prefere o stage2, e o da rodada anterior
+    levaria os valores velhos para o perfil."""
+    cod = "1100015"
+    pd.DataFrame({"cod_municipio": [cod], "uf": [uf_from_cod(cod)]}).to_parquet(
+        tmp_path / "dim_municipio.parquet", index=False)
+    pd.DataFrame({"cod_municipio": [cod], "numero_estabelecimentos": [2886.0],
+                  "area_estabelecimentos_ha": [90000.0]}).to_parquet(
+        tmp_path / "censo_agro_municipio_summary.parquet", index=False)
+    pd.DataFrame({"cod_municipio": [cod], "quantidade_cadastros": [3100],
+                  "area_geometrica_uniao_ha": [510000.0], "percentual_sobreposicao": [4.2]}).to_parquet(
+        tmp_path / "car_municipio_summary.parquet", index=False)
+    # o stage2 da rodada anterior, com o Censo ainda dobrado
+    pd.DataFrame({"cod_municipio": [cod], "uf": [uf_from_cod(cod)],
+                  "numero_estabelecimentos_censo": [5772.0], "quantidade_cadastros_car": [3100]}).to_parquet(
+        tmp_path / "rural_profile_stage2.parquet", index=False)
+    for pasta in ("DIMS", "MUN", "GEO"):
+        monkeypatch.setattr(brp, pasta, tmp_path)
+    monkeypatch.setattr(common, "MANIFEST_DIR", tmp_path / "manifests")
+    monkeypatch.setattr(sys, "argv", ["build_rural_profile.py"])   # sem argumentos, como na linha de comando
+
+    brp.main()
+
+    s2 = pd.read_parquet(tmp_path / "rural_profile_stage2.parquet").set_index("cod_municipio").loc[cod]
+    assert s2.get("numero_estabelecimentos_censo") == 2886
+    assert s2.get("quantidade_cadastros_car") == 3100   # é o stage2 de fato, com o CAR

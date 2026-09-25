@@ -26,7 +26,7 @@ def _perfil(tmp_path, monkeypatch, com_stage2):
 
 
 def test_perfil_rural_usa_o_stage2_quando_existe(tmp_path, monkeypatch):
-    # o --stage 2 grava os dois arquivos; o stage2 é o mais completo e deve vencer
+    # o build_rural_profile grava os dois arquivos; o stage2 é o mais completo e deve vencer
     assert _perfil(tmp_path, monkeypatch, com_stage2=True).get("quantidade_cadastros_car") == 1540
 
 

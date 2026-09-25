@@ -7,12 +7,15 @@ de integração). Da PEVS entra a silvicultura do último ano, só no nível de 
 
 rural_profile_stage2: acrescenta os agregados do CAR e do MapBiomas (Etapa 2).
 
+Cada rodada grava os dois. O export_frontend usa o stage2 quando ele existe: regravar
+só o stage1 deixaria o stage2 da rodada anterior, com os valores velhos, alimentando o
+perfil. Sem CAR nem MapBiomas, o stage2 sai igual ao stage1.
+
 Ambos partem de dim_municipio (universo completo — municípios sem dados entram com
 null, nunca zero). Saídas em data/processed/municipality/.
 """
 from __future__ import annotations
 
-import argparse
 import sys
 from pathlib import Path
 
@@ -118,10 +121,6 @@ def stage2(base: pd.DataFrame) -> pd.DataFrame:
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--stage", choices=["1", "2"], default="1")
-    args = ap.parse_args()
-
     s1 = stage1()
     outs = save_table(s1, MUN / "rural_profile_stage1")
     write_manifest("rural_profile_stage1", source="Composição Etapa 1 (MF/SNCR/Censo/PEVS)",
@@ -129,13 +128,12 @@ def main():
                    municipality_count=s1["cod_municipio"].nunique(), output_files=outs)
     print(f"[PERFIL] stage1: {len(s1):,} municípios, {s1.shape[1]} colunas")
 
-    if args.stage == "2":
-        s2 = stage2(s1)
-        outs2 = save_table(s2, MUN / "rural_profile_stage2")
-        write_manifest("rural_profile_stage2", source="Composição Etapa 2 (+CAR/MapBiomas)",
-                       reference_date=None, row_count=len(s2),
-                       municipality_count=s2["cod_municipio"].nunique(), output_files=outs2)
-        print(f"[PERFIL] stage2: {len(s2):,} municípios, {s2.shape[1]} colunas")
+    s2 = stage2(s1)
+    outs2 = save_table(s2, MUN / "rural_profile_stage2")
+    write_manifest("rural_profile_stage2", source="Composição Etapa 2 (+CAR/MapBiomas)",
+                   reference_date=None, row_count=len(s2),
+                   municipality_count=s2["cod_municipio"].nunique(), output_files=outs2)
+    print(f"[PERFIL] stage2: {len(s2):,} municípios, {s2.shape[1]} colunas")
 
 
 if __name__ == "__main__":
