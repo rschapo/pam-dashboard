@@ -86,12 +86,22 @@ def baixar_tema(cli: SidraClient, tema: str, cfg: dict, dry: bool):
     var_str = ",".join(variaveis.keys()) or "allxp"
     classif = info["classif"]
     classif_nome = info.get("classif_nome", "")
+    # Nas tabelas do Censo a unidade é a da variável (Unidades, Hectares, %); as
+    # categorias das classificações não trazem unidade.
+    unid_var = {v.get("nome"): v.get("unidade") or "" for v in info["meta"].get("variaveis", [])}
 
     frames = []
     for cod_est in ESTADOS_COD:
         alvo = dst / f"{tema}_{tabela}_{IBGE2UF[str(cod_est).zfill(2)]}.csv"
         if alvo.exists():
-            frames.append(pd.read_csv(alvo, sep=";", dtype={"cod_municipio": str}))
+            # Os brutos gravados até 25/09/2026 saíram com a unidade vazia: ela é
+            # preenchida pela variável, sem baixar de novo e sem mexer no resto.
+            d = pd.read_csv(alvo, sep=";", dtype=str, keep_default_na=False)
+            vazia = d["unidade"] == ""
+            if vazia.any():
+                d.loc[vazia, "unidade"] = d.loc[vazia, "variavel"].map(unid_var).fillna("")
+                d.to_csv(alvo, sep=";", index=False, encoding="utf-8")
+            frames.append(d)
             continue
         dados = cli.valores_municipais(tabela, var_str, cod_est, ANO_CENSO, classif)
         if not dados or len(dados) < 2:
@@ -110,7 +120,8 @@ def baixar_tema(cli: SidraClient, tema: str, cfg: dict, dry: bool):
                 or col(lambda v: ("classifica" in v.lower()
                                   or any(b.lower() in v.lower() for b in busca))
                                  and "digo" not in v))
-        c_un = col(lambda v: "Unidade de Medida" in v and "Nome" in v)
+        # A coluna MN se chama só "Unidade de Medida", sem "Nome".
+        c_un = col(lambda v: v.strip() == "Unidade de Medida") or "MN"
         linhas = []
         for row in dados[1:]:
             linhas.append({
@@ -120,7 +131,7 @@ def baixar_tema(cli: SidraClient, tema: str, cfg: dict, dry: bool):
                 "subcategoria": row.get(c_cn, "") if c_cn else "",
                 "variavel": row.get(c_vn, ""),
                 "valor": clean_num(row.get("V")),
-                "unidade": row.get(c_un, "") if c_un else "",
+                "unidade": row.get(c_un, ""),
                 "fonte_tabela_sidra": tabela,
             })
         d = pd.DataFrame(linhas)

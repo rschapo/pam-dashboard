@@ -35,6 +35,8 @@ finance, technical_assistance, land_use, activity. Colunas: `cod_municipio`,
 `ano_referencia`, `categoria`, `subcategoria`, `variavel`, `valor`, `unidade`,
 `fonte_tabela_sidra`. Harmonização em `censo_agro_area_groups_harmonizado`
 (mantém a original; soma só compatíveis). Resumo em `censo_agro_municipio_summary`.
+`unidade` é a da variável no SIDRA (Unidades nas contagens, Hectares nas áreas); as
+variáveis baixadas hoje são todas contagens, em Unidades.
 
 ## sncr_imoveis_validos  (`municipality/`)
 `id_imovel_hash` (SHA-256, **sem** dado nominal), `cod_municipio`, `uf`,
