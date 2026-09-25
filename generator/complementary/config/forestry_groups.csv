@@ -1,22 +1,126 @@
-produto;tipo_atividade;grupo;observacao
-Madeira em tora para papel e celulose;Silvicultura;madeira_tora_papel_celulose;
-Madeira em tora para outras finalidades;Silvicultura;madeira_tora_outros_fins;
-Madeira em tora;Silvicultura;madeira_tora_outros_fins;Quando a fonte não separa a finalidade
-Lenha;Silvicultura;lenha;
-Carvão vegetal;Silvicultura;carvao_vegetal;
-Resina;Silvicultura;outros_produtos_silvicultura;
-Casca de acácia-negra;Silvicultura;outros_produtos_silvicultura;
-Folha de eucalipto;Silvicultura;outros_produtos_silvicultura;
-Madeira em tora;Extracao;extracao_madeireira;Extração vegetal = floresta nativa
-Lenha;Extracao;extracao_madeireira;
-Carvão vegetal;Extracao;extracao_madeireira;
-Açaí (fruto);Extracao;extracao_nao_madeireira;
-Castanha-do-pará;Extracao;extracao_nao_madeireira;
-Erva-mate;Extracao;extracao_nao_madeireira;
-Babaçu (amêndoa);Extracao;extracao_nao_madeireira;
-Pó de carnaúba;Extracao;extracao_nao_madeireira;
-Piaçava;Extracao;extracao_nao_madeireira;
-# Faixas por espécie (tabela 5930 — área de silvicultura)
-Eucalipto;AreaSilvicultura;eucalipto;
-Pinus;AreaSilvicultura;pinus;
-Outras espécies;AreaSilvicultura;outros_produtos_silvicultura;
+# Grupos analíticos da PEVS (process/process_pevs.py), um por categoria do SIDRA.
+# A linha casa por tipo_atividade + cod_categoria (código interno do SIDRA, estável);
+# a coluna produto é só referência: o rótulo muda (em 2025 o IBGE renumerou as espécies
+# da silvicultura e passou a omitir o " - " nos produtos novos).
+#
+# Só o nível "produto" recebe grupo, para a soma por grupo não contar a mesma produção
+# duas vezes: o valor das linhas com grupo fecha com o Total do IBGE.
+#   produto   nível mais detalhado que existe na série inteira (2004-2025);
+#             na área plantada (tabela 5930), cada espécie
+#   agregado  subtotal do IBGE, igual à soma de outras linhas: sem grupo
+#   especie   abertura de um produto da silvicultura por espécie, só desde 2013
+#             (acácia negra, cedro australiano, mogno africano e teca desde 2025): sem grupo
+#   contagem  a mesma extração de outra linha, contada em árvores: sem grupo
+# Código que aparecer nos dados sem linha aqui fica sem grupo e vai para os avisos do
+# manifesto (data/manifests/pevs_municipio.json).
+tipo_atividade;cod_categoria;produto;nivel;grupo;observacao
+# Silvicultura (tabela 291)
+Silvicultura;3455;1.1 - Carvão vegetal;produto;carvao_vegetal;
+Silvicultura;83420;1.1.1 - Carvão vegetal de acácia negra;especie;;espécie de 1.1, desde 2025
+Silvicultura;83421;1.1.2 - Carvão vegetal de cedro australiano;especie;;espécie de 1.1, desde 2025
+Silvicultura;33247;1.1.3 - Carvão vegetal de eucalipto;especie;;espécie de 1.1, desde 2013
+Silvicultura;83422;1.1.4 - Carvão vegetal de mogno africano;especie;;espécie de 1.1, desde 2025
+Silvicultura;33248;1.1.5 - Carvão vegetal de pinus;especie;;espécie de 1.1, desde 2013
+Silvicultura;83423;1.1.6 - Carvão vegetal de teca;especie;;espécie de 1.1, desde 2025
+Silvicultura;33249;1.1.7 - Carvão vegetal de outras espécies;especie;;espécie de 1.1, desde 2013
+Silvicultura;3456;1.2 - Lenha;produto;lenha;
+Silvicultura;83424;1.2.1 - Lenha de acácia negra;especie;;espécie de 1.2, desde 2025
+Silvicultura;83425;1.2.2 - Lenha de cedro australiano;especie;;espécie de 1.2, desde 2025
+Silvicultura;33250;1.2.3 - Lenha de eucalipto;especie;;espécie de 1.2, desde 2013
+Silvicultura;83426;1.2.4 - Lenha de mogno africano;especie;;espécie de 1.2, desde 2025
+Silvicultura;33251;1.2.5 - Lenha de pinus;especie;;espécie de 1.2, desde 2013
+Silvicultura;83427;1.2.6 - Lenha de teca;especie;;espécie de 1.2, desde 2025
+Silvicultura;33252;1.2.7 - Lenha de outras espécies;especie;;espécie de 1.2, desde 2013
+Silvicultura;3457;1.3 - Madeira em tora;agregado;;soma de 1.3.1 e 1.3.2
+Silvicultura;3458;1.3.1 - Madeira em tora para papel e celulose;produto;madeira_tora_papel_celulose;
+Silvicultura;83428;1.3.1.1 - Madeira em tora de acácia negra para papel e celulose;especie;;espécie de 1.3.1, desde 2025
+Silvicultura;83429;1.3.1.2 - Madeira em tora de cedro australiano para papel e celulose;especie;;espécie de 1.3.1, desde 2025
+Silvicultura;33253;1.3.1.3 - Madeira em tora de eucalipto para papel e celulose;especie;;espécie de 1.3.1, desde 2013
+Silvicultura;83430;1.3.1.4 - Madeira em tora de mogno africano para papel e celulose;especie;;espécie de 1.3.1, desde 2025
+Silvicultura;33254;1.3.1.5 - Madeira em tora de pinus para papel e celulose;especie;;espécie de 1.3.1, desde 2013
+Silvicultura;83431;1.3.1.6 - Madeira em tora de Teca para papel e celulose;especie;;espécie de 1.3.1, desde 2025
+Silvicultura;33255;1.3.1.7 - Madeira em tora de outras espécies para papel e celulose;especie;;espécie de 1.3.1, desde 2013
+Silvicultura;3459;1.3.2 - Madeira em tora para outras finalidades;produto;madeira_tora_outros_fins;
+Silvicultura;83432;1.3.2.1 - Madeira em tora de acácia negra para outras finalidades;especie;;espécie de 1.3.2, desde 2025
+Silvicultura;83433;1.3.2.2 - Madeira em tora de cedro australiano para outras finalidades;especie;;espécie de 1.3.2, desde 2025
+Silvicultura;33256;1.3.2.3 - Madeira em tora de eucalipto para outras finalidades;especie;;espécie de 1.3.2, desde 2013
+Silvicultura;83434;1.3.2.4 - Madeira em tora de mogno africano para outras finalidades;especie;;espécie de 1.3.2, desde 2025
+Silvicultura;33257;1.3.2.5 - Madeira em tora de pinus para outras finalidades;especie;;espécie de 1.3.2, desde 2013
+Silvicultura;83435;1.3.2.6 - Madeira em tora de Teca para outras finalidades;especie;;espécie de 1.3.2, desde 2025
+Silvicultura;33258;1.3.2.7 - Madeira em tora de outras espécies para outras finalidades;especie;;espécie de 1.3.2, desde 2013
+Silvicultura;3460;2 - Outros produtos;agregado;;soma de 2.1, 2.2 e 2.3
+Silvicultura;3461;2.1 - Acácia-negra (casca);produto;outros_produtos_silvicultura;
+Silvicultura;3462;2.2 - Eucalipto (folha);produto;outros_produtos_silvicultura;
+Silvicultura;3463;2.3 - Resina;produto;outros_produtos_silvicultura;
+# Extração vegetal (tabela 289) — floresta nativa
+Extracao;3402;1 - Alimentícios;agregado;;soma dos itens 1.x
+Extracao;3403;1.1 - Açaí (fruto);produto;extracao_nao_madeireira;
+Extracao;83410;1.2 - Baru ou Cumaru (amêndoa);produto;extracao_nao_madeireira;
+Extracao;83411;1.3 - Buriti (fruto);produto;extracao_nao_madeireira;
+Extracao;83412;1.4 - Cajá (fruto);produto;extracao_nao_madeireira;
+Extracao;3404;1.5 - Castanha-de-caju;produto;extracao_nao_madeireira;
+Extracao;3405;1.6 - Castanha-do-pará;produto;extracao_nao_madeireira;
+Extracao;83413;1.7 - Cupuaçu (fruto);produto;extracao_nao_madeireira;
+Extracao;3406;1.8 - Erva-mate;produto;extracao_nao_madeireira;
+Extracao;83414;1.9 - Juçara (fruto);produto;extracao_nao_madeireira;
+Extracao;83415;1.10 - Macaúba (fruto);produto;extracao_nao_madeireira;
+Extracao;3407;1.11 - Mangaba (fruto);produto;extracao_nao_madeireira;
+Extracao;3408;1.12 - Palmito;produto;extracao_nao_madeireira;
+Extracao;39409;1.13 - Pequi (fruto);produto;extracao_nao_madeireira;
+Extracao;3409;1.14 - Pinhão;produto;extracao_nao_madeireira;
+Extracao;83416;1.15 - Pupunha (fruto);produto;extracao_nao_madeireira;
+Extracao;83417;1.16 - Tucumã ou Tucum (fruto);produto;extracao_nao_madeireira;
+Extracao;3410;1.17 - Umbu (fruto);produto;extracao_nao_madeireira;
+Extracao;11296;1.18 - Outros;produto;extracao_nao_madeireira;
+Extracao;3411;2 - Aromáticos, medicinais, tóxicos e corantes;agregado;;soma dos itens 2.x
+Extracao;3412;2.1 - Ipecacuanha ou poaia (raiz);produto;extracao_nao_madeireira;
+Extracao;3413;2.2 - Jaborandi (folha);produto;extracao_nao_madeireira;
+Extracao;3414;2.3 - Urucum (semente);produto;extracao_nao_madeireira;
+Extracao;3415;2.4 - Outros;produto;extracao_nao_madeireira;
+Extracao;3416;3 - Borrachas;agregado;;soma dos itens 3.x
+Extracao;3417;3.1 - Caucho;produto;extracao_nao_madeireira;
+Extracao;3418;3.2 - Hevea (látex coagulado);produto;extracao_nao_madeireira;
+Extracao;3419;3.3 - Hevea (látex líquido);produto;extracao_nao_madeireira;
+Extracao;40524;3.4 - Mangabeira;produto;extracao_nao_madeireira;
+Extracao;3420;4 - Ceras;agregado;;soma dos itens 4.x
+Extracao;3421;4.1 - Carnaúba (cera);produto;extracao_nao_madeireira;
+Extracao;3422;4.2 - Carnaúba (pó);produto;extracao_nao_madeireira;
+Extracao;110011;4.3 - Outras;produto;extracao_nao_madeireira;
+Extracao;3423;5 - Fibras;agregado;;soma dos itens 5.x
+Extracao;3424;5.1 - Buriti;produto;extracao_nao_madeireira;
+Extracao;3425;5.2 - Carnaúba;produto;extracao_nao_madeireira;
+Extracao;3426;5.3 - Piaçava;produto;extracao_nao_madeireira;
+Extracao;3427;5.4 - Outras;produto;extracao_nao_madeireira;
+Extracao;3428;6 - Gomas não elásticas;agregado;;soma dos itens 6.x
+Extracao;3429;6.1 - Balata;produto;extracao_nao_madeireira;
+Extracao;3430;6.2 - Maçaranduba;produto;extracao_nao_madeireira;
+Extracao;3431;6.3 - Sorva;produto;extracao_nao_madeireira;
+Extracao;3433;7.1 - Carvão vegetal;produto;extracao_madeireira;
+Extracao;3434;7.2 - Lenha;produto;extracao_madeireira;
+Extracao;3435;7.3 - Madeira em tora;produto;extracao_madeireira;
+Extracao;3438;8 - Oleaginosos;agregado;;soma dos itens 8.x
+Extracao;83418;8.1 - Andiroba (amêndoa);produto;extracao_nao_madeireira;
+Extracao;3439;8.2 - Babaçu (amêndoa);produto;extracao_nao_madeireira;
+Extracao;3440;8.3 - Copaíba (óleo);produto;extracao_nao_madeireira;
+Extracao;3441;8.4 - Cumaru (amêndoa);produto;extracao_nao_madeireira;
+Extracao;3442;8.5 - Licuri (coquilho);produto;extracao_nao_madeireira;
+Extracao;83419;8.6 - Murumuru;produto;extracao_nao_madeireira;
+Extracao;3443;8.7 - Oiticica (semente);produto;extracao_nao_madeireira;
+Extracao;3444;8.8 - Pequi (amêndoa);produto;extracao_nao_madeireira;
+Extracao;3445;8.9 - Tucum (amêndoa);produto;extracao_nao_madeireira;
+Extracao;3446;8.10 - Outros;produto;extracao_nao_madeireira;
+Extracao;3448;9.1 - Pinheiro brasileiro (nó de pinho);produto;extracao_madeireira;madeira, em m³
+Extracao;3449;9.2 - Pinheiro brasileiro (árvores abatidas);contagem;;mesma extração de 9.3 contada em mil árvores, sem valor de produção
+Extracao;3450;9.3 - Pinheiro brasileiro (madeira em tora);produto;extracao_madeireira;à parte de 7.3: aparece sem 7.3 ou acima dela
+Extracao;3451;10 - Tanantes;agregado;;soma dos itens 10.x
+Extracao;3452;10.1 - Angico (casca);produto;extracao_nao_madeireira;
+Extracao;3453;10.2 - Barbatimão (casca);produto;extracao_nao_madeireira;
+Extracao;3454;10.3 - Outros;produto;extracao_nao_madeireira;
+# Área plantada por espécie (tabela 5930)
+AreaSilvicultura;39326;Eucalipto;produto;eucalipto;
+AreaSilvicultura;39327;Pinus;produto;pinus;
+AreaSilvicultura;39328;Outras espécies;produto;outras_especies;
+AreaSilvicultura;83436;Acácia negra;produto;outras_especies;separada de Outras espécies em 2025
+AreaSilvicultura;83437;Cedro australiano;produto;outras_especies;separada de Outras espécies em 2025
+AreaSilvicultura;83438;Mogno africano;produto;outras_especies;separada de Outras espécies em 2025
+AreaSilvicultura;83439;Teca;produto;outras_especies;separada de Outras espécies em 2025

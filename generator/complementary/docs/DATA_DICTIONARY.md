@@ -54,6 +54,16 @@ p10/p25/p75/p90, máxima, total), `coeficiente_gini_area`, `indice_concentracao_
 plantada), `produto`, `quantidade`, `area_ha`, `valor_producao_mil_reais`,
 `unidade_quantidade`, `grupo`, `fonte_tabela_sidra`. Categoria "Total" descartada.
 
+`produto` traz o rótulo do SIDRA com a numeração do IBGE ("1.2 - Lenha") e **mistura
+níveis**: subtotais ("1.3 - Madeira em tora", "1 - Alimentícios"), produtos e, na
+silvicultura desde 2013, a abertura por espécie ("1.2.3 - Lenha de eucalipto"). Somar
+todas as linhas conta a mesma produção duas ou três vezes. `grupo` só vem preenchido no
+nível de produto (ver METHODOLOGY, "PEVS — grupos de produtos"): somar as linhas com
+`grupo` preenchido dá o Total do IBGE, ano a ano. Grupos da silvicultura:
+`carvao_vegetal`, `lenha`, `madeira_tora_papel_celulose`, `madeira_tora_outros_fins`,
+`outros_produtos_silvicultura`; da extração vegetal: `extracao_madeireira`,
+`extracao_nao_madeireira`; da área plantada: `eucalipto`, `pinus`, `outras_especies`.
+
 ## rural_profile_stage1 / stage2  (`municipality/`)
 Perfil municipal agregado. Stage 1: módulo fiscal, SNCR, Censo, PEVS (sem cruzar
 PAM/PPM). Stage 2: acrescenta CAR (cadastros, área união, sobreposição) e MapBiomas

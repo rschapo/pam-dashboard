@@ -20,14 +20,28 @@
   "output_files": [
     {
       "file": "pevs_municipio.parquet",
-      "sha256": "2e58b5c3180d40ff711a6f3ac8967de1c9f04658ae8e049f96d778c1f6092443",
-      "bytes": 2905120
+      "sha256": "8acb447b651f70412ba52b3745cf709a9e7e71100cf0f7793c0e5fcd6d286fca",
+      "bytes": 3018784
     },
     {
       "file": "pevs_municipio.csv",
-      "sha256": "faf6e623df8ee0891abfd5a4786f8e57c2e128d835d0a0405de2671ed85b28bc",
-      "bytes": 48545370
+      "sha256": "dff22c325d0f736e2ebc661b9a8a45a0385b69f8e7be3e8710b14386cd2f93ed",
+      "bytes": 55225795
     }
   ],
-  "generated_at": "2026-09-24T18:12:29-04:00"
+  "generated_at": "2026-09-24T21:57:14-04:00",
+  "linhas_com_grupo": {
+    "Extração vegetal": {
+      "linhas": 300964,
+      "com_grupo": 234896
+    },
+    "Silvicultura": {
+      "linhas": 280369,
+      "com_grupo": 132993
+    },
+    "Área plantada (silvicultura)": {
+      "linhas": 66451,
+      "com_grupo": 66451
+    }
+  }
 }

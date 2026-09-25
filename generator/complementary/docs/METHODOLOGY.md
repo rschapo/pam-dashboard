@@ -51,6 +51,28 @@ conclusão jurídica individual — a classificação é analítica.
 "Produtor sem área" como incompatível e **não interpola** — se uma faixa não puder ser
 reconstruída, fica registrada, não estimada.
 
+## PEVS — grupos de produtos
+
+As tabelas da PEVS (291 silvicultura, 289 extração vegetal, 5930 área plantada) trazem,
+na mesma classificação, subtotais do IBGE, produtos e, na silvicultura desde 2013, a
+abertura de cada produto por espécie. `config/forestry_groups.csv` classifica cada
+categoria pelo **código interno do SIDRA** (o rótulo mudou em 2025, quando o IBGE
+renumerou as espécies) como `produto`, `agregado`, `especie` ou `contagem`, e **só o
+nível `produto` recebe grupo**. É o nível mais detalhado que existe na série inteira
+(2004–2025): pôr o grupo na espécie deixaria 2004–2012 sem grupo, e pôr nos dois níveis
+contaria a produção em dobro. Conferido no consolidado: cada subtotal é a soma dos seus
+itens, cada produto é a soma das suas espécies, e a soma das linhas com grupo fecha com
+o Total do IBGE em todos os anos (valor na produção, área na 5930). O teste
+`test_consolidado_real_soma_por_grupo_fecha_com_o_total` refaz a conta quando o
+consolidado está disponível.
+
+Casos à parte: o pinheiro brasileiro em árvores abatidas é `contagem` (a mesma extração
+da madeira em tora de pinheiro, em mil árvores e sem valor); a madeira em tora de
+pinheiro é um produto próprio, fora de "7.3 - Madeira em tora". As espécies separadas
+de "Outras espécies" em 2025 (acácia negra, cedro australiano, mogno africano e teca)
+ficam no grupo `outras_especies`, para a série da área não quebrar. Um código que surgir
+sem linha na config fica sem grupo e vai para os avisos do manifesto.
+
 ## Estatísticas fundiárias (SNCR)
 
 Por município calculamos, sobre imóveis válidos, média/mediana/percentis (p10, p25,
