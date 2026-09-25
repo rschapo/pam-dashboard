@@ -32,7 +32,7 @@ let rebanho_categorias, producao_categorias, ppm_est_data, ppm_mic_data, ppm_mun
 // PEVS (Silvicultura/Extração) — carregado sob demanda ao abrir o domínio Silvicultura
 let PEVS = null, pevsLoaded = false, pevsLoading = false;
 let sil_tipos, sil_cats, sil_metricas, sil_unidades = {}, sil_sep = '||';
-let sil_periodo = {}, sil_notas = {};
+let sil_periodo = {}, sil_notas = {}, sil_nivel = {};
 let pevs_est_data, pevs_mic_data, pevs_mun_data;
 
 // ECON (Economia) — carregado sob demanda ao abrir o domínio Economia
@@ -150,7 +150,14 @@ function idxDominio(ai) {
 }
 function temAno(ai) {
   const ad = anosDoDominio();
-  return ad === anos || ad.includes(anos[ai]);
+  if (ad !== anos && !ad.includes(anos[ai])) return false;
+  // Categoria da PEVS que começa ou acaba no meio da série (área plantada desde
+  // 2013, espécies separadas em 2025): fora do período ela não existe, não é zero.
+  if (state.domain === 'silvicultura') {
+    const p = sil_periodo[silKey()];
+    if (p && (anos[ai] < p[0] || anos[ai] > p[1])) return false;
+  }
+  return true;
 }
 function getAno() {
   const ad = anosDoDominio(), i = idxDominio(state.anoIdx);
@@ -850,7 +857,7 @@ function updateHistorico() {
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else if (dom === 'silvicultura') {
-    cultVals = getActiveCategoriasSil().map(c => {
+    cultVals = produtosSil().map(c => {
       const k = state.tipoSil + sil_sep + c;
       const v = uf
         ? (pevs_est_data?.[uf]?.[k]?.[M]?.[idxDominio(ai)] || 0)
@@ -870,12 +877,12 @@ function updateHistorico() {
   chTop = new Chart(ctx2, {
     type: 'bar',
     data: {
-      labels: cultVals.map(x => x.c),
+      labels: cultVals.map(x => dom === 'silvicultura' ? rotuloCurto(x.c) : x.c),
       datasets: [{ data: cultVals.map(x => x.v), backgroundColor: BRAND_GOLD, borderRadius: 4 }]
     },
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmt(c.raw, M) } } },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { title: it => cultVals[it[0].dataIndex]?.c, label: c => fmt(c.raw, M) } } },
       scales: {
         x: { ticks: { callback: v => fmt(v, M) }, grid: { color: '#f0f0f0' } },
         y: { ticks: { font: { size: 10 } } }
@@ -931,7 +938,7 @@ function updateRanking() {
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else if (dom === 'silvicultura') {
-    cultVals = getActiveCategoriasSil().map(c => {
+    cultVals = produtosSil().map(c => {
       const k = state.tipoSil + sil_sep + c;
       const v = Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[idxDominio(ai)] || 0), 0);
       return { c, v };
@@ -950,12 +957,12 @@ function updateRanking() {
     chRankCult = new Chart(ctx2, {
       type: 'bar',
       data: {
-        labels: cultVals.map(x => x.c),
+        labels: cultVals.map(x => dom === 'silvicultura' ? rotuloCurto(x.c) : x.c),
         datasets: [{ data: cultVals.map(x => x.v), backgroundColor: BRAND_GOLD, borderRadius: 4 }]
       },
       options: {
         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => fmt(c.raw, M) } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: it => cultVals[it[0].dataIndex]?.c, label: c => fmt(c.raw, M) } } },
         scales: {
           x: { ticks: { callback: v => fmt(v, M) }, grid: { color: '#f0f0f0' } },
           y: { ticks: { font: { size: 10 } } }
@@ -1138,11 +1145,35 @@ function periodoSil(c) {
   return fim < ultimo ? ` (até ${fim})` : '';
 }
 
+// A PEVS mistura subtotais do IBGE ("1.3 - Madeira em tora"), produtos e, na
+// silvicultura, a abertura por espécie. Rankings usam só os produtos, senão a mesma
+// madeira conta duas ou três vezes; a aba abre no maior produto do último ano, e não
+// na primeira categoria da lista (que na área plantada seria uma espécie de 2025).
+function ehProdutoSil(c) { return (sil_nivel[state.tipoSil + sil_sep + c] || 'produto') === 'produto'; }
+function produtosSil() { return getActiveCategoriasSil().filter(ehProdutoSil); }
+function categoriaInicialSil(list) {
+  const mets = sil_metricas?.[state.tipoSil] || ['v'], m = mets.includes('v') ? 'v' : mets[0];
+  const ult = (PEVS?.anos?.length || 1) - 1;
+  let melhor = list[0] || '', maior = -1;
+  for (const c of list) {
+    if (!ehProdutoSil(c)) continue;
+    const k = state.tipoSil + sil_sep + c;
+    const v = Object.keys(pevs_est_data || {}).reduce((s, u) => s + (pevs_est_data[u]?.[k]?.[m]?.[ult] || 0), 0);
+    if (v > maior) { maior = v; melhor = c; }
+  }
+  return melhor;
+}
+// Rótulo de gráfico sem o código do IBGE; o nome inteiro vai na dica.
+function rotuloCurto(c) {
+  const t = String(c).replace(/^\d+(?:\.\d+)*\s*-\s*/, '');
+  return t.length > 38 ? t.slice(0, 37) + '…' : t;
+}
+
 function populateCategoriaSil() {
   const sel = document.getElementById('f-categoria-sil'); if (!sel) return;
   const list = getActiveCategoriasSil();
   sel.innerHTML = list.map(c => `<option value="${c}">${c}${periodoSil(c)}</option>`).join('');
-  if (!list.includes(state.categoriaSil)) state.categoriaSil = list[0] || '';
+  if (!list.includes(state.categoriaSil)) state.categoriaSil = categoriaInicialSil(list);
   sel.value = state.categoriaSil;
   const nota = document.getElementById('sil-nota');
   if (nota) nota.textContent = (sil_notas[state.tipoSil] || []).join(' ');
@@ -1239,6 +1270,7 @@ function loadPEVS() {
       sil_unidades = d.unidades || {};
       sil_periodo  = d.periodo_categoria || {};
       sil_notas    = d.notas || {};
+      sil_nivel    = d.nivel_categoria || {};
       sil_sep      = d.sep || '||';
       pevs_est_data = d.est_data; pevs_mic_data = d.mic_data; pevs_mun_data = d.mun_data;
       if (!sil_tipos.includes(state.tipoSil)) state.tipoSil = sil_tipos[0];

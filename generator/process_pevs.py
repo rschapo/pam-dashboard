@@ -29,7 +29,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 import pandas as pd
 import requests
 
-from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
+from ibge_common import RAW_IBGE, MICRO_MUNICIPIOS_NOVOS  # brutos fora do projeto: ver ibge_common._raiz_bruta
 CSV     = RAW_IBGE / "pevs" / "PEVS_municipios_completo.csv"
 OUT_DIR = Path(__file__).parent.parent / "public" / "data"
 OUT     = OUT_DIR / "pevs.json"
@@ -146,6 +146,21 @@ periodo_categoria = {k: [int(r["min"]), int(r["max"])] for k, r in extremos.iter
                      if r["min"] > anos[0] or r["max"] < anos[-1]}
 print(f"  Categorias com período parcial: {len(periodo_categoria)}")
 
+# Nível de cada categoria, da mesma config que agrupa a base complementar: a PEVS
+# mistura subtotais do IBGE ("1.3 - Madeira em tora"), produtos e, na silvicultura,
+# a abertura por espécie. O painel lista só os produtos no Top Produtos — senão a
+# mesma madeira aparece duas ou três vezes — e abre no maior deles.
+_cfg = pd.read_csv(Path(__file__).parent / "complementary" / "config" / "forestry_groups.csv",
+                   sep=";", dtype=str, comment="#", keep_default_na=False)
+_nivel = {(r["tipo_atividade"], r["cod_categoria"]): r["nivel"] for _, r in _cfg.iterrows()}
+nivel_categoria = {}
+for tipo, cod, ck in df[["Tipo", "Cod_Categoria", "catkey"]].drop_duplicates().itertuples(index=False):
+    nivel_categoria[ck] = _nivel.get((tipo, str(cod)), "produto")
+faltam = sorted({f"{t}/{c}" for t, c in df[["Tipo", "Cod_Categoria"]].drop_duplicates().itertuples(index=False)
+                 if (t, str(c)) not in _nivel})
+if faltam:
+    print(f"  [AVISO] sem nível em forestry_groups.csv (tratadas como produto): {', '.join(faltam)}")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 2. Cod_Microrregiao — a PEVS/SIDRA não devolve na consulta municipal;
 #    busca o mapeamento município → microrregião na API de localidades do IBGE
@@ -156,12 +171,17 @@ r = requests.get("https://servicodados.ibge.gov.br/api/v1/localidades/municipios
 r.raise_for_status()
 MUN2MIC = {str(m["id"]): str(m["microrregiao"]["id"])
            for m in r.json() if m.get("microrregiao")}
+for cod, mic in MICRO_MUNICIPIOS_NOVOS.items():   # instalado depois de 2017: microrregião de origem
+    MUN2MIC.setdefault(cod, mic)
 df["Cod_Microrregiao"] = df["Cod_Municipio"].map(MUN2MIC)
 
-sem_mic = int(df["Cod_Microrregiao"].isna().sum())
-if sem_mic:
-    print(f"  [AVISO] {sem_mic} linha(s) sem microrregião mapeada — descartadas")
-    df = df[df["Cod_Microrregiao"].notna()].copy()
+# Sem microrregião, o município continua na UF e no próprio município e fica fora só
+# da soma por microrregião (o groupby ignora a chave vazia). Antes a linha era
+# descartada, e o município sumia também da UF e do Brasil.
+sem_mic = df["Cod_Microrregiao"].isna()
+if sem_mic.any():
+    print(f"  [AVISO] sem microrregião: {', '.join(sorted(df.loc[sem_mic, 'Cod_Municipio'].unique()))} "
+          "— fora só da soma por microrregião; inclua em ibge_common.MICRO_MUNICIPIOS_NOVOS")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. Agregação — {chave_geo: {tipo||categoria: {"q":[…],"v":[…],"a":[…]}}}
@@ -203,6 +223,7 @@ PEVS = {
     "metricas_por_tipo":   {t: TIPO_METRICAS.get(t, ["q", "v"]) for t in tipos},
     "unidades":            unidades,
     "periodo_categoria":   periodo_categoria,
+    "nivel_categoria":     nivel_categoria,
     "notas":               {t: NOTAS[t] for t in tipos if t in NOTAS and anos[-1] >= 2025},
     "sep":                 SEP,
     "est_data":            EST_DATA,

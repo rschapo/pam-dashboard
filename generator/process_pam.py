@@ -21,7 +21,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 import pandas as pd
 import requests
 
-from ibge_common import IBGE2UF, build_ufs_info, build_mic_info, build_mun_info
+from ibge_common import IBGE2UF, build_ufs_info, build_mic_info, build_mun_info, completar_microrregiao
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
@@ -63,6 +63,14 @@ print(f"  Raw rows: {len(df):,}   {df['UF'].nunique() if 'UF' in df.columns else
 df["UF"] = df["Cod_Municipio"].str[:2].map(IBGE2UF)
 df = df[df["UF"].notna()].copy()
 print(f"  After UF fix: {len(df):,} rows, {df['UF'].nunique()} states")
+
+# Município instalado depois de 2017 vem sem microrregião; sem isto ele formava uma
+# microrregião "nan" à parte, e a de origem ficava sem a produção dele.
+df = completar_microrregiao(df)
+sem_mic = df["Cod_Microrregiao"].isna() | (df["Cod_Microrregiao"].astype(str) == "nan")
+if sem_mic.any():
+    print(f"  [AVISO] sem microrregião: {', '.join(sorted(df.loc[sem_mic, 'Cod_Municipio'].unique()))} "
+          "— inclua em ibge_common.MICRO_MUNICIPIOS_NOVOS")
 
 MUN_COL = None
 for candidate in ["Municipio","Nome_Municipio","municipio","nome_municipio","MUNICIPIO"]:
