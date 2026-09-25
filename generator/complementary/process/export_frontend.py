@@ -76,7 +76,9 @@ def build_perfil_rural() -> dict:
     base = dim[[c for c in cols_id if c in dim.columns]].copy()
 
     # camadas agregadas (quando existirem) — merge à esquerda pela chave
-    prof = _load("municipality/rural_profile_stage2") or _load("municipality/rural_profile_stage1")
+    prof = _load("municipality/rural_profile_stage2")
+    if prof is None:
+        prof = _load("municipality/rural_profile_stage1")
     if prof is not None:
         extra = [c for c in prof.columns if c not in ("uf",) and c != "cod_municipio"]
         base = base.merge(prof[["cod_municipio"] + extra], on="cod_municipio", how="left")
