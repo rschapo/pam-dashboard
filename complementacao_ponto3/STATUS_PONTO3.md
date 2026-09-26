@@ -15,8 +15,8 @@ O briefing estava desatualizado (descrevia como pendente trabalho que já havia 
 
 **C — VAB/PIB**
 - Processado: `data/processed/municipality/demografia_pib.csv` (5.571 mun) + `data/processed/state/demografia_pib.csv` (27 UF)
-- Colunas: `cod_ibge; populacao; pib_total; impostos_liquidos; vab_agropecuaria; vab_industria; vab_servicos; pct_agro_no_pib; pib_per_capita; ano_ref; ano_ref_vab; fonte`
-- **`ano_ref=2023` (PIB total) + `ano_ref_vab=2021` (VAB setorial)** — fonte `IBGE/SIDRA (tabelas 5938 e 6579)`. `pct_agro_no_pib` = vab_agropecuaria / VAB total.
+- Colunas (desde 2026-09-26): `cod_ibge; populacao; pib_total; impostos_liquidos; vab_adm_publica; vab_agropecuaria; vab_industria; vab_servicos; vab_total; pct_agro_no_vab; pib_per_capita; ano_ref; ano_ref_vab; fonte`
+- **`ano_ref=2023` (PIB total) + `ano_ref_vab=2021` (VAB setorial)** — fonte `IBGE/SIDRA (tabelas 5938 e 6579)`. `pct_agro_no_vab` = 100 × vab_agropecuaria / vab_total, os dois de 2021 (bate com a variável 516 do SIDRA). A coluna anterior, `pct_agro_no_pib`, dividia por agro + indústria + serviços, sem a administração pública.
 - Brutos SIDRA: `data/raw/ibge/sidra_pibtotal_municipios_2023.json`, `sidra_vabsetorial_municipios_2021.json` (+ versões UF). ✅
 
 ## Por que 2023 no PIB mas 2021 no VAB

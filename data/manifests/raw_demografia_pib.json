@@ -1,8 +1,8 @@
 {
   "dataset": "raw_demografia_pib",
   "source": "IBGE/SIDRA (tabelas 5938 e 6579)",
-  "extraction_date": "2026-08-08",
-  "reference_date": "2026-08-08",
+  "extraction_date": "2026-09-26",
+  "reference_date": "2026-09-26",
   "source_files": [],
   "source_hashes": [],
   "script_version": "0.1.0",
@@ -23,8 +23,8 @@
     },
     {
       "file": "sidra_vabsetorial_municipios_2021.json",
-      "sha256": "85dbc50d853f88c819c0e13b21392b9df8a6f2f19127c409ba585a50e9a220d6",
-      "bytes": 5813990
+      "sha256": "6fbbc23470c60455bf07f4953080ce8bb35d26fe4939b33fc243dbb9868c009c",
+      "bytes": 8752564
     },
     {
       "file": "sidra_populacao_uf_2024.json",
@@ -38,11 +38,11 @@
     },
     {
       "file": "sidra_vabsetorial_uf_2021.json",
-      "sha256": "8eff146f1ee19b8be7025f3ffb7038899d9129f3120f2e7ffb19d32f77b0e6b9",
-      "bytes": 28761
+      "sha256": "0ee74627d3f8dfe1d1b442ec2fde86bfcd016324c74155cf0e61094f900a61e6",
+      "bytes": 43134
     }
   ],
-  "generated_at": "2026-08-08T14:53:08-04:00",
+  "generated_at": "2026-09-26T13:26:15-04:00",
   "ano_pib": 2023,
   "ano_pop": 2024,
   "ano_vab_efetivo": {

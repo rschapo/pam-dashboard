@@ -156,7 +156,7 @@ antiga `Base_Municipios_Brasil` foi auditada, migrada e apagada).
 
 | Tabela | Cobertura | Números-chave (Brasil, ano mais recente) |
 |---|---|---|
-| `demografia_pib.csv` (município) + `.csv` (UF) | 5.571 mun / 27 UF | PIB total **R$ 10,94 tri** (2023, bate com oficial) · população **212,58 Mi** (2024) · VAB setorial em **2021** (defasagem real do IBGE — só até esse ano no nível municipal; documentado em `ano_ref_vab`) |
+| `demografia_pib.csv` (município) + `.csv` (UF) | 5.571 mun / 27 UF | PIB total **R$ 10,94 tri** (2023, bate com oficial) · população **212,58 Mi** (2024) · VAB setorial em **2021** (defasagem real do IBGE — só até esse ano no nível municipal; documentado em `ano_ref_vab`) · agropecuária no VAB total de 2021: **7,66%** (MT 37,98%), a mesma participação da variável 516 do SIDRA; entra no painel pelo `export_econ.py` |
 | `credito_rural.csv` | 5.406–5.396 mun (Custeio/Investimento) | Custeio **R$ 208,7 bi** + Investimento **R$ 105,1 bi** (2024). **Bug real corrigido**: o recurso "Investimento" do SICOR/BCB não tem o campo `codIbge` (só código interno do BCB) — a coleta antiga (Base_Municipios_Brasil) vinha sempre 100% nula para essa finalidade. Resolvido por join nome+UF, 99,9% de correspondência |
 | `financas.csv` | 5.570 municípios | Receita corrente **R$ 1,17 tri** · Receita total **R$ 1,59 tri** · Transferências correntes **R$ 762 bi** (2023). **Bug real corrigido**: cada conta do DCA-Anexo I-C do SICONFI vem repetida em várias "colunas" do relatório (Receitas Brutas Realizadas / Deduções FUNDEB / Outras Deduções) — a lógica antiga sobrescrevia com a última que aparecesse, pegando valores errados (uma dedução, não o valor bruto). Corrigido filtrando `coluna == "Receitas Brutas Realizadas"` e casando por `cod_conta` exato |
 

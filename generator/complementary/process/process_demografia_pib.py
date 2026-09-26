@@ -3,10 +3,14 @@ process_demografia_pib.py — Constrói mun_demografia_pib / uf_demografia_pib a
 partir dos JSONs brutos gravados por download_demografia_pib.py.
 
 Mesma lógica de campos de Base_Municipios_Brasil/scripts/coletar_base.py::
-coletar_demografia_pib (mapa de variável SIDRA -> coluna, cálculo de
-pct_agro_no_pib), agora lendo do arquivo já baixado em vez da API ao vivo —
-permite rodar em ambiente sem rede (Cowork/CI) depois do download na máquina
-do usuário.
+coletar_demografia_pib (mapa de variável SIDRA -> coluna), agora lendo do
+arquivo já baixado em vez da API ao vivo — permite rodar em ambiente sem rede
+(Cowork/CI) depois do download na máquina do usuário.
+
+pct_agro_no_vab é a participação da agropecuária no VAB total, em %, os dois do
+ano do VAB setorial (ano_ref_vab). Não se divide pelo PIB total, que é de outro
+ano (ano_ref), nem pela soma agro + indústria + serviços, que deixa de fora a
+administração pública.
 
 Saídas:
   data/processed/municipality/demografia_pib.parquet | .csv
@@ -31,14 +35,17 @@ from common import RAW_DIR, PROCESSED_DIR, cod_mun7, clean_num, save_table, writ
 
 CAMPO_POR_VARIAVEL = {
     "Produto Interno Bruto a preços correntes": "pib_total",
+    "Valor adicionado bruto a preços correntes total": "vab_total",
     "Valor adicionado bruto a preços correntes da agropecuária": "vab_agropecuaria",
     "Valor adicionado bruto a preços correntes da indústria": "vab_industria",
+    # "…dos serviços, exclusive administração, defesa, educação e saúde públicas…"
     "Valor adicionado bruto a preços correntes dos serviços": "vab_servicos",
+    "Valor adicionado bruto a preços correntes da administração": "vab_adm_publica",
     "Impostos, líquidos de subsídios, sobre produtos a preços correntes": "impostos_liquidos",
 }
 # PIB per capita não existe como variável na tabela 5938 — calculado abaixo
 # a partir de pib_total (mil R$) / população (nº de pessoas).
-VAB_COLS = ["vab_agropecuaria", "vab_industria", "vab_servicos"]
+VAB_COLS = ["vab_agropecuaria", "vab_industria", "vab_servicos", "vab_adm_publica", "vab_total"]
 
 
 def _load(path: Path) -> list:
@@ -115,9 +122,9 @@ def build(nivel: str, ano_pib: int, ano_pop: int) -> pd.DataFrame:
     for c in VAB_COLS + ["pib_total"]:
         if c not in df:
             df[c] = None
-    soma_vab = df[VAB_COLS].apply(pd.to_numeric, errors="coerce").fillna(0).sum(axis=1)
     agro = pd.to_numeric(df["vab_agropecuaria"], errors="coerce")
-    df["pct_agro_no_pib"] = (agro / soma_vab.replace(0, float("nan"))).round(4)
+    vab_total = pd.to_numeric(df["vab_total"], errors="coerce")
+    df["pct_agro_no_vab"] = (100 * agro / vab_total.replace(0, float("nan"))).round(2)
     # PIB per capita (R$): não existe como variável na 5938 — calculado aqui.
     # pib_total vem em Mil Reais (unidade da tabela) -> x1000 para reais correntes.
     if "populacao" in df:
@@ -127,7 +134,7 @@ def build(nivel: str, ano_pib: int, ano_pop: int) -> pd.DataFrame:
     else:
         df["pib_per_capita"] = None
     df["ano_ref"] = ano_pib          # população + PIB total
-    df["ano_ref_vab"] = ano_vab      # VAB setorial + pct_agro_no_pib (pode ser < ano_ref)
+    df["ano_ref_vab"] = ano_vab      # VAB setorial + pct_agro_no_vab (pode ser < ano_ref)
     df["fonte"] = "IBGE/SIDRA (tabelas 5938 e 6579)"
     df = df.dropna(subset=[chave]).sort_values(chave).reset_index(drop=True)
     return df, ano_vab
@@ -154,7 +161,7 @@ def main():
         print(f"  {nome} ({'município' if nivel=='6' else 'UF'}): {len(df):,} linhas -> {[Path(o).name for o in outs]}")
 
     if anos_vab and anos_vab != {args.ano_pib}:
-        print(f"  [AVISO] VAB setorial/pct_agro_no_pib referem-se a {sorted(anos_vab)}, "
+        print(f"  [AVISO] VAB setorial/pct_agro_no_vab referem-se a {sorted(anos_vab)}, "
               f"não a {args.ano_pib} — PIB total e população estão em {args.ano_pib}/{args.ano_pop}. "
               "Ver coluna ano_ref_vab.")
 

@@ -1,7 +1,7 @@
 {
   "dataset": "demografia_pib",
   "source": "IBGE/SIDRA (tabela 5938 PIB total + VAB setorial, tabela 6579 população)",
-  "extraction_date": "2026-08-08",
+  "extraction_date": "2026-09-26",
   "reference_date": "2023-01-01",
   "source_files": [
     "sidra_pibtotal_municipios_2023.json",
@@ -40,11 +40,11 @@
     },
     {
       "file": "sidra_vabsetorial_municipios_2021.json",
-      "sha256": "85dbc50d853f88c819c0e13b21392b9df8a6f2f19127c409ba585a50e9a220d6"
+      "sha256": "6fbbc23470c60455bf07f4953080ce8bb35d26fe4939b33fc243dbb9868c009c"
     },
     {
       "file": "sidra_vabsetorial_uf_2021.json",
-      "sha256": "8eff146f1ee19b8be7025f3ffb7038899d9129f3120f2e7ffb19d32f77b0e6b9"
+      "sha256": "0ee74627d3f8dfe1d1b442ec2fde86bfcd016324c74155cf0e61094f900a61e6"
     }
   ],
   "script_version": "0.1.0",
@@ -55,26 +55,26 @@
   "output_files": [
     {
       "file": "demografia_pib.parquet",
-      "sha256": "f488c21197edebc4a6e1bdfe3ed51afbe194ca9af1c26d794aa98bd79d0d98d9",
-      "bytes": 330730
+      "sha256": "a940cc54278e4310502229f4650cd83a4618d819c3d63c8eb5cab7846d111b8c",
+      "bytes": 402858
     },
     {
       "file": "demografia_pib.csv",
-      "sha256": "09bbf12ec163df2bfc2f6029a58a1577a6a56617836a4c1d155560aa54760667",
-      "bytes": 650778
+      "sha256": "c543c398a7451f6d8d50d1bb1c90355a8b08ac9ac1899136502b961d967f3139",
+      "bytes": 740253
     },
     {
       "file": "demografia_pib.parquet",
-      "sha256": "7cdb9754c5e04c8252fc5e56325dbafabbd9d3c8dfa12e60e6f98db12f739426",
-      "bytes": 9551
+      "sha256": "74b92c5e40fbb26c6304eb6ac83616822ff854b84b257f3b3014a691172a0852",
+      "bytes": 11110
     },
     {
       "file": "demografia_pib.csv",
-      "sha256": "afd1cc123f6b5375748ef36ed5c0b81f8506d2e15b9e2b0b2c9986c8b2686507",
-      "bytes": 3555
+      "sha256": "604b033de79cfebc786f0d5efdb29e8126d68ef0e7c4dffcc850b8fc7cc360bf",
+      "bytes": 4153
     }
   ],
-  "generated_at": "2026-08-08T14:53:20-04:00",
+  "generated_at": "2026-09-26T13:27:13-04:00",
   "ano_pib": 2023,
   "ano_pop": 2024,
   "anos_vab_efetivos": [

@@ -5,10 +5,13 @@ Municípios (SIDRA) e grava os JSONs brutos em data/raw/ibge/.
 Fontes:
   População  — tabela 6579, variável 9324 (estimativa)
   PIB total  — tabela 5938, variável 37
-  VAB setorial — tabela 5938, variáveis 513 (Agropecuária), 517 (Indústria),
-               6575 (Serviços), 543 (Impostos líquidos)
+  VAB setorial — tabela 5938, variáveis 498 (VAB total), 513 (Agropecuária),
+               517 (Indústria), 6575 (Serviços, exclusive administração pública),
+               525 (Administração pública), 543 (Impostos líquidos)
                (PIB per capita não existe como variável na 5938 — é calculado em
                process_demografia_pib.py como pib_total / população)
+               O VAB total vem junto com os setores porque é o denominador da
+               participação da agropecuária: o PIB total é de outro ano.
 
 IMPORTANTE — descompasso de defasagem confirmado nesta coleta: no nível
 municipal, o PIB TOTAL está disponível até um ano mais recente do que o
@@ -42,7 +45,7 @@ API_SIDRA = "https://apisidra.ibge.gov.br/values"
 UA = {"User-Agent": "AgrocoreEstudos/1.0 (bases complementares)"}
 
 PIB_TOTAL_VAR = "37"
-VAB_VARIAVEIS = "513,517,6575,543"
+VAB_VARIAVEIS = "498,513,517,6575,525,543"
 POP_VARIAVEL = "9324"
 MAX_ANOS_RETROCESSO_VAB = 4
 

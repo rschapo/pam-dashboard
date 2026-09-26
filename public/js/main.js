@@ -183,9 +183,11 @@ function getMicKey() {
 // hora. Razões (PIB per capita, % agrícola, território declarado) não podem ser
 // somadas — recompõem-se dos componentes, senão o total do estado vira a soma
 // das taxas. car.json declara as suas próprias; economia as traz aqui.
+// A participação da agropecuária divide pelo VAB total do mesmo ano (_vab), não
+// pelo PIB: o IBGE abre o VAB por setor só até ano_vab, e o PIB é de ano_pib.
 const RAZOES_ECON = {
   pc:  { num: 'pib', den: 'pop', fator: 1000 },  // pib em mil R$, per capita em R$
-  pct: { num: 'agro', den: 'pib', fator: 1 },
+  pct: { num: 'agro', den: '_vab', fator: 100, pareado: true },
 };
 
 function baseDominioSimples() {
@@ -333,10 +335,11 @@ function metLabel() {
     return cat + ' — Quantidade' + (unit ? ' (' + unit + ')' : '');
   }
   if (state.domain === 'economia') {
-    if (M === 'pib') return 'PIB Total (mil R$)';
-    if (M === 'agro') return 'PIB Agrícola (mil R$)';
+    const anoPib = ECON?.ano_pib || 2023, anoVab = ECON?.ano_vab || 2021;
+    if (M === 'pib') return `PIB Total (mil R$, ${anoPib})`;
+    if (M === 'agro') return `VAB da agropecuária (mil R$, ${anoVab})`;
     if (M === 'pc') return 'PIB per Capita (R$)';
-    if (M === 'pct') return '% do PIB Agrícola';
+    if (M === 'pct') return `Agropecuária no VAB (%, ${anoVab})`;
   }
   if (state.domain === 'terra') {
     if (M === 'natural') return 'Vegetação Natural (ha)';
@@ -390,7 +393,9 @@ function fmt(v, m) {
 // ═══════════════════════════════════════════════════════════
 function getColor(v, max, palette) {
   palette = palette || COLORS_BR;
-  if (!v || !max) return palette[0];
+  // Negativo cai no primeiro tom, como o zero: log1p abaixo de -1 dá NaN. Só a
+  // participação no VAB chega aqui negativa (VAB total < 0, como o IBGE publica).
+  if (!(v > 0) || !max) return palette[0];
   const t = Math.min(Math.log1p(v) / Math.log1p(max), 1);
   const i = Math.floor(t * (palette.length - 1));
   return palette[Math.min(i, palette.length - 1)];
