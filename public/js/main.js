@@ -655,6 +655,7 @@ function updateMunicipio() {
   const tblTitle = document.getElementById('mun-tbl-title');
 
   updateMapMun();
+  atualizarPerfil();
 
   if (!uf) {
     if (hint) hint.textContent = 'Selecione um estado no filtro à esquerda';
@@ -708,6 +709,87 @@ function toggleMunicipio(id) {
   const sel = document.getElementById('f-municipio');
   if (sel) sel.value = state.munSel;
   updateMunicipio();
+}
+
+// ─── Perfil do município ───
+// O que as bases complementares dizem do município escolhido, em qualquer aba:
+// módulo fiscal, CAR e estrutura fundiária, Censo, uso do solo e silvicultura.
+// perfil.json (export_perfil.py) só é baixado quando o primeiro município é aberto.
+let PERFIL = null, perfilPendente = null;
+
+function carregarPerfil() {
+  if (PERFIL) return Promise.resolve(PERFIL);
+  // Falha de rede não fica guardada: a próxima escolha tenta de novo.
+  perfilPendente ||= fetch('data/perfil.json')
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(d => (PERFIL = d))
+    .catch(e => { console.error('Erro ao carregar perfil.json', e); perfilPendente = null; return null; });
+  return perfilPendente;
+}
+
+const CLASSES_MF = [['cl-pq', 'Pequenos, até 4 MF'], ['cl-md', 'Médios, de 4 a 15 MF'],
+                    ['cl-gr', 'Grandes, acima de 15 MF']];
+
+function numBR(v, casas = 0) {
+  return v == null ? '—' : v.toLocaleString('pt-BR', { maximumFractionDigits: casas });
+}
+
+function escHTML(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function blocoPerfil(titulo, linhas, extra = '') {
+  const dl = linhas.map(([rot, v]) => `<dt>${rot}</dt><dd>${v}</dd>`).join('');
+  return `<div class="perfil-bloco"><h4>${titulo}</h4><dl>${dl}</dl>${extra}</div>`;
+}
+
+// Barra empilhada das três classes de módulos fiscais, com os percentuais embaixo.
+function barraEstrutura(rotulo, pcts) {
+  if (!pcts) return '';
+  const desc = CLASSES_MF.map(([, n], i) => `${n}: ${numBR(pcts[i], 1)}%`).join('; ');
+  const partes = pcts.map((p, i) => `<span class="${CLASSES_MF[i][0]}" style="width:${p}%"></span>`).join('');
+  return `<div class="perfil-barra-rot">${rotulo}</div>` +
+         `<div class="perfil-barra" role="img" aria-label="${rotulo}. ${desc}" title="${desc}">${partes}</div>` +
+         `<div class="perfil-pcts">${pcts.map(p => `<span>${numBR(p, 1)}%</span>`).join('')}</div>`;
+}
+
+async function atualizarPerfil() {
+  const box = document.getElementById('perfil-mun'); if (!box) return;
+  const id = state.munSel;
+  if (!id) { box.hidden = true; return; }
+  const info = mun_info[id] || {};
+  box.hidden = false;
+  document.getElementById('perfil-titulo').textContent = '🧭 Perfil do município — ' + (info.n || id);
+  document.getElementById('perfil-sub').textContent = mic_info[info.mid]?.n ? 'Microrregião ' + mic_info[info.mid].n : '';
+  const grid = document.getElementById('perfil-grid'), nota = document.getElementById('perfil-nota');
+  if (!PERFIL) { grid.innerHTML = '<p class="perfil-nota">Carregando o perfil…</p>'; nota.textContent = ''; }
+  const d = await carregarPerfil();
+  if (state.munSel !== id) return;                 // outro município foi escolhido enquanto carregava
+  if (!d) { grid.innerHTML = '<p class="perfil-nota">Não foi possível carregar o perfil.</p>'; return; }
+  const p = d.mun?.[id] || {}, a = d.anos || {};
+  const ha = v => v == null ? '—' : numBR(v) + ' ha';
+  const ano = v => v ? ' ' + v : '';
+  const leg = `<div class="perfil-leg">${CLASSES_MF.map(([c, n]) => `<span><i class="${c}"></i>${n}</span>`).join('')}</div>`;
+  grid.innerHTML = [
+    blocoPerfil('Fundiário (INCRA)', [
+      ['Módulo fiscal', ha(p.mf)], ['Fração mínima de parcelamento', ha(p.fmp)], ['Área do município', ha(p.amun)]]),
+    blocoPerfil('CAR', [
+      ['Imóveis cadastrados', numBR(p.imov)],
+      ['Sobreposição entre cadastros', p.sob == null ? '—' : numBR(p.sob, 1) + '%']],
+      p.en ? barraEstrutura('Estrutura fundiária: % dos imóveis', p.en) +
+             barraEstrutura('Estrutura fundiária: % da área', p.ea) + leg : ''),
+    blocoPerfil('Censo Agropecuário' + ano(a.censo), [
+      ['Estabelecimentos', numBR(p.est)], ['Área dos estabelecimentos', ha(p.aest)]]),
+    blocoPerfil('Uso do solo, MapBiomas' + ano(a.mapbiomas), [
+      ['Agricultura', ha(p.agri)], ['Pastagem', ha(p.past)], ['Silvicultura', ha(p.silv)]]),
+    blocoPerfil('Silvicultura, PEVS' + ano(a.pevs), [
+      ['Valor da produção', p.vpf == null ? '—' : 'R$ ' + numBR(p.vpf) + ' mil'],
+      ['Produto de maior valor', p.ppf ? escHTML(p.ppf.replace(/^\d+(?:\.\d+)*\s*-\s*/, '')) : '—']]),
+  ].join('');
+  nota.textContent = 'Fontes: INCRA (IE nº 5/2022), SICAR, IBGE (Censo Agropecuário e PEVS) e MapBiomas. ' +
+    'A estrutura fundiária classifica as inscrições não canceladas do CAR pelo número de módulos fiscais ' +
+    '(área ÷ módulo fiscal do município): conta inscrições, não propriedades, e a área inclui a ' +
+    'sobreposição entre cadastros. "—" indica sem dado.';
 }
 
 function updateMunChartTop(muns) {

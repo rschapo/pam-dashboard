@@ -338,6 +338,39 @@ hr.sidebar-sep {
   border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow);
 }
 
+/* ── Perfil do município ── */
+.perfil-mun {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+.perfil-mun[hidden] { display: none; }
+.perfil-hdr { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 12px; }
+.perfil-hdr h3 { font-size: 13px; font-weight: 700; color: var(--green); }
+.perfil-sub { font-size: 11px; color: var(--text-lt); }
+.perfil-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+.perfil-bloco { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
+.perfil-bloco h4 {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--text-lt); font-weight: 700; margin-bottom: 6px;
+}
+.perfil-bloco dl { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; font-size: 12px; }
+.perfil-bloco dt { color: var(--text-lt); }
+.perfil-bloco dd { font-weight: 700; color: var(--green); text-align: right; font-variant-numeric: tabular-nums; }
+.perfil-barra-rot { font-size: 11px; color: var(--text-lt); margin-top: 8px; }
+.perfil-barra {
+  display: flex; height: 12px; border-radius: 3px; overflow: hidden;
+  background: var(--border-lt); margin: 3px 0 2px;
+}
+.perfil-barra span { display: block; height: 100%; }
+.perfil-pcts { display: flex; justify-content: space-between; font-size: 11px; font-variant-numeric: tabular-nums; }
+.perfil-leg { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 11px; color: var(--text-lt); margin-top: 8px; }
+.perfil-leg i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.cl-pq { background: #9CC285; }
+.cl-md { background: var(--green-mid); }
+.cl-gr { background: var(--green-dk); }
+.perfil-nota { font-size: 11px; color: var(--text-lt); margin-top: 10px; line-height: 1.5; }
+
 /* ── Estado label bar ── */
 .estado-bar {
   display: flex; align-items: center; gap: 10px;

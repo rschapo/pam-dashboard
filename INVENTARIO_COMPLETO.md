@@ -42,12 +42,16 @@ abaixo, `<brutos>` é essa pasta. Em `data/` ficam os processados e os manifesto
 | `data/geo_uf.json` | Malha de estados | 0,25 MB | 27 UF |
 | `data/geo_mic.json` | Malha de microrregiões | 4,3 MB | 558 microrregiões |
 | `data/geo_mun.json` | Malha municipal | 16,4 MB | 5.570 municípios |
+| `data/perfil.json` | 🧭 Perfil do município | 1,0 MB | 5.571 municípios · INCRA, CAR, Censo 2017, MapBiomas 2024, PEVS 2025 |
 
 **O dashboard tem 8 abas de tema** (🌾 Agrícola, 🐄 Pecuária, 🌲 Silvicultura,
 📊 Economia, 🗺️ Uso do Solo, 🚜 Tratores, 💰 Crédito, 🌳 CAR) e, conforme o tema,
 até 6 visões (Mapa Brasil, Estado/Micro, Municípios, Série Histórica, Rankings,
 Concentração). O mapa chega ao **município**: a malha municipal é carregada sob
-demanda.
+demanda. Na visão Municípios, escolher um município abre, em qualquer aba, o quadro
+**Perfil do município**: módulo fiscal e fração mínima (INCRA), imóveis,
+sobreposição e estrutura fundiária do CAR, estabelecimentos do Censo 2017, uso do
+solo (MapBiomas) e silvicultura (PEVS).
 
 Deploy automático via Netlify a cada push na branch `main`. Conferido em
 2026-09-26: `pkg.json`, `pevs.json` e `car.json` no ar são idênticos aos do
@@ -84,15 +88,13 @@ grandes (ver 3.3).
 
 | Arquivo | Conteúdo | Municípios |
 |---|---|---|
-| `data/frontend/perfil_rural.json` | Perfil rural: módulo fiscal, Censo Agro, silvicultura, CAR (com a estrutura fundiária) e MapBiomas | 5.571 |
-| `data/processed/dimensions/dim_modulo_fiscal` | Índices básicos do INCRA (módulo fiscal, fração mínima, zona típica) | 5.569 |
-| `data/processed/municipality/censo_agro_*` | Temas do Censo Agro 2017 com as categorias (o de máquinas já alimenta a aba Tratores) | 5.563 no resumo |
+| `data/frontend/perfil_rural.json` | Perfil rural completo: módulo fiscal, Censo Agro, silvicultura, CAR (com a estrutura fundiária) e MapBiomas; o painel usa o recorte `perfil.json` | 5.571 |
+| `data/processed/dimensions/dim_modulo_fiscal` | Índices básicos do INCRA (módulo fiscal, fração mínima, zona típica); no painel, só no perfil | 5.569 |
+| `data/processed/municipality/censo_agro_*` | Temas do Censo Agro 2017 com as categorias (o de máquinas já alimenta a aba Tratores; o resumo, o perfil) | 5.563 no resumo |
 
 Os três artefatos da versão anterior desta parte (`geo_mun.json`, `econ.json` e
-`mapbiomas_mun.json`) já estão publicados.
-
-**Pendência real:** decidir se o perfil rural entra no painel (aba própria ou painel
-lateral do município) e então ligar o `perfil_rural.json` ao frontend.
+`mapbiomas_mun.json`) já estão publicados, e o perfil rural entrou no painel como o
+quadro "Perfil do município" (`perfil.json`, gerado por `export_perfil.py`).
 
 ---
 
@@ -249,8 +251,9 @@ paralela de dado de produção agro em nenhum outro projeto.
 
 1. **PPM 2025** — aguardar o IBGE (sem data no calendário em 2026-09-26). Quando
    sair, baixar e regenerar o `ppm.json`; o painel já aceita anos diferentes por aba.
-2. **Perfil rural no painel** — o `perfil_rural.json` está pronto, mas ligá-lo ao
-   frontend depende de decidir o desenho (ver Parte 2).
+2. **Temas do Censo no painel** — os temas além de máquinas (uso da terra, irrigação,
+   assistência técnica, financiamento…) ainda não aparecem; o perfil do município só
+   mostra o resumo (estabelecimentos e área).
 3. **Gestão (TSE)** não tem `cod_ibge` — só isolado por enquanto; precisa de
    um de-para TSE↔IBGE para entrar nos cruzamentos.
 4. **SNCR** — nada baixado: o INCRA publica por UF, e o download é manual. A estrutura
@@ -262,4 +265,5 @@ paralela de dado de produção agro em nenhum outro projeto.
    o módulo fiscal, ainda marca como pendentes camadas já processadas.
 7. Resolvidos desde a versão anterior: publicação de `geo_mun`/`econ`/`mapbiomas_mun`,
    camadas ambientais do CAR (medida dissolvida, 27 UFs), Censo Agropecuário (5.073.324
-   estabelecimentos, com as categorias), módulo fiscal e estrutura fundiária pelo CAR.
+   estabelecimentos, com as categorias), módulo fiscal, estrutura fundiária pelo CAR e
+   perfil do município no painel.
