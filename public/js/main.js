@@ -1712,7 +1712,56 @@ function refreshAll() {
 // ═══════════════════════════════════════════════════════════
 // EXPORT
 // ═══════════════════════════════════════════════════════════
+// Fonte de recorte único exporta o que o painel mostra, com as razões recompostas
+// dos componentes: por UF ou, com um estado escolhido, por município. O arquivo leva
+// o domínio, a métrica e o ano da fonte, porque o do seletor não se aplica a ela.
+const PREFIXO_EXPORT = { economia: 'Economia', terra: 'UsoDoSolo', maquinas: 'Tratores',
+                         credito: 'Credito', car: 'CAR' };
+
+// Economia tem dois anos: o do PIB e o do VAB por setor. O CAR é um cadastro
+// contínuo, sem ano de referência no car.json.
+function anoDaFonte(M) {
+  if (state.domain === 'economia') return M === 'agro' || M === 'pct' ? ECON?.ano_vab : ECON?.ano_pib;
+  if (state.domain === 'terra') return TERRA?.ano;
+  if (state.domain === 'maquinas') return MAQ?.ano;
+  if (state.domain === 'credito') return CRED?.ano;
+  return null;
+}
+
+function linhasExportSimples(M) {
+  const uf = state.ufSel, base = baseDominioSimples();
+  const r2 = v => v == null ? null : Math.round(v * 100) / 100;
+  if (!uf) return Object.keys(ufs_info).sort()
+    .map(u => ({ cod: u, nome: ufs_info[u].n, v: r2(calcEst(u, M)) }));
+  return Object.keys(mun_info).filter(id => mun_info[id].uf === uf)
+    .sort((a, b) => mun_info[a].n.localeCompare(mun_info[b].n, 'pt-BR'))
+    .map(id => ({ cod: id, nome: mun_info[id].n, mic: mic_info[mun_info[id].mid]?.n || '',
+                  v: base[id] ? r2(calcMunVal(id, M, getAnoIdx())) : null }));   // fora da base: sem dado
+}
+
+function exportarSimples(formato) {
+  const M = curMetrica(), uf = state.ufSel, ano = anoDaFonte(M), linhas = linhasExportSimples(M);
+  const nome = [PREFIXO_EXPORT[state.domain], M, ano, uf || 'Brasil'].filter(Boolean).join('_');
+  let href;
+  if (formato === 'csv') {
+    const rows = uf
+      ? [['Código IBGE', 'Município', 'Microrregião', metLabel()], ...linhas.map(x => [x.cod, x.nome, x.mic, x.v ?? ''])]
+      : [['UF', 'Estado', metLabel()], ...linhas.map(x => [x.cod, x.nome, x.v ?? ''])];
+    href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(rows.map(r => r.join(';')).join('\n'));
+  } else {
+    const data = {};
+    linhas.forEach(x => { if (x.v != null) data[x.cod] = x.v; });
+    href = 'data:application/json,' + encodeURIComponent(JSON.stringify(
+      { dominio: state.domain, metrica: M, rotulo: metLabel(), ano: ano ?? null, uf: uf || 'BR', data }));
+  }
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = `${nome}.${formato}`;
+  a.click();
+}
+
 function exportCSV() {
+  if (baseDominioSimples()) return exportarSimples('csv');
   const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel, dom = state.domain;
   const ufs = uf ? [uf] : Object.keys(ufs_info);
   const label = dom === 'agricola' ? 'Cultura' : dom === 'pecuaria' ? 'Categoria' : 'Produto';
@@ -1742,6 +1791,7 @@ function exportCSV() {
 }
 
 function exportJSON() {
+  if (baseDominioSimples()) return exportarSimples('json');
   const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel, dom = state.domain;
   const out = { ano: getAno(), metrica: M, uf: uf || 'BR', data: {} };
   (uf ? [uf] : Object.keys(ufs_info)).forEach(u => {
