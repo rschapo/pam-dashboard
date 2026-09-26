@@ -1,7 +1,7 @@
 {
   "dataset": "dim_municipio",
   "source": "IBGE (malha/localidades) — entrada: municipios.csv",
-  "extraction_date": "2026-07-29",
+  "extraction_date": "2026-09-26",
   "reference_date": "2024-01-01",
   "source_files": [
     "municipios.csv"
@@ -20,13 +20,13 @@
   "output_files": [
     {
       "file": "dim_municipio.parquet",
-      "sha256": "9aaa394805887a17479c1e12af17f477234f08f194b41c2ac0fa3913dcde1644",
-      "bytes": 216143
+      "sha256": "8479afd01c8fb838d1f3a84ef11fc7819f1bc05cf50859f478ebc1c96d66a264",
+      "bytes": 216137
     },
     {
       "file": "dim_municipio.csv",
-      "sha256": "c8975964c70d20b704cc5eb45e6ad7eb1846629daded57d6708a63cb8f8cfc42",
-      "bytes": 882039
+      "sha256": "514561e545e20bc1b436ec992738d4e8db1eaf548cda0db6d330e7e6fa6dc900",
+      "bytes": 882043
     },
     {
       "file": "dim_municipio_codigos_historicos.csv",
@@ -34,7 +34,7 @@
       "bytes": 96
     }
   ],
-  "generated_at": "2026-07-29T13:01:24-04:00",
+  "generated_at": "2026-09-26T17:53:27-04:00",
   "areas_preenchidas": 5573,
   "produtores_pam_marcados": true,
   "produtores_ppm_marcados": true

@@ -37,6 +37,16 @@ pip install geopandas shapely pyogrio pyproj
 pip install openpyxl
 ```
 
+## Onde ficam os brutos
+
+Nos documentos, nos scripts e nas mensagens, `data/raw/...` é a raiz lógica dos brutos.
+Nesta máquina ela fica fora da pasta sincronizada, no caminho gravado em
+`data/raw_dir.txt` (hoje `D:\00-Claude_Fora_Drive\pam-dashboard\raw`). A variável
+`PAM_RAW_DIR` tem prioridade sobre o arquivo, e sem os dois vale `data/raw` dentro do
+projeto (`common.RAW_DIR`). Um bruto que parece faltar em `data/raw` deve ser procurado
+primeiro ali: é o caso de `ibge/areas_municipios.csv`, que o
+`download/download_ibge_areas.py` grava a partir da edição mais recente do IBGE.
+
 ## Como rodar
 
 Os **downloads oficiais só funcionam com rede aberta** (na sua máquina). Em ambiente
@@ -74,7 +84,6 @@ Coloque os brutos nestes caminhos e rode o passo correspondente:
 - SNCR (INCRA, por UF) → `data/raw/sncr/<uf>/`
 - CAR (SICAR, por UF) → `data/raw/car/<uf>/`
 - MapBiomas (estatística) → `data/raw/mapbiomas/mapbiomas_cobertura_municipios.xlsx`
-- Áreas territoriais (IBGE) → `data/raw/ibge/areas_municipios.xlsx`
 
 Ver `config/sources.yaml` para os portais oficiais e `docs/SOURCES.md`.
 

@@ -1,8 +1,8 @@
 {
   "dataset": "raw_ibge_areas",
   "source": "IBGE — Áreas Territoriais",
-  "extraction_date": "2026-07-29",
-  "reference_date": "2026-07-29",
+  "extraction_date": "2026-09-26",
+  "reference_date": "2026-09-26",
   "source_files": [
     "AR_BR_RG_UF_RGINT_RGI_MUN_2025.ods"
   ],
@@ -24,5 +24,5 @@
       "bytes": 95285
     }
   ],
-  "generated_at": "2026-07-29T13:01:19-04:00"
+  "generated_at": "2026-09-26T17:53:11-04:00"
 }
