@@ -509,7 +509,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// Load all 3 JSON files, then init the dashboard
+// Load all 4 JSON files, then init the dashboard
 (function(){
   const msg = document.getElementById('loading-msg');
   const overlay = document.getElementById('loading-overlay');
@@ -517,7 +517,7 @@
 
   function tryInit(pkg, geoUF, geoMic) {
     loaded++;
-    if (loaded === 3) {
+    if (loaded === 4) {
       msg.textContent = 'Inicializando mapa…';
       setTimeout(() => {
         window.PAM_PKG    = pkg;
@@ -525,12 +525,19 @@
         window.PAM_GEO_MIC = geoMic;
         overlay.classList.add('hidden');
         setTimeout(() => { overlay.style.display = 'none'; }, 500);
-        window.initDashboard(pkg, geoUF, geoMic);
+        window.initDashboard(pkg, geoUF, geoMic, _mun);
       }, 80);
     }
   }
 
-  let _pkg, _geoUF, _geoMic;
+  let _pkg, _geoUF, _geoMic, _mun;
+
+  // Divisão territorial do IBGE, que completa a lista de municípios da PAM. Sem ela
+  // o painel abre assim mesmo, só com os municípios da PAM.
+  fetch('data/municipios.json')
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .catch(e => { console.error('Erro ao carregar municipios.json', e); return null; })
+    .then(d => { _mun = d; tryInit(_pkg, _geoUF, _geoMic); });
 
   msg.textContent = 'Carregando dados agrícolas…';
   fetch('data/pkg.json')

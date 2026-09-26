@@ -94,13 +94,14 @@ function silKey() { return state.tipoSil + sil_sep + state.categoriaSil; }
 // ═══════════════════════════════════════════════════════════
 // ENTRY POINT — called from index.html after fetch()
 // ═══════════════════════════════════════════════════════════
-window.initDashboard = function(pkg, geoUF, geoMic) {
+window.initDashboard = function(pkg, geoUF, geoMic, dimMun) {
   PKG      = pkg;
   GEO_UF   = geoUF;
   GEO_MIC  = geoMic;
 
   ({ anos, culturas, colheitadeiras, tratores, permanentes, temporarias,
      ufs_info, mic_info, mun_info, est_data, mic_data, mun_data, mun_grp_data } = PKG);
+  completarMunicipios(dimMun);
 
   N_ANOS = anos.length;
   state.anoIdx = N_ANOS - 1;
@@ -126,6 +127,17 @@ window.initDashboard = function(pkg, geoUF, geoMic) {
   bindEvents();
   refreshAll();
 };
+
+// O pkg.json só lista os municípios com lavoura. As bases de fonte única cobrem o
+// país, e estado e microrregião saem da soma dos municípios: sem Recife, Vitória e
+// outros 29, o PIB de PE saía 24,6% menor. A divisão territorial do IBGE
+// (municipios.json) completa mun_info e mic_info sem mexer no que a PAM já traz.
+// Nas abas da PAM os rankings não mudam, porque só listam quem tem valor.
+function completarMunicipios(dim) {
+  if (!dim) return;
+  for (const [mid, [n, uf, ms]] of Object.entries(dim.mic || {})) mic_info[mid] ||= { n, uf, ms };
+  for (const [id, [n, uf, mid]] of Object.entries(dim.mun || {})) mun_info[id] ||= { n: `${n} - ${uf}`, uf, mid };
+}
 
 // ═══════════════════════════════════════════════════════════
 // HELPERS
