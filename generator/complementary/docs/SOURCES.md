@@ -11,7 +11,7 @@ Detalhes operacionais em `config/sources.yaml` (campos de rastreabilidade da se�
 | Malha municipal (geom.) | IBGE Malhas v3 | servicodados.ibge.gov.br/api/v3/malhas | GeoJSON/SHP | automático |
 | Censo Agropecuário 2017 | IBGE/SIDRA | apisidra.ibge.gov.br + v3/agregados | JSON | automático (tabelas validadas por metadados) |
 | PEVS | IBGE/SIDRA | apisidra.ibge.gov.br | JSON | automático (via `download_pevs_ibge.py`) |
-| Módulo fiscal | INCRA | gov.br/incra (Índices Básicos, IE 20/1980) | XLSX/CSV | manual |
+| Módulo fiscal | INCRA | gov.br/incra (Índices Básicos de 2013 e IE nº 5/2022); in.gov.br (IE no DOU) | PDF/XLS/HTML | automático |
 | SNCR | INCRA | gov.br/incra; acervofundiario.incra.gov.br | CSV/SHP por UF | manual, por UF |
 | CAR | SICAR / Serviço Florestal Brasileiro | car.gov.br; consultapublica.car.gov.br | SHP por UF/mun. | manual, com termos de uso |
 | Uso e cobertura | MapBiomas | brasil.mapbiomas.org/estatisticas | XLSX / GeoTIFF (GEE) | manual, complementar |

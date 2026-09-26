@@ -1,6 +1,9 @@
 {
   "modulo_fiscal": {
-    "status": "ausente"
+    "municipios": 5569,
+    "modulo_zero_ou_neg": 0,
+    "modulo_nulo": 0,
+    "uf_incompativel": 0
   },
   "sncr": {
     "status": "ausente"

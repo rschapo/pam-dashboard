@@ -18,14 +18,14 @@ Coletores SIDRA replicam o padrão validado dos geradores PAM/PPM/PEVS: descober
 variáveis/classificações por **metadados** (`v3/agregados/{t}/metadados`), consulta de
 valores em `n6` filtrado por `n3` (**uma UF por vez**), pausa entre requisições, retry
 com backoff, tratamento de `429`/`400`, salvamento progressivo e retomada. Fontes sem
-API estável (INCRA módulo fiscal, SNCR, SICAR, MapBiomas) usam **adaptador local**: o
-operador baixa o bruto para `data/raw/...` e o script inventaria, hasheia e valida.
+API estável (SNCR, SICAR, MapBiomas) usam **adaptador local**: o operador baixa o bruto
+para `data/raw/...` e o script inventaria, hasheia e valida.
 
 ## Correspondência geográfica
 
 - `dim_municipio` é construída da malha oficial (localidades/`ibge_municipios_full.csv`),
   preservando micro/mesorregião e incluindo regiões imediata/intermediária.
-- Junções por nome (ex.: módulo fiscal quando a fonte não traz código) usam
+- Junções por nome (ex.: MapBiomas e crédito rural, cujas fontes não trazem o código) usam
   **(nome normalizado, UF)** contra a dimensão, com tabela de exceções revisável —
   **nunca** só por nome. Não correspondidos vão para `interim/` e para o manifesto.
 - Correspondência de códigos históricos→atuais: `dim_municipio_codigos_historicos.csv`
@@ -42,6 +42,31 @@ Duas classificações mantidas em paralelo (`_stats.py`):
 
 Não se rotula automaticamente todo imóvel < 1 MF como "minifúndio" nem se emite
 conclusão jurídica individual — a classificação é analítica.
+
+### Fonte do módulo fiscal
+
+Os índices em vigor são os da Instrução Especial INCRA nº 5/2022 (DOU de 01/08/2022). O
+INCRA não os publica numa tabela única, então `process_modulo_fiscal.py` os monta de
+três peças oficiais:
+
+- **Módulo fiscal e zona de pecuária:** vêm da tabela de Índices Básicos de 2013 (PDF,
+  com o código IBGE de cada município). A IE os manteve: nos 1.885 municípios da planilha
+  e nos 814 do trecho do Anexo IV, o valor de 2022 é o de 2013.
+- **Fração mínima de parcelamento (FMP):** é a da planilha da IE nos 1.885 municípios em
+  que ela mudou; nos demais, a de 2013.
+- **Zona típica de módulo:** é a da região geográfica imediata do município, no Anexo
+  III. Cada região tem uma zona só (art. 4º, §4º). A planilha não basta: há município
+  que mudou de zona sem mudar a FMP e por isso não está nela. O DF vem sem zona no Anexo
+  III e fica com a de 2013 (A1), a única compatível com a FMP e o limite que o anexo dá.
+
+O Anexo IV traz todos os índices por município, mas só a versão certificada do DOU o tem
+inteiro; a página web para em "Butiá". O processamento compara o resultado com esse
+trecho, de 814 municípios, campo a campo: não há divergência. A consulta online do INCRA
+("Consultar Índices Básicos") tem CAPTCHA e não é usada.
+
+Dois municípios ficam sem índice: Fernando de Noronha, distrito estadual que a tabela do
+INCRA não lista, e Boa Esperança do Norte (MT), instalado em 2025, depois da tabela de
+2013.
 
 ## Faixas de área do Censo (harmonização)
 

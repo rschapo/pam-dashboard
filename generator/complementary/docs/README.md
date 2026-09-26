@@ -70,7 +70,6 @@ que houver em `data/processed`: o `export_frontend` prefere o stage2.
 
 Coloque os brutos nestes caminhos e rode o passo correspondente:
 
-- Módulo fiscal (INCRA) → `data/raw/incra/modulo_fiscal_municipios.(csv|xlsx)`
 - SNCR (INCRA, por UF) → `data/raw/sncr/<uf>/`
 - CAR (SICAR, por UF) → `data/raw/car/<uf>/`
 - MapBiomas (estatística) → `data/raw/mapbiomas/mapbiomas_cobertura_municipios.xlsx`

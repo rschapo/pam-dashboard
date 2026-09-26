@@ -1,0 +1,120 @@
+{
+  "dataset": "dim_modulo_fiscal",
+  "source": "INCRA — Índices Básicos (IE nº 5/2022; tabela de 2013)",
+  "extraction_date": "2026-09-26",
+  "reference_date": "2022-08-01",
+  "source_files": [
+    "indices_basicos_2013_por_municipio.pdf",
+    "tabela-fmp_alterado.xls",
+    "ie_incra_5_2022.html"
+  ],
+  "source_hashes": [
+    {
+      "file": "indices_basicos_2013_por_municipio.pdf",
+      "sha256": "27a73b9360db24dc5d6eab40f83faf6d9dbccd1afdfe91776fbf431d828dbb0d"
+    },
+    {
+      "file": "tabela-fmp_alterado.xls",
+      "sha256": "048191e59288640b99131f61c0f7bb5f6e05ff79f90f07b6c848958c26addf5c"
+    },
+    {
+      "file": "ie_incra_5_2022.html",
+      "sha256": "341917224440c287c2de6b8cd8d181282d62707f94afa572d4f4f4131c18baf1"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 5569,
+  "municipality_count": 5569,
+  "rejected_rows": 0,
+  "warnings": [
+    "2 municípios da dim_municipio sem índice no INCRA: Fernando de Noronha (PE), Boa Esperança do Norte (MT)"
+  ],
+  "output_files": [
+    {
+      "file": "dim_modulo_fiscal.parquet",
+      "sha256": "ed490229d6c3763a6634791984e43d5dbf45f7108ed2d4f6ec613864d15eec82",
+      "bytes": 50715
+    },
+    {
+      "file": "dim_modulo_fiscal.csv",
+      "sha256": "a1617512f1ab51b5eb86db920e96f142692feefe59d7810d9bdc9e1ce16634dd",
+      "bytes": 540399
+    },
+    {
+      "file": "modulo_fiscal_nao_correspondidos.csv",
+      "sha256": "721d1445a6b42d646a70f4bac0dd641c723a8d50c75b0adb45a08ab3b830b1e3",
+      "bytes": 26
+    }
+  ],
+  "generated_at": "2026-09-26T08:02:30-04:00",
+  "fmp_alterada_em_2022": 1885,
+  "conferencia_anexo_iv": {
+    "municipios": 814,
+    "divergencias": {
+      "ausentes": 0,
+      "modulo_fiscal_ha": 0,
+      "fracao_minima_parcelamento_ha": 0,
+      "zona_tipica_modulo": 0,
+      "zona_pecuaria": 0
+    }
+  },
+  "linhas_nao_lidas": [],
+  "nomes_diferentes": [
+    "1506500 SANTA ISABEL DO PARÁ → Santa Izabel do Pará",
+    "2306306 ITAPAGÉ → Itapajé",
+    "2606903 IGUARACI → Iguaracy",
+    "2608503 LAGOA DO ITAENGA → Lagoa de Itaenga",
+    "2922250 MUQUÉM DE SÃO FRANCISCO → Muquém do São Francisco",
+    "2928505 SANTA TERESINHA → Santa Terezinha",
+    "3108909 BRASÓPOLIS → Brazópolis",
+    "3102704 CACHOEIRA DO PAJEÚ → Cachoeira de Pajeú",
+    "3120102 COUTO MAGALHÃES DE MINAS → Couto de Magalhães de Minas",
+    "3122900 DONA EUSÉBIA → Dona Euzébia",
+    "3131802 ITABIRINHA DE MANTENA → Itabirinha",
+    "3147808 PASSA-VINTE → Passa Vinte",
+    "3153806 QUELUZITA → Queluzito",
+    "3159407 SANTA RITA DO IBITIPOCA → Santa Rita de Ibitipoca",
+    "3165206 SÃO THOMÉ DAS LETRAS → São Tomé das Letras",
+    "3300605 BOM JESUS DE ITABAPOANA → Bom Jesus do Itabapoana",
+    "3301876 IGUABA  GRANDE → Iguaba Grande",
+    "3303807 PARATI → Paraty",
+    "3304755 SÃO  FRANCISCO  DE ITABAPOANA → São Francisco de Itabapoana",
+    "3305901 TRAJANO DE MORAIS → Trajano de Moraes",
+    "3506607 BIRITIBA-MIRIM → Biritiba Mirim",
+    "3515004 EMBU → Embu das Artes",
+    "3516101 FLORINÍA → Florínea",
+    "3516853 GAVIÃO  PEIXOTO → Gavião Peixoto",
+    "3530607 MOJI DAS CRUZES → Mogi das Cruzes",
+    "3530805 MOJI MIRIM → Mogi Mirim",
+    "3548054 SANTO ANTÔNIO DE ARACANGUÁ → Santo Antônio do Aracanguá",
+    "3550001 SÃO LUÍS DO PARAITINGA → São Luiz do Paraitinga",
+    "3557006 VOTORANTIN → Votorantim",
+    "4128633 DOUTOR ULISSES → Doutor Ulysses",
+    "4201950 BALNEÁRIO ARROIO DO  SILVA → Balneário Arroio do Silva",
+    "4206108 GRÃO PARÁ → Grão-Pará",
+    "4302055 BENJAMIM CONSTANT DO SUL → Benjamin Constant do Sul",
+    "4317103 SANTANA DO LIVRAMENTO → Sant'Ana do Livramento",
+    "5107008 POXORÉO → Poxoréu",
+    "5107800 SANTO ANTÔNIO DO LEVERGER → Santo Antônio de Leverger",
+    "1100379 ALTO ALEGRE DO PARECIS → Alto Alegre dos Parecis",
+    "1101484 SÃO FELIPE D' OESTE → São Felipe D'Oeste",
+    "2516409 CAMPO DE SANTANA → Tacima",
+    "2513653 SANTARÉM → Joca Claudino",
+    "2513968 SÃO DOMINGOS DE POMBAL → São Domingos",
+    "2515401 SERIDÓ → São Vicente do Seridó",
+    "2400208 AÇU → Assú",
+    "2401206 ARÊS → Arez",
+    "2401305 AUGUSTO SEVERO → Campo Grande",
+    "2408409 OLHO-D'ÁGUA DO BORGES → Olho d'Água do Borges",
+    "2702801 FLEIXEIRAS → Flexeiras",
+    "2800100 AMPARO DE SÃO FRANCISCO → Amparo do São Francisco",
+    "2802601 GRACHO CARDOSO → Graccho Cardoso",
+    "2202455 CAPITÃO GERVÁSIO  OLIVEIRA → Capitão Gervásio Oliveira",
+    "1400605 SÃO LUIZ → São Luiz do Anauá",
+    "1706001 COUTO DE MAGALHÃES → Couto Magalhães",
+    "1708254 FORTALEZA DO TABOCÃO → Tabocão",
+    "1720499 SÃO VALÉRIO DA NATIVIDADE → São Valério",
+    "2601607 BELÉM DE SÃO FRANCISCO → Belém do São Francisco",
+    "2603926 CARNAUBEIRAS DA PENHA → Carnaubeira da Penha"
+  ]
+}

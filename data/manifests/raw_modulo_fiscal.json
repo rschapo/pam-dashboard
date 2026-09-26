@@ -1,0 +1,54 @@
+{
+  "dataset": "raw_modulo_fiscal",
+  "source": "INCRA — Índices Básicos (IE nº 5/2022 e tabela de 2013)",
+  "extraction_date": "2026-09-26",
+  "reference_date": "2022-08-01",
+  "source_files": [
+    "indices_basicos_2013_por_municipio.pdf",
+    "tabela-fmp_alterado.xls",
+    "ie_incra_5_2022.html"
+  ],
+  "source_hashes": [
+    {
+      "file": "indices_basicos_2013_por_municipio.pdf",
+      "sha256": "27a73b9360db24dc5d6eab40f83faf6d9dbccd1afdfe91776fbf431d828dbb0d"
+    },
+    {
+      "file": "tabela-fmp_alterado.xls",
+      "sha256": "048191e59288640b99131f61c0f7bb5f6e05ff79f90f07b6c848958c26addf5c"
+    },
+    {
+      "file": "ie_incra_5_2022.html",
+      "sha256": "341917224440c287c2de6b8cd8d181282d62707f94afa572d4f4f4131c18baf1"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 0,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "indices_basicos_2013_por_municipio.pdf",
+      "sha256": "27a73b9360db24dc5d6eab40f83faf6d9dbccd1afdfe91776fbf431d828dbb0d",
+      "bytes": 1831688
+    },
+    {
+      "file": "tabela-fmp_alterado.xls",
+      "sha256": "048191e59288640b99131f61c0f7bb5f6e05ff79f90f07b6c848958c26addf5c",
+      "bytes": 326656
+    },
+    {
+      "file": "ie_incra_5_2022.html",
+      "sha256": "341917224440c287c2de6b8cd8d181282d62707f94afa572d4f4f4131c18baf1",
+      "bytes": 892559
+    }
+  ],
+  "generated_at": "2026-09-26T08:01:44-04:00",
+  "urls": {
+    "indices_basicos_2013_por_municipio.pdf": "https://www.gov.br/incra/pt-br/acesso-a-informacao/indices_basicos_2013_por_municipio.pdf/@@display-file/file",
+    "tabela-fmp_alterado.xls": "https://www.gov.br/incra/pt-br/assuntos/noticias/reclassificacao-de-imoveis-rurais-beneficia-produtores-de-todo-o-pais/tabela-fmp_alterado.xls/@@download/file",
+    "ie_incra_5_2022.html": "https://www.in.gov.br/web/dou/-/instrucao-especial-n-5-de-29-de-julho-de-2022-418986404"
+  },
+  "pagina": "https://www.gov.br/incra/pt-br/assuntos/governanca-fundiaria/modulo-fiscal"
+}

@@ -11,7 +11,7 @@ por causa da allowlist de rede — ver `INITIAL_ASSESSMENT.md`). Regenere com
 |---|---|---|---|
 | `dim_municipio` | **Concluído** (offline) | 5.571 municípios, 27 UFs, 510 regiões imediatas | Malha base-mestra |
 | Área municipal (ha) | Pendente | `null` p/ todos até carregar IBGE Áreas | — |
-| `dim_modulo_fiscal` | Pipeline pronto | aguarda bruto INCRA | — |
+| `dim_modulo_fiscal` | **Concluído** (2026-09-26) | 5.569 municípios; sem índice só Fernando de Noronha e Boa Esperança do Norte | IE INCRA nº 5/2022 |
 | Censo Agro 2017 (temático) | Pipeline pronto | aguarda SIDRA (tabelas validadas por metadados) | 2017 |
 | `sncr_*` | Pipeline pronto | aguarda bruto por UF | — |
 | `pevs_municipio` | Pipeline pronto | aguarda consolidado PEVS | 2004–2024 |

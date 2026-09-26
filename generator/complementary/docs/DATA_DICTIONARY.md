@@ -26,8 +26,20 @@ Dimensão territorial oficial (universo completo; municípios sem produção **i
 Acompanha `dim_municipio_codigos_historicos.csv` (correspondência histórico→atual).
 
 ## dim_modulo_fiscal  (`dimensions/`)
-`cod_municipio`, `modulo_fiscal_ha`, `fracao_minima_parcelamento_ha`,
-`zona_tipica_modulo`, `zona_pecuaria`, `data_referencia`, `fonte`, `observacao`.
+Índices básicos do INCRA em vigor (IE nº 5/2022), uma linha por município: 5.569. Ficam
+sem linha Fernando de Noronha e Boa Esperança do Norte, que o INCRA não lista. Fontes e
+conferência em METHODOLOGY, "Fonte do módulo fiscal".
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| cod_municipio | str(7) | Código IBGE, como o INCRA o publica |
+| modulo_fiscal_ha | float | Módulo fiscal (ha), de 5 a 110. A área do imóvel dividida por ele dá o número de módulos fiscais: pequena propriedade até 4, média de 4 a 15, grande acima de 15 (Lei 8.629/1993) |
+| fracao_minima_parcelamento_ha | float | Menor área (ha) em que um imóvel pode ser desmembrado; imóvel menor que ela é minifúndio |
+| zona_tipica_modulo | str | Zona típica de módulo, de A1 a C2: a da região geográfica imediata |
+| zona_pecuaria | int | Zona de pecuária, de 1 a 5 |
+| data_referencia | str | `2022-08-01`, publicação da IE nº 5/2022 |
+| fonte | str | INCRA — Índices Básicos (IE nº 5/2022; tabela de 2013) |
+| observacao | str | Só no DF: a zona típica é a de 2013, porque o Anexo III não a informa |
 
 ## censo_agro_<tema>  (`municipality/`)
 Colunas: `cod_municipio`, `ano_referencia`, `categoria` (o tema), `subcategoria`,
@@ -110,6 +122,7 @@ conta contra o consolidado.
 
 | Campo | Tipo | Descrição |
 |---|---|---|
+| modulo_fiscal_ha | float | Módulo fiscal do município (ha), da `dim_modulo_fiscal`; `null` em Fernando de Noronha e Boa Esperança do Norte |
 | valor_producao_florestal | float | Valor da produção da silvicultura no ano, R$ mil nominais; em cada município e somado no Brasil, é o Total do IBGE. `0` quando a fonte informa zero (valor arredondado); `null` sem silvicultura no ano ou sem informação |
 | produto_florestal_predominante | str | Produto de maior valor no ano, com o rótulo do SIDRA ("1.2 - Lenha", "2.3 - Resina"). É o `produto`, e não o `grupo`: o grupo só junta casca de acácia-negra, folha de eucalipto e resina, e o produto diz qual deles. No empate, o primeiro rótulo; `null` sem valor positivo |
 | silvicultura_presente | bool | O município tem valor da silvicultura no ano (o zero conta) |

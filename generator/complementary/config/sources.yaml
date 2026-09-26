@@ -70,13 +70,13 @@ fontes:
 
   incra_modulo_fiscal:
     instituicao: INCRA
-    descricao: "Módulo fiscal e fração mínima de parcelamento por município"
-    endpoint: "https://www.gov.br/incra/pt-br/assuntos/governanca-fundiaria"
-    referencia_norma: "Instrução Especial INCRA nº 20/1980 e atualizações"
-    formato_original: "XLSX/CSV (Índices Básicos)"
-    download_mode: manual        # tabela de índices básicos; confirmar link vigente
-    destino_raw: "data/raw/incra/modulo_fiscal_municipios.csv"
-    verificar: true
+    descricao: "Índices básicos por município: módulo fiscal, fração mínima de parcelamento, zona típica de módulo e zona de pecuária"
+    endpoint: "https://www.gov.br/incra/pt-br/assuntos/governanca-fundiaria/modulo-fiscal"
+    referencia_norma: "Instrução Especial INCRA nº 5/2022 (DOU de 01/08/2022)"
+    formato_original: "PDF (Índices Básicos de 2013), XLS (FMP alterada pela IE nº 5/2022), HTML (IE no DOU)"
+    download_mode: automatico    # links em download/download_modulo_fiscal.py; a consulta online tem CAPTCHA e não é usada
+    destino_raw: "data/raw/incra/"
+    verificar: false
 
   incra_sncr:
     instituicao: INCRA

@@ -1,7 +1,7 @@
 {
   "dataset": "rural_profile_stage1",
   "source": "Composição Etapa 1 (MF/SNCR/Censo/PEVS)",
-  "extraction_date": "2026-09-25",
+  "extraction_date": "2026-09-26",
   "reference_date": null,
   "source_files": [],
   "source_hashes": [],
@@ -13,14 +13,14 @@
   "output_files": [
     {
       "file": "rural_profile_stage1.parquet",
-      "sha256": "cc5df88501104655b4feee43efa03a8ee24819bc007747964757b29bb94c1421",
-      "bytes": 112973
+      "sha256": "34cd7459407648921ae1af359544cb3eeeb732a22b2a4892175a302d46336ae6",
+      "bytes": 117135
     },
     {
       "file": "rural_profile_stage1.csv",
-      "sha256": "4786bf4df99b572558e390a0531ac1302fc0775415b7d0ba9243e6b7210c1681",
-      "bytes": 312528
+      "sha256": "1cda8f3031b7115dc7fc2eea6a442e6af60c621be0b7edc375596088ec45e4c9",
+      "bytes": 340381
     }
   ],
-  "generated_at": "2026-09-25T10:35:59-04:00"
+  "generated_at": "2026-09-26T08:03:45-04:00"
 }

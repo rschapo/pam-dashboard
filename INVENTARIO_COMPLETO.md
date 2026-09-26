@@ -3,7 +3,7 @@
 > Levantamento profundo de **tudo que existe** na pasta única do projeto
 > (`Dados IBGE PAM Culturas/pam-dashboard`) e de **tudo que está de fato
 > publicado** em https://boisterous-maamoul-a8039b.netlify.app/
-> Gerado em: 2026-08-16 · Repositório: https://github.com/rschapo/pam-dashboard
+> Gerado em: 2026-08-16 · Atualizado em: 2026-09-26 · Repositório: https://github.com/rschapo/pam-dashboard
 
 ---
 
@@ -13,98 +13,104 @@ Este projeto tem **duas camadas bem distintas** e é importante não confundi-la
 
 1. **PUBLICADO** — o que está de fato no ar, servindo o dashboard público.
 2. **BASE COMPLEMENTAR** — dados coletados, processados e validados dentro
-   da mesma pasta única (sem duplicação em nenhum outro projeto), mas ainda
-   **não conectados** ao dashboard público — são o insumo para a próxima
-   fase (dashboard territorial / cruzamento AOR).
+   da mesma pasta única (sem duplicação em nenhum outro projeto). Parte já
+   alimenta o painel (CAR, economia, uso do solo, tratores e crédito); o resto
+   (perfil rural, módulo fiscal, temas do Censo) é insumo para a próxima fase
+   (dashboard territorial / cruzamento AOR).
 
 Toda a base usa a mesma chave universal: **`cod_ibge` / `cod_municipio`**
 (código IBGE de 7 dígitos). Isso é o que torna tudo abaixo cruzável entre si.
 
+Os **brutos** ficam fora da pasta sincronizada, em
+`D:\00-Claude_Fora_Drive\pam-dashboard\raw` (caminho gravado em `data/raw_dir.txt`);
+abaixo, `<brutos>` é essa pasta. Em `data/` ficam os processados e os manifestos.
+
 ---
 
-## PARTE 1 — O que está PUBLICADO (verificado ao vivo, HTTP 200)
+## PARTE 1 — O que está PUBLICADO (verificado ao vivo em 2026-09-26, HTTP 200)
 
-| Arquivo | Domínio | Tamanho | Cobertura | Status HTTP |
-|---|---|---|---|---|
-| `data/pkg.json` | 🌾 Agrícola (PAM) | 16,3 MB | 27 UF · 557 microrregiões · 5.536 municípios · 2004–2024 | ✅ 200 |
-| `data/ppm.json` | 🐄 Pecuária (PPM) | 19,2 MB | 27 UF · 558 microrregiões · 5.546 municípios · 2004–2024 | ✅ 200 |
-| `data/pevs.json` | 🌲 Silvicultura (PEVS) | 17,1 MB | 27 UF · 556 microrregiões · 5.446 municípios · 2004–2024 | ✅ 200 |
-| `data/geo_uf.json` | Malha de estados | 0,25 MB | 27 UF | ✅ 200 |
-| `data/geo_mic.json` | Malha de microrregiões | 4,3 MB | 558 microrregiões | ✅ 200 |
-| `assets/logo.png` | Logo AgroCore | 0,13 MB | — | ✅ 200 |
-| `js/main.js` / `css/style.css` | Frontend | — | — | ✅ 200 |
+| Arquivo | Aba | Tamanho | Cobertura |
+|---|---|---|---|
+| `data/pkg.json` | 🌾 Agrícola (PAM) | 17,1 MB | 27 UF · 557 microrregiões · 5.540 municípios · 2004–2025 |
+| `data/ppm.json` | 🐄 Pecuária (PPM) | 19,2 MB | 27 UF · 558 microrregiões · 5.546 municípios · 2004–2024 |
+| `data/pevs.json` | 🌲 Silvicultura (PEVS) | 20,0 MB | 27 UF · 557 microrregiões · 5.474 municípios · 2004–2025 |
+| `data/econ.json` | 📊 Economia | 0,6 MB | 5.571 municípios · PIB 2023 · VAB 2021 |
+| `data/mapbiomas_mun.json` | 🗺️ Uso do Solo | 0,7 MB | 5.565 municípios · 2024 · Coleção 10.1 |
+| `data/maquinas.json` | 🚜 Tratores | 0,3 MB | 5.466 municípios · Censo Agro 2017 (SIDRA 6870) |
+| `data/credito.json` | 💰 Crédito | 0,4 MB | 5.465 municípios · 2024 · BCB/SICOR |
+| `data/car.json` | 🌳 CAR | 0,8 MB | 5.571 municípios · 27 UF · 5 camadas ambientais |
+| `data/geo_uf.json` | Malha de estados | 0,25 MB | 27 UF |
+| `data/geo_mic.json` | Malha de microrregiões | 4,3 MB | 558 microrregiões |
+| `data/geo_mun.json` | Malha municipal | 16,4 MB | 5.570 municípios |
 
-**O dashboard hoje tem 3 domínios navegáveis** (🌾 Agrícola / 🐄 Pecuária /
-🌲 Silvicultura), cada um com 5 visões (Mapa Brasil, Estado/Micro,
-Municípios, Série Histórica, Rankings), coroplético até o nível de
-**microrregião** (não município — a malha municipal já existe mas ainda não
-foi ligada, ver Parte 2).
+**O dashboard tem 8 abas de tema** (🌾 Agrícola, 🐄 Pecuária, 🌲 Silvicultura,
+📊 Economia, 🗺️ Uso do Solo, 🚜 Tratores, 💰 Crédito, 🌳 CAR) e, conforme o tema,
+até 6 visões (Mapa Brasil, Estado/Micro, Municípios, Série Histórica, Rankings,
+Concentração). O mapa chega ao **município**: a malha municipal é carregada sob
+demanda.
 
-Deploy automático via Netlify a cada push na branch `main`. Commit publicado
-mais recente: `0a1d365` (banner de consentimento de cookies / LGPD).
+Deploy automático via Netlify a cada push na branch `main`. Conferido em
+2026-09-26: `pkg.json`, `pevs.json` e `car.json` no ar são idênticos aos do
+repositório.
 
-### Conteúdo detalhado dos 3 domínios publicados
+### Conteúdo detalhado dos domínios publicados
 
-**Agrícola (PAM)** — 67 culturas, agrupadas em Permanentes (33) / Temporárias
-(34) / 🌾 Colheitadeiras (14, subgrupo de grãos) / 🚜 Tratores (20, subgrupo
-calculado). Métricas: Área Colhida (ha), Produção (ton), Valor (mil R$),
-Rendimento (kg/ha). Fonte: SIDRA tabelas 1612/1613.
+**Agrícola (PAM)** — 81 culturas: Permanentes (36) / Temporárias (45), com os
+subgrupos 🌾 Colheitadeiras (14) e 🚜 Tratores (31). Métricas: Área Colhida (ha),
+Produção (ton), Valor (mil R$), Rendimento (kg/ha). Fonte: SIDRA tabelas 1612/1613.
 
-**Pecuária (PPM)** — 10 categorias de rebanho (Bovino, Bubalino, Caprino,
-Codornas, Equino, Galináceos, Ovino, Suíno) + 6 de produção animal (Leite,
-Ovos de galinha/codorna, Mel, Lã, Casulos do bicho-da-seda). Métricas:
-Quantidade (unidade varia por categoria) + Valor (mil R$, só produção
-animal). Fonte: SIDRA tabelas 3939/74.
+**Pecuária (PPM)** — 10 categorias de rebanho + 6 de produção animal (leite, ovos,
+mel, lã, casulos). Métricas: Quantidade (unidade varia por categoria) + Valor (mil
+R$, só produção animal). Fonte: SIDRA tabelas 3939/74. **A PPM 2025 ainda não saiu**:
+em 2026-09-26 as tabelas terminam em 2024, e o calendário do IBGE não traz data até
+2027 (a PPM 2024 saiu em 18/09/2025).
 
-**Silvicultura (PEVS)** — 21 produtos de floresta plantada (carvão vegetal,
-lenha, madeira em tora — hierárquicos) + 52 de extração vegetal nativa + 3
-espécies de área plantada (Eucalipto/Pinus/Outras). Fonte: SIDRA tabelas
-291/289/5930.
+**Silvicultura (PEVS)** — 29 categorias de silvicultura (produtos, subtotais e, desde
+2013, a abertura por espécie), 62 de extração vegetal e 7 de área plantada. A série
+de área plantada começa em 2013. Fonte: SIDRA tabelas 291/289/5930.
+
+**Economia, Uso do Solo, Tratores e Crédito** — indicadores por município, das
+bases da Parte 3 (PIB/VAB do IBGE, MapBiomas, Censo Agro 2017 e SICOR).
+
+**CAR** — imóveis, área declarada, cobertura do território e sobreposição, mais as
+5 camadas ambientais dissolvidas (vegetação nativa, reserva legal, APP, área
+consolidada e uso restrito), em hectares e em % do território (ver 3.3).
 
 ---
 
 ## PARTE 2 — Pronto e validado, mas AINDA NÃO publicado
 
-Estes arquivos já existem em `public/data/` **localmente**, prontos no
-formato que o frontend consome, mas **não foram commitados nem deployados**
-(confirmado: HTTP 404 no site ao vivo). Foram gerados por uma sessão anterior
-(11/08) a partir dos dados processados descritos na Parte 3.
+| Arquivo | Conteúdo | Municípios |
+|---|---|---|
+| `data/frontend/perfil_rural.json` | Perfil rural: módulo fiscal, Censo Agro, silvicultura, CAR e MapBiomas | 5.571 |
+| `data/processed/dimensions/dim_modulo_fiscal` | Índices básicos do INCRA (módulo fiscal, fração mínima, zona típica) | 5.569 |
+| `data/processed/municipality/censo_agro_*` | Temas do Censo Agro 2017 com as categorias (o de máquinas já alimenta a aba Tratores) | 5.563 no resumo |
 
-| Arquivo local | Conteúdo | Tamanho | Municípios |
-|---|---|---|---|
-| `public/data/geo_mun.json` | Malha municipal (Brasil inteiro) | 15,6 MB | 5.570, chave `{cod_ibge, uf}` |
-| `public/data/econ.json` | PIB/VAB por município e UF (versão compacta) | 0,6 MB | 5.571 |
-| `public/data/mapbiomas_mun.json` | Uso do solo por município (versão compacta) | 0,66 MB | 5.565 |
+Os três artefatos da versão anterior desta parte (`geo_mun.json`, `econ.json` e
+`mapbiomas_mun.json`) já estão publicados.
 
-**O que isso destrava, quando conectado:** coroplético em nível de
-**município** (hoje só microrregião), e dois domínios novos possíveis —
-contexto econômico (PIB/VAB) e uso físico do solo (MapBiomas) — como 4º/5º
-domínio do dashboard, ou como camadas de contexto dentro dos domínios
-existentes.
-
-**Pendência real:** decidir o desenho de UI (novo domínio? camada de mapa
-adicional? painel lateral?) e então: `git add -f public/data/{geo_mun,econ,mapbiomas_mun}.json`
-+ trecho de frontend + commit + push.
+**Pendência real:** decidir se o perfil rural entra no painel (aba própria ou painel
+lateral do município) e então ligar o `perfil_rural.json` ao frontend.
 
 ---
 
 ## PARTE 3 — Base complementar completa (dentro da pasta única, `data/`)
 
-Tudo abaixo está em `pam-dashboard/data/` (raw + processed + manifests) —
-**nenhuma duplicação em outro projeto** (a antiga `Base_Municipios_Brasil`
-foi auditada, migrada e apagada nesta mesma sessão de trabalho).
+Os processados e os manifestos estão em `pam-dashboard/data/` (4,4 GB de
+processados); os brutos, em `<brutos>` — **nenhuma duplicação em outro projeto** (a
+antiga `Base_Municipios_Brasil` foi auditada, migrada e apagada).
 
 ### 3.1 Geografia — ✅ validado
 
 | Tabela | Cobertura | Fonte |
 |---|---|---|
 | `data/processed/dimensions/dim_municipio.csv` | 5.570 municípios, hierarquia completa (micro/meso/região imediata/intermediária) | IBGE Localidades |
-| `data/raw/ibge/malha_municipios.gpkg` | Malha vetorial municipal (46 MB) | IBGE Malhas v3 |
-| `data/raw/ibge/areas_municipios.csv` | Área territorial (km²) por município | IBGE Áreas Territoriais 2025 |
+| `<brutos>/ibge/malha_municipios.gpkg` | Malha vetorial municipal (46 MB) | IBGE Malhas v3 |
+| `<brutos>/ibge/areas_municipios.csv` | Área territorial (km²) por município | IBGE Áreas Territoriais 2025 |
 
-### 3.2 Uso do solo físico — MapBiomas — ✅ validado nesta sessão
+### 3.2 Uso do solo físico — MapBiomas — ✅ validado
 
-- **Bruto:** `data/raw/mapbiomas/mapbiomas_cobertura_municipios.xlsx` (77 MB,
+- **Bruto:** `<brutos>/mapbiomas/mapbiomas_cobertura_municipios.xlsx` (77 MB,
   Coleção 10.1) + `mapbiomas_pastagem_municipios.xlsx` (bônus, não
   processado — dados de vigor/idade de pastagem, não simples área)
 - **Processado:** `data/processed/municipality/mapbiomas_municipio.csv`
@@ -116,26 +122,28 @@ foi auditada, migrada e apagada nesta mesma sessão de trabalho).
 - **Bônus:** `car_mapbiomas_comparacao.csv` — reconciliação área CAR ×
   MapBiomas por município, já calculada
 
-### 3.3 Fundiário — CAR (Cadastro Ambiental Rural) — ⚠️ presente, não auditado nesta sessão
+### 3.3 Fundiário — CAR (Cadastro Ambiental Rural) — ✅ completo e validado (2026-09)
 
-- **Bruto:** `data/raw/car/<UF>/` — 27 estados, shapefiles/geojson de
-  imóveis, APP, reserva legal, vegetação nativa, uso restrito, área
-  consolidada (**11 GB total**)
-- **Processado:** `data/processed/geospatial/` (**3,9 GB**) — parquets de
-  imóveis validados por UF + `car_municipio_summary.csv`:
-  - 5.562 municípios · **8.267.002 cadastros** (8.266.504 válidos)
-  - Área geométrica união (pegada física real): **587,1 Mha** (~69% do
-    território nacional — plausível para um cadastro autodeclaratório)
-  - Colunas de vegetação nativa/reserva legal/APP/área consolidada
-    **presentes mas parecem subpopuladas** nacionalmente (somas muito baixas
-    — 13,4 Mha de vegetação nativa é implausível para o Brasil todo; a
-    camada ambiental parece ter sido processada só para alguns estados via
-    `car_ambiental_municipio_<UF>.csv`). **Não validei este ponto — revisar
-    antes de usar essas colunas específicas.**
-- **Nota metodológica (já documentada no projeto):** usar a área
-  *geométrica união*, nunca a *declarada* — CAR é autodeclaratório.
+- **Bruto:** as 135 camadas do SICAR (27 UFs × 5) em `<brutos>/car/` (219 GB
+  extraídos), conferidas byte a byte contra os ZIPs; os ZIPs (86 GB, em
+  `D:\00-Claude_Fora_Drive\pam-dashboard\car-zips`) ficam guardados por um período.
+  Na Bahia, também o CEFIR (`<brutos>/cefir/`).
+- **Processado:** `data/processed/geospatial/` — imóveis validados por UF,
+  `car_municipio_summary` (cadastros, área geométrica união, sobreposição) e, por
+  município, as **5 camadas ambientais dissolvidas** (`car_ambiental_dissolve_<UF>`:
+  a área onde cadastros se sobrepõem conta uma vez). BA e SE declaram de outro jeito
+  e têm medidas compostas (`car_ambiental_composta_<UF>`). A APP dissolvida soma
+  30,7 Mi ha, 3,6% do território.
+- **Validação contra o MapBiomas** por UF (`processed/state/car_mapbiomas_uf`): na
+  mediana das UFs, a vegetação nativa fica em 73% do esperado e a área consolidada em
+  86% da agropecuária, com correlações por município de 0,90 e 0,94.
+- **Limites e ressalvas por UF:** `generator/complementary/docs/CAR_LIMITATIONS.md`.
+  As colunas ambientais do `car_municipio_summary` são soma bruta (contam a
+  sobreposição duas vezes); a medida certa é a dissolvida.
+- **Nota metodológica:** usar a área *geométrica união*, nunca a *declarada* — CAR é
+  autodeclaratório.
 
-### 3.4 Econômico — ✅ validado nesta sessão (2 correções de bug reais)
+### 3.4 Econômico — ✅ validado (2 correções de bug reais)
 
 | Tabela | Cobertura | Números-chave (Brasil, ano mais recente) |
 |---|---|---|
@@ -173,11 +181,18 @@ só a linha Total: no Brasil, **5.073.324** estabelecimentos, o número oficial 
   nem no antecessor — os dados ficam **isolados**, não cruzáveis
   automaticamente com o resto da base por enquanto.
 
-### 3.7 Módulo Fiscal / SNCR / INCRA — não coletado
+### 3.7 Módulo Fiscal (INCRA) — ✅ coletado em 2026-09-26 · SNCR — não coletado
 
-`data/raw/sncr/` e `data/raw/incra/` existem como pastas vazias — scripts de
-coleta (`download_modulo_fiscal.py`, `process_sncr.py` etc.) já prontos em
-`generator/complementary/`, mas sem dado bruto baixado ainda.
+- **Módulo fiscal:** `data/processed/dimensions/dim_modulo_fiscal` — módulo fiscal,
+  fração mínima de parcelamento, zona típica de módulo e zona de pecuária em vigor
+  (IE INCRA nº 5/2022) para **5.569 municípios**; só Fernando de Noronha e Boa
+  Esperança do Norte (MT, instalado em 2025) ficam sem índice. Montado de três peças
+  oficiais baixadas automaticamente para `<brutos>/incra/` (tabela de 2013 em PDF,
+  planilha da IE de 2022 e a IE no DOU) e conferido contra o trecho do Anexo IV da
+  IE: nenhuma divergência em 814 municípios. Já entra no perfil rural
+  (`modulo_fiscal_ha`). Método em `generator/complementary/docs/METHODOLOGY.md`.
+- **SNCR:** `<brutos>/sncr/` continua vazia — o INCRA publica por UF, sem endpoint
+  automatizável; o script (`download_sncr.py`) só inventaria o que for colocado lá.
 
 ---
 
@@ -192,16 +207,18 @@ pam-dashboard/
 │
 ├── generator/complementary/      ← pipeline territorial (tudo da Parte 3)
 │   ├── common.py                 ← utilitários compartilhados (chave cod_ibge, SIDRA client, manifesto)
-│   ├── download/                 ← 1 script por fonte (ibge, mapbiomas, car, censo_agro, demografia_pib,
-│   │                                financas, gestao, credito_rural, sncr, modulo_fiscal)
+│   ├── download/                 ← 1 script por fonte (ibge, mapbiomas, car, cefir, censo_agro,
+│   │                                demografia_pib, financas, gestao, credito_rural, sncr, modulo_fiscal)
 │   ├── process/                  ← 1 script por fonte, mesma convenção
 │   ├── config/                   ← land_use_classes.csv, forestry_groups.csv, car_status_map.csv etc.
 │   └── docs/                     ← METHODOLOGY.md, DATA_DICTIONARY.md, INTEGRATION_PLAN.md, SOURCES.md,
 │                                    QUALITY_REPORT.md, CAR_LIMITATIONS.md, CAR_SOURCE_MATRIX.md
 │
 ├── data/
-│   ├── raw/          ← arquivos brutos por fonte (ibge, mapbiomas, car, censo_agro, siconfi, bcb, tse, sncr, incra)
+│   ├── raw_dir.txt   ← aponta os brutos, fora da pasta sincronizada (ibge, mapbiomas, car, cefir,
+│   │                    censo_agro, siconfi, bcb, tse, sncr, incra)
 │   ├── processed/    ← tabelas finais (dimensions, geospatial, municipality, state), .csv + .parquet
+│   ├── frontend/     ← JSON do perfil rural (fora do site)
 │   └── manifests/    ← 1 JSON por dataset: fonte, data de extração, hash SHA-256, contagens, avisos
 │
 └── public/data/      ← o que É PUBLICADO (só o que está commitado no git chega aqui em produção)
@@ -213,26 +230,25 @@ e avisos — rastreabilidade completa de cada dataset.
 
 **Confirmação de pasta única:** a antiga `Agrocore (Estudos)/Base_Municipios_Brasil`
 (0,61 GB, duplicava PAM/PPM/PEVS e tinha 4 camadas únicas) foi totalmente
-migrada para dentro desta pasta e **apagada** nesta sessão. Não existe mais
-nenhuma cópia paralela de dado de produção agro em nenhum outro projeto.
+migrada para dentro desta pasta e **apagada**. Não existe mais nenhuma cópia
+paralela de dado de produção agro em nenhum outro projeto.
 
 ---
 
 ## PARTE 5 — Pendências e cautelas para quem for usar esta base
 
-1. **Publicar os 3 novos artefatos da Parte 2** (`geo_mun.json`, `econ.json`,
-   `mapbiomas_mun.json`) exige decisão de design de UI antes do
-   commit+push — hoje eles só existem localmente.
-2. **CAR — colunas ambientais** (vegetação nativa, reserva legal, APP,
-   área consolidada) parecem incompletas nacionalmente — revisar antes de
-   usar para qualquer análise de "pegada ambiental".
-3. **Censo Agropecuário — resolvido em 25/09/2026.** O `numero_estabelecimentos`
-   do resumo tinha o dobro do valor oficial; agora soma os 5.073.324
-   estabelecimentos do Censo 2017, e os temas trazem as categorias (ver a
-   seção 3.5).
-4. **Gestão (TSE)** não tem `cod_ibge` — só isolado por enquanto; precisa de
+1. **PPM 2025** — aguardar o IBGE (sem data no calendário em 2026-09-26). Quando
+   sair, baixar e regenerar o `ppm.json`; o painel já aceita anos diferentes por aba.
+2. **Perfil rural no painel** — o `perfil_rural.json` está pronto, mas ligá-lo ao
+   frontend depende de decidir o desenho (ver Parte 2).
+3. **Gestão (TSE)** não tem `cod_ibge` — só isolado por enquanto; precisa de
    um de-para TSE↔IBGE para entrar nos cruzamentos.
-5. **SNCR, INCRA, Módulo Fiscal** — scripts prontos, nada baixado ainda.
-6. Todo o resto (PAM, PPM, PEVS, geo_mun, MapBiomas, demografia_pib,
-   crédito rural, finanças) foi **validado nesta sessão** contra números
-   oficiais conhecidos e bate.
+4. **SNCR** — nada baixado: o INCRA publica por UF, e o download é manual.
+5. **CAR** — ler as ressalvas por UF em `CAR_LIMITATIONS.md` antes de comparar
+   estados (BA e SE usam as medidas compostas; há UFs com camada parcial na base
+   nacional). Os ZIPs do CAR (86 GB) ficam guardados por um período.
+6. **`QUALITY_REPORT.md`** está no estado de 2026-07-28 e precisa ser refeito: fora
+   o módulo fiscal, ainda marca como pendentes camadas já processadas.
+7. Resolvidos desde a versão anterior: publicação de `geo_mun`/`econ`/`mapbiomas_mun`,
+   camadas ambientais do CAR (medida dissolvida, 27 UFs), Censo Agropecuário (5.073.324
+   estabelecimentos, com as categorias) e módulo fiscal.
