@@ -175,6 +175,11 @@ function getAno() {
   const ad = anosDoDominio(), i = idxDominio(state.anoIdx);
   return i >= 0 ? ad[i] : anos[state.anoIdx];
 }
+// Ano do seletor nos títulos. Fonte de recorte único já carrega o próprio ano no
+// rótulo da métrica; o do seletor não se aplica a ela e só confundiria ao lado.
+function anoNoTitulo(antes = ' (', depois = ')') {
+  return baseDominioSimples() ? '' : antes + getAno() + depois;
+}
 
 function getActiveCulturas() {
   if (state.cultura) return [state.cultura];
@@ -577,7 +582,7 @@ function updateMapMun() {
     }
   }).addTo(mapMun);
   try { mapMun.fitBounds(layerMunMic.getBounds(), { padding: [10, 10] }); } catch (e) {}
-  if (titleEl) titleEl.textContent = '🗺️ Municípios — ' + (ufs_info[uf]?.n || uf) + ' (' + getAno() + ')';
+  if (titleEl) titleEl.textContent = '🗺️ Municípios — ' + (ufs_info[uf]?.n || uf) + anoNoTitulo();
 }
 
 
@@ -684,8 +689,8 @@ function updateMunicipio() {
     .sort((a, b) => b.v - a.v);
 
   const ufName = ufs_info[uf]?.n || uf;
-  if (hint) hint.textContent = `${ufName} — ${muns.length} municípios com dados em ${getAno()}`;
-  if (tblTitle) tblTitle.textContent = `🏆 Ranking — ${ufName} (${getAno()})`;
+  if (hint) hint.textContent = `${ufName} — ${muns.length} municípios com dados${anoNoTitulo(' em ', '')}`;
+  if (tblTitle) tblTitle.textContent = `🏆 Ranking — ${ufName}${anoNoTitulo()}`;
 
   if (tbl) {
     const hdr = `<thead><tr><th>#</th><th>Município</th><th>Microrregião</th><th>${metLabel()}</th></tr></thead>`;
@@ -703,7 +708,7 @@ function updateMunicipio() {
   }
 
   const topEl = document.getElementById('mun-chart-top-title');
-  if (topEl) topEl.textContent = `📊 Top 15 Municípios — ${ufName} (${getAno()})`;
+  if (topEl) topEl.textContent = `📊 Top 15 Municípios — ${ufName}${anoNoTitulo()}`;
   updateMunChartTop(muns.slice(0, 15));
 
   const histEl = document.getElementById('mun-chart-hist-title');
@@ -1028,13 +1033,19 @@ function updateRanking() {
         }
       }
     });
-    document.getElementById('rank-uf-title').textContent = `🏆 Top Estados — ${metLabel()} (${getAno()})`;
+    document.getElementById('rank-uf-title').textContent = `🏆 Top Estados — ${metLabel()}${anoNoTitulo()}`;
   }
 
-  // Top culturas / categorias
-  const dom = state.domain;
+  // Top culturas / categorias. Fonte de recorte único não se abre por cultura: o
+  // quadro mostra os maiores municípios do recorte, como o de microrregiões abaixo.
+  const dom = state.domain, simples = !!baseDominioSimples(), ufSel = state.ufSel;
   let cultVals;
-  if (dom === 'pecuaria') {
+  if (simples) {
+    cultVals = Object.keys(mun_info)
+      .filter(id => !ufSel || mun_info[id].uf === ufSel)
+      .map(id => ({ c: mun_info[id].n, v: calcMunVal(id, M, ai) }))
+      .filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  } else if (dom === 'pecuaria') {
     cultVals = getActiveCategoriasPec().map(c => {
       const v = Object.keys(ufs_info).reduce((s, u) => s + (ppm_est_data?.[u]?.[c]?.[M]?.[idxDominio(ai)] || 0), 0);
       return { c, v };
@@ -1071,10 +1082,11 @@ function updateRanking() {
         }
       }
     });
-    document.getElementById('rank-cult-title').textContent =
-      (dom === 'pecuaria' ? '🐄 Top Categorias'
+    document.getElementById('rank-cult-title').textContent = simples
+      ? `🏘️ Top 15 Municípios — ${ufSel ? (ufs_info[ufSel]?.n || ufSel) : 'Brasil'}`
+      : (dom === 'pecuaria' ? '🐄 Top Categorias'
         : dom === 'silvicultura' ? '🌲 Top Produtos'
-        : '🌱 Top Culturas') + ` — ${metLabel()} (${getAno()})`;
+        : '🌱 Top Culturas') + ` — ${metLabel()}${anoNoTitulo()}`;
   }
 
   // Top microrregiões
@@ -1104,8 +1116,7 @@ function updateRanking() {
     });
     document.getElementById('rank-mic-title').textContent =
       '📍 Top 20 Microrregiões — ' +
-      (micFilter ? (ufs_info[micFilter]?.n || micFilter) : 'Brasil') +
-      ' (' + getAno() + ')';
+      (micFilter ? (ufs_info[micFilter]?.n || micFilter) : 'Brasil') + anoNoTitulo();
   }
 }
 
@@ -1602,9 +1613,7 @@ function updateConcentracao() {
   const c = calcularConcentracao();
   const set = (id, txt) => { const e = document.getElementById(id); if (e) e.textContent = txt; };
   const escopo = nomeEscopoAtual();
-  // Fonte de recorte único já carrega o próprio ano no rótulo da métrica; o ano
-  // do seletor não se aplica a ela e só confundiria ao lado.
-  const quando = baseDominioSimples() ? '' : ' · ' + getAno();
+  const quando = anoNoTitulo(' · ', '');
 
   if (!c) {
     ['conc-hhi', 'conc-gini', 'conc-top10', 'conc-p50', 'conc-p80', 'conc-n']
