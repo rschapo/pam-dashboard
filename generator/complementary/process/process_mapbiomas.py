@@ -27,8 +27,27 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from common import (  # noqa: E402
-    RAW_DIR, PROCESSED_DIR, CONFIG_DIR, cod_mun7, save_table, write_manifest, today_iso,
+    RAW_DIR, PROCESSED_DIR, CONFIG_DIR, MANIFEST_DIR, cod_mun7, save_table, write_manifest, today_iso,
 )
+
+# A planilha grafa cinco municípios de outro jeito que o IBGE. Alias explícito, da
+# chave do MapBiomas para a do IBGE (nome sem acento, em maiúsculas, | UF).
+ALIASES_MAPBIOMAS = {
+    "SAO LUIZ|RR": "SAO LUIZ DO ANAUA|RR",
+    "ACU|RN": "ASSU|RN",
+    "ARES|RN": "AREZ|RN",
+    "GRACHO CARDOSO|SE": "GRACCHO CARDOSO|SE",
+    "BARAO DE MONTE ALTO|MG": "BARAO DO MONTE ALTO|MG",
+}
+
+# As lagoas dos Patos e Mirim não pertencem a município: o IBGE as trata como áreas
+# à parte, com código próprio (áreas territoriais: 2.884 km² e 10.199 km², o que o
+# MapBiomas mede nelas). Ficam com esse código aqui; o painel, que soma municípios,
+# as deixa fora (export_uso_solo.py).
+AREAS_FORA_DE_MUNICIPIO = {
+    "4300001": ("Lagoa Mirim", "RS"),
+    "4300002": ("Lagoa dos Patos", "RS"),
+}
 
 
 def _classes() -> pd.DataFrame:
@@ -84,9 +103,25 @@ def _resolver_cod_ibge(raw: pd.DataFrame, c_municipio: str, c_uf: str) -> tuple[
     ref = pd.read_csv(ref_path, sep=";", dtype=str)
     ref["_chave"] = ref["nome_municipio"].map(_norm_nome) + "|" + ref["sigla_uf"].str.upper()
     lookup = dict(zip(ref["_chave"], ref["cod_ibge"].map(cod_mun7)))
+    for alias, oficial in ALIASES_MAPBIOMAS.items():
+        lookup[alias] = lookup[oficial]          # KeyError se o IBGE mudar o nome: rever o alias
+    for cod, (nome, uf) in AREAS_FORA_DE_MUNICIPIO.items():
+        lookup[_norm_nome(nome) + "|" + uf] = cod
 
     chaves = raw[c_municipio].map(_norm_nome) + "|" + raw[c_uf].str.upper()
     return lookup, chaves
+
+
+def _data_download() -> str:
+    """Data em que a planilha foi baixada (manifesto do download), e não a do
+    processamento: rodar de novo não pode fazer o dado parecer mais novo."""
+    p = MANIFEST_DIR / "raw_mapbiomas.json"
+    if p.exists():
+        import json
+        data = json.loads(p.read_text(encoding="utf-8")).get("extraction_date")
+        if data:
+            return data
+    return today_iso()
 
 
 def build(colecao=None, versao=None) -> pd.DataFrame:
@@ -181,8 +216,12 @@ def build(colecao=None, versao=None) -> pd.DataFrame:
     df = pd.DataFrame(rows)
     rejeitados = int(df["cod_municipio"].isna().sum())
     if rejeitados:
-        print(f"  [AVISO] {rejeitados:,} linha(s) sem cod_municipio resolvido — mantidas com null "
-              "(não descartamos silenciosamente; ver amostra de combinações sem match acima)")
+        # O que sobra são fragmentos de borda: pedaços de um município que a planilha
+        # rotula com a UF vizinha (Itaituba em AM, Oriximiná em RR…), ~70 ha no total.
+        ult = df["ano"].max()
+        area = df.loc[df["cod_municipio"].isna() & (df["ano"] == ult), "area_ha"].sum()
+        print(f"  [AVISO] {rejeitados:,} linha(s) sem cod_municipio resolvido ({area:,.1f} ha em {ult}) — "
+              "mantidas com null (não descartamos silenciosamente; ver amostra de combinações sem match acima)")
     # percentual sobre a área municipal (dim_municipio), quando disponível
     dimp = PROCESSED_DIR / "dimensions" / "dim_municipio.parquet"
     if dimp.exists():
@@ -194,7 +233,7 @@ def build(colecao=None, versao=None) -> pd.DataFrame:
         df["percentual_area_municipal"] = None
     df["colecao"] = colecao
     df["versao"] = versao
-    df["data_download"] = today_iso()
+    df["data_download"] = _data_download()
     df.attrs["fonte_aba"] = fonte_aba
     return df
 

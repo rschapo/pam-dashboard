@@ -118,8 +118,14 @@ antiga `Base_Municipios_Brasil` foi auditada, migrada e apagada).
   Coleção 10.1) + `mapbiomas_pastagem_municipios.xlsx` (bônus, não
   processado — dados de vigor/idade de pastagem, não simples área)
 - **Processado:** `data/processed/municipality/mapbiomas_municipio.csv`
-  (295 MB, **3.152.720 linhas**, 5.564/5.570 municípios resolvidos por
-  nome+UF — planilha do MapBiomas não traz `cod_ibge` direto)
+  (295 MB, **3.152.720 linhas**; a planilha do MapBiomas não traz `cod_ibge`, resolvido
+  por nome+UF). Desde 2026-09-26, 5.569 dos 5.571 municípios: os cinco que o MapBiomas
+  grafa diferente do IBGE (Açu, Arês, São Luiz, Gracho Cardoso, Barão de Monte Alto)
+  casam por alias explícito. Sem dado, só Fernando de Noronha (fora do MapBiomas) e Boa
+  Esperança do Norte (de 2025). As lagoas dos Patos e Mirim (RS) levam os códigos de
+  área do IBGE (4300002 e 4300001) e ficam fora dos totais municipais; 71,5 ha de
+  fragmentos de borda, rotulados com a UF vizinha, seguem sem código.
+- **No painel:** `public/data/mapbiomas_mun.json` sai do `export_uso_solo.py`.
 - **Validação:** total Brasil 2024 = **850,5 Mha** (oficial: 851,6 Mha) ·
   pastagem 155,0 Mha · agricultura 62,7 Mha · silvicultura 8,9 Mha
   (consistente com os 7,69 Mha de eucalipto do PEVS — duas fontes batendo)

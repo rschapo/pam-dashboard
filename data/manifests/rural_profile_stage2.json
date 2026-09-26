@@ -13,14 +13,14 @@
   "output_files": [
     {
       "file": "rural_profile_stage2.parquet",
-      "sha256": "f0ba12b9e7d99062da7a66725606964d59eabb56694335ba9129815f4a5abc57",
-      "bytes": 497232
+      "sha256": "5245ab10aa48ed28b82585b86c81d418a4d0e9864f2643f91d8ae8a1ab7f9c5f",
+      "bytes": 496435
     },
     {
       "file": "rural_profile_stage2.csv",
-      "sha256": "1c05869ea069d1bb409c44244144047b689058a59da2349f2cb99132661c81a8",
-      "bytes": 841458
+      "sha256": "bb6e6a71a67ff6d89d03a1c262366778ee68afec24c5b4672e5eaa9ba4f97b9f",
+      "bytes": 841580
     }
   ],
-  "generated_at": "2026-09-26T08:25:53-04:00"
+  "generated_at": "2026-09-26T18:25:02-04:00"
 }

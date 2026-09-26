@@ -359,12 +359,13 @@ function metLabel() {
     if (M === 'pct') return `Agropecuária no VAB (%, ${anoVab})`;
   }
   if (state.domain === 'terra') {
-    if (M === 'natural') return 'Vegetação Natural (ha)';
-    if (M === 'agri') return 'Agricultura (ha)';
-    if (M === 'past') return 'Pastagem (ha)';
-    if (M === 'urban') return 'Urbano (ha)';
-    if (M === 'agua') return 'Água (ha)';
-    if (M === 'outros') return 'Outros (ha)';
+    const ano = TERRA?.ano || 2024;
+    if (M === 'natural') return `Vegetação Natural (ha, ${ano})`;
+    if (M === 'agri') return `Agricultura (ha, ${ano})`;
+    if (M === 'past') return `Pastagem (ha, ${ano})`;
+    if (M === 'urban') return `Urbano (ha, ${ano})`;
+    if (M === 'agua') return `Água (ha, ${ano})`;
+    if (M === 'outros') return `Outros (ha, ${ano})`;
   }
   if (state.domain === 'maquinas') {
     const ano = MAQ?.ano || 2017;
