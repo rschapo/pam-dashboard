@@ -38,7 +38,7 @@ abaixo, `<brutos>` é essa pasta. Em `data/` ficam os processados e os manifesto
 | `data/mapbiomas_mun.json` | 🗺️ Uso do Solo | 0,7 MB | 5.565 municípios · 2024 · Coleção 10.1 |
 | `data/maquinas.json` | 🚜 Tratores | 0,3 MB | 5.466 municípios · Censo Agro 2017 (SIDRA 6870) |
 | `data/credito.json` | 💰 Crédito | 0,4 MB | 5.465 municípios · 2024 · BCB/SICOR |
-| `data/car.json` | 🌳 CAR | 0,8 MB | 5.571 municípios · 27 UF · 5 camadas ambientais |
+| `data/car.json` | 🌳 CAR | 1,3 MB | 5.571 municípios · 27 UF · 5 camadas ambientais · estrutura fundiária |
 | `data/geo_uf.json` | Malha de estados | 0,25 MB | 27 UF |
 | `data/geo_mic.json` | Malha de microrregiões | 4,3 MB | 558 microrregiões |
 | `data/geo_mun.json` | Malha municipal | 16,4 MB | 5.570 municípios |
@@ -74,7 +74,9 @@ bases da Parte 3 (PIB/VAB do IBGE, MapBiomas, Censo Agro 2017 e SICOR).
 
 **CAR** — imóveis, área declarada, cobertura do território e sobreposição, mais as
 5 camadas ambientais dissolvidas (vegetação nativa, reserva legal, APP, área
-consolidada e uso restrito), em hectares e em % do território (ver 3.3).
+consolidada e uso restrito), em hectares e em % do território, e a estrutura
+fundiária: % dos imóveis e da área em pequenos (até 4 módulos fiscais), médios e
+grandes (ver 3.3).
 
 ---
 
@@ -139,7 +141,8 @@ antiga `Base_Municipios_Brasil` foi auditada, migrada e apagada).
   do município). No Brasil, das 8.326.008 inscrições, 93,6% têm até 4 MF, 4,7% de 4 a 15
   e 1,7% mais de 15; somam 24,7%, 16,8% e 58,6% da área cadastrada. A classe bate com a
   que o próprio SICAR calcula em 99,7% das inscrições. Conta inscrições, não
-  propriedades, e a área inclui a sobreposição entre cadastros. Entra no perfil rural.
+  propriedades, e a área inclui a sobreposição entre cadastros. Entra no perfil rural e
+  na aba CAR do painel.
 - **Validação contra o MapBiomas** por UF (`processed/state/car_mapbiomas_uf`): na
   mediana das UFs, a vegetação nativa fica em 73% do esperado e a área consolidada em
   86% da agropecuária, com correlações por município de 0,90 e 0,94.

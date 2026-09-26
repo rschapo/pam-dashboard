@@ -28,6 +28,11 @@ A área típica do imóvel sai como média (área ÷ imóveis) e não como media
 mediana municipal não se recompõe em estado nem em microrregião, e o painel
 precisa do mesmo indicador nos três níveis.
 
+A estrutura fundiária vem de process_car_estrutura.py: a parcela dos imóveis e a
+da área em cada classe de módulos fiscais (pequenos até 4 MF, médios de 4 a 15,
+grandes acima de 15). Pelo mesmo motivo, o JSON leva as contagens e as áreas de
+cada classe, e não os percentuais. A mediana de módulos fica de fora do painel.
+
 Nada aqui depende de rede.
 """
 from __future__ import annotations
@@ -94,6 +99,17 @@ RESSALVAS = {
     "ac": ["RS: inclui o campo nativo com pecuária, que o MapBiomas classifica "
            "como vegetação natural."],
 }
+# Estrutura fundiária: classe → rótulo, e as colunas de car_estrutura_fundiaria que a
+# compõem (quantidades, área). A pequena soma as três faixas até 4 MF.
+CLASSES_MF = {
+    "pq": ("Pequenos, até 4 MF",
+           ["quantidade_ate_1_mf", "quantidade_1_2_mf", "quantidade_2_4_mf"], "area_ate_4_mf_ha"),
+    "md": ("Médios, de 4 a 15 MF", ["quantidade_4_15_mf"], "area_4_15_mf_ha"),
+    "gr": ("Grandes, acima de 15 MF", ["quantidade_acima_15_mf"], "area_acima_15_mf_ha"),
+}
+NOTA_ESTRUTURA = ("SICAR e INCRA. Cada imóvel não cancelado entra na classe do seu número de "
+                  "módulos fiscais (área ÷ módulo fiscal do município). Conta inscrições no CAR, "
+                  "não propriedades, e a área inclui a sobreposição entre cadastros.")
 
 
 def _num(v):
@@ -142,6 +158,24 @@ def camadas_ambientais(dim: pd.DataFrame) -> tuple[pd.DataFrame, dict, float]:
     return pd.concat(partes), substituidas, fora
 
 
+def estrutura_fundiaria() -> pd.DataFrame:
+    """Imóveis (_n<classe>) e área (_a<classe>) de cada classe de módulos fiscais por
+    município, com os totais das três (_ncl, _acl), que são os denominadores. Vazio sem
+    car_estrutura_fundiaria. Imóvel sem classe (área zero, município sem módulo fiscal)
+    fica fora do denominador, como dos percentuais da tabela."""
+    p = GEO / "car_estrutura_fundiaria.parquet"
+    if not p.exists():
+        return pd.DataFrame()
+    e = pd.read_parquet(p).set_index("cod_municipio")
+    out = pd.DataFrame(index=e.index)
+    for c, (_, quantidades, area) in CLASSES_MF.items():
+        out[f"_n{c}"] = e[quantidades].sum(axis=1, min_count=1)
+        out[f"_a{c}"] = e[area]
+    out["_ncl"] = out[[f"_n{c}" for c in CLASSES_MF]].sum(axis=1, min_count=1)
+    out["_acl"] = out[[f"_a{c}" for c in CLASSES_MF]].sum(axis=1, min_count=1)
+    return out
+
+
 def build_car() -> dict:
     car = pd.read_parquet(GEO / "car_municipio_summary.parquet")
     dim = pd.read_parquet(PROCESSED_DIR / "dimensions" / "dim_municipio.parquet")
@@ -153,13 +187,14 @@ def build_car() -> dict:
     amb, substituidas, ha_fora = camadas_ambientais(dim)
     amb_implausivel = amb.div(area_mun.reindex(amb.index), axis=0) > COBERTURA_MAX
     amb = amb.mask(amb_implausivel)
+    est = estrutura_fundiaria()
 
     # Território declarado, área média, sobreposição e os percentuais das camadas
     # são razões. O JSON carrega os componentes para que estado e microrregião
     # recomponham cada uma a partir das somas — somar percentuais daria o estado
     # como soma das taxas.
     mun: dict[str, dict] = {}
-    for cod in d.index.union(amb.index):
+    for cod in d.index.union(amb.index).union(est.index):
         reg = {}
         if cod in d.index:
             r = d.loc[cod]
@@ -168,10 +203,11 @@ def build_car() -> dict:
                    "_abru": _num(r["area_geometrica_bruta_ha"])}
             if not area_implausivel[cod]:
                 reg["area"] = _num(r["area_geometrica_uniao_ha"])
-        if cod in amb.index:
-            for campo, v in amb.loc[cod].items():
-                if pd.notna(v):
-                    reg[campo] = int(round(v))
+        for tabela in (amb, est):
+            if cod in tabela.index:
+                for campo, v in tabela.loc[cod].items():
+                    if pd.notna(v):
+                        reg[campo] = int(round(v))
         reg["_amun"] = _num(area_mun.get(cod))
         mun[str(cod)] = reg
 
@@ -187,6 +223,21 @@ def build_car() -> dict:
             notas.setdefault(c, []).append(NOTA_COMPOSTA[uf][c])
     for c, textos in RESSALVAS.items():
         notas.setdefault(c, []).extend(textos)
+    # Classes de módulos fiscais: % dos imóveis (_n) e % da área (_a), só com a tabela.
+    tipos = {"n": ("% dos imóveis", "_ncl"), "a": ("% da área", "_acl")} if not est.empty else {}
+    estrutura = {f"{c}_{t}": (f"{rot} ({unid})", f"_{t}{c}", den)
+                 for t, (unid, den) in tipos.items() for c, (rot, *_) in CLASSES_MF.items()}
+    ressalvas = {
+        "area_omitida": int(area_implausivel.sum()),
+        "metodo_camadas": METODO,
+        "camadas_omitidas": {c: int(amb_implausivel[c].sum()) for c in CAMADAS if c in amb},
+        "ufs_sem_camada": {c: [u for u in ufs if u not in medidas[c]] for c in CAMADAS},
+        "substituidas": substituidas,
+        "notas": notas,
+        "ha_fora_da_uf": round(ha_fora),
+    }
+    if estrutura:
+        ressalvas["estrutura"] = {"campos": list(estrutura), "nota": NOTA_ESTRUTURA}
     return {
         "fonte": "SICAR — Cadastro Ambiental Rural",
         "campos": {
@@ -197,6 +248,7 @@ def build_car() -> dict:
             "sobre": "Sobreposição entre cadastros (%)",
             **{c: f"{ROTULOS[c]} (ha)" for c in CAMADAS},
             **{f"{c}_p": f"{ROTULOS[c]} (% do território)" for c in CAMADAS},
+            **{k: rot for k, (rot, _, _) in estrutura.items()},
         },
         "razoes": {
             "cob": {"num": "area", "den": "_amun", "fator": 100, "pareado": True},
@@ -204,16 +256,10 @@ def build_car() -> dict:
             "sobre": {"num": "_asob", "den": "_abru", "fator": 100},
             **{f"{c}_p": {"num": c, "den": "_amun", "fator": 100, "pareado": True}
                for c in CAMADAS},
+            **{k: {"num": num, "den": den, "fator": 100, "pareado": True}
+               for k, (_, num, den) in estrutura.items()},
         },
-        "ressalvas": {
-            "area_omitida": int(area_implausivel.sum()),
-            "metodo_camadas": METODO,
-            "camadas_omitidas": {c: int(amb_implausivel[c].sum()) for c in CAMADAS if c in amb},
-            "ufs_sem_camada": {c: [u for u in ufs if u not in medidas[c]] for c in CAMADAS},
-            "substituidas": substituidas,
-            "notas": notas,
-            "ha_fora_da_uf": round(ha_fora),
-        },
+        "ressalvas": ressalvas,
         "gerado_em": now_iso(),
         "mun": mun,
     }

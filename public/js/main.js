@@ -226,7 +226,9 @@ function agregarDominioSimples(ids, m) {
       if (!d || (razao.pareado && d[razao.num] == null)) continue;
       num += d[razao.num] || 0; den += d[razao.den] || 0;
     }
-    return den ? (num * razao.fator) / den : 0;
+    // Sem denominador não há medida (null, "sem dado"); com ele, zero é medida:
+    // município com imóveis e nenhum grande tem 0% de grandes.
+    return den ? (num * razao.fator) / den : null;
   }
   let soma = 0;
   for (const id of ids) soma += base[id]?.[m] || 0;
@@ -374,6 +376,7 @@ function metLabel() {
 }
 
 function fmt(v, m) {
+  if (v === 0 && razoesDoDominio()[m]) return '0';   // razão medida; ver agregarDominioSimples
   if (!v || v === 0) return '—';
   if (m === 'r') return v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' kg/ha';
   if (v >= 1e9) return (v / 1e9).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' Gi';
@@ -419,7 +422,7 @@ function updateMapBR() {
       return { fillColor: getColor(v, max, COLORS_BR), fillOpacity: .78, color: '#fff', weight: 1 };
     },
     onEachFeature(f, layer) {
-      const uf = f.properties.uf, v = vals[uf] || 0;
+      const uf = f.properties.uf, v = vals[uf];   // cru: fmt distingue sem dado de zero
       layer.bindTooltip(
         `<b style="color:${BRAND_GREEN}">${ufs_info[uf]?.n || uf}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
         { sticky: true }
@@ -475,7 +478,7 @@ function updateMapEst() {
       return { fillColor: getColor(v, max, COLORS_MIC), fillOpacity: .78, color: '#fff', weight: .8 };
     },
     onEachFeature(f, layer) {
-      const mid = f.properties.mid, v = vals[mid] || 0;
+      const mid = f.properties.mid, v = vals[mid];
       layer.bindTooltip(
         `<b style="color:${BRAND_GREEN}">${mic_info[mid]?.n || mid}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
         { sticky: true }
@@ -547,7 +550,7 @@ function updateMapMun() {
                color: isSel ? BRAND_GOLD : '#fff', weight: isSel ? 2.5 : .5 };
     },
     onEachFeature(f, layer) {
-      const cod = f.properties.cod_ibge, v = vals[cod] || 0;
+      const cod = f.properties.cod_ibge, v = vals[cod];
       const nm = mun_info[cod]?.n || cod;
       layer.bindTooltip(
         `<b style="color:${BRAND_GREEN}">${nm}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
@@ -1329,6 +1332,7 @@ const DOMINIOS_SIMPLES = {
 function atualizarNotaCar() {
   const nota = document.getElementById('car-ressalva'), r = CAR?.ressalvas;
   if (!nota || !r) return;
+  if (r.estrutura?.campos?.includes(state.metricaCar)) { nota.textContent = r.estrutura.nota; return; }
   const c = (state.metricaCar || '').replace(/_p$/, '');
   if (!(c in (r.ufs_sem_camada || {}))) {
     nota.textContent =
