@@ -14,6 +14,10 @@ const COLORS_BR  = ['#ffffb2','#fed976','#feb24c','#fd8d3c','#fc4e2a','#e31a1c',
 // Micro/estado: warm OrRd — no near-white
 const COLORS_MIC = ['#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000'];
 
+// Os JSON baixados sob demanda também são conferidos com o servidor antes de usar a
+// cópia guardada, como os da abertura (index.html; o motivo está no netlify.toml).
+const CONFERIR = { cache: 'no-cache' };
+
 // Chart.js default overrides (green‑brand)
 Chart.defaults.font.family = "'Segoe UI', 'Inter', system-ui, sans-serif";
 Chart.defaults.font.size   = 12;
@@ -525,7 +529,7 @@ function initMapMun() {
 function loadGeoMun() {
   if (geoMunLoaded) return Promise.resolve();
   if (geoMunLoading) return geoMunLoading;
-  geoMunLoading = fetch('data/geo_mun.json')
+  geoMunLoading = fetch('data/geo_mun.json', CONFERIR)
     .then(r => r.json())
     .then(d => {
       GEO_MUN = d;
@@ -738,7 +742,7 @@ let PERFIL = null, perfilPendente = null;
 function carregarPerfil() {
   if (PERFIL) return Promise.resolve(PERFIL);
   // Falha de rede não fica guardada: a próxima escolha tenta de novo.
-  perfilPendente ||= fetch('data/perfil.json')
+  perfilPendente ||= fetch('data/perfil.json', CONFERIR)
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(d => (PERFIL = d))
     .catch(e => { console.error('Erro ao carregar perfil.json', e); perfilPendente = null; return null; });
@@ -1349,7 +1353,7 @@ function loadPPM() {
   const btn = document.querySelector('.dom-btn[data-dom="pecuaria"]');
   const original = btn ? btn.textContent : '';
   if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
-  ppmLoading = fetch('data/ppm.json')
+  ppmLoading = fetch('data/ppm.json', CONFERIR)
     .then(r => r.json())
     .then(d => {
       PPM = d;
@@ -1374,7 +1378,7 @@ function loadPEVS() {
   const btn = document.querySelector('.dom-btn[data-dom="silvicultura"]');
   const original = btn ? btn.textContent : '';
   if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
-  pevsLoading = fetch('data/pevs.json')
+  pevsLoading = fetch('data/pevs.json', CONFERIR)
     .then(r => r.json())
     .then(d => {
       PEVS = d;
@@ -1468,7 +1472,7 @@ function loadDominio(dom) {
   const btn = document.querySelector(`.dom-btn[data-dom="${dom}"]`);
   const original = btn ? btn.textContent : '';
   if (btn) { btn.textContent = '⏳ Carregando…'; btn.disabled = true; }
-  const p = fetch('data/' + cfg.arquivo)
+  const p = fetch('data/' + cfg.arquivo, CONFERIR)
     .then(r => r.json())
     .then(d => { cfg.aplicar(d); cfg.marcar(true); _aggCache.clear(); })
     .catch(e => {

@@ -6,7 +6,10 @@
 [[headers]]
   for = "/data/*.json"
   [headers.values]
-    Cache-Control = "public, max-age=86400"
+    # Os dados mudam a cada publicação. O navegador guarda a cópia, mas confere com o
+    # servidor antes de usá-la (ETag: se nada mudou, a resposta é curta). Com um dia
+    # de cache, quem voltava ao site via o código novo com os dados velhos.
+    Cache-Control = "public, max-age=0, must-revalidate"
 
 [[headers]]
   for = "/*"

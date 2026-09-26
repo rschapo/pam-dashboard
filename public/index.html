@@ -532,26 +532,29 @@
   }
 
   let _pkg, _geoUF, _geoMic, _mun;
+  // Confere cada JSON com o servidor antes de usar a cópia guardada, inclusive a que
+  // ficou do tempo em que os dados tinham um dia de cache (ver netlify.toml).
+  const CONFERIR = { cache: 'no-cache' };
 
   // Divisão territorial do IBGE, que completa a lista de municípios da PAM. Sem ela
   // o painel abre assim mesmo, só com os municípios da PAM.
-  fetch('data/municipios.json')
+  fetch('data/municipios.json', CONFERIR)
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .catch(e => { console.error('Erro ao carregar municipios.json', e); return null; })
     .then(d => { _mun = d; tryInit(_pkg, _geoUF, _geoMic); });
 
   msg.textContent = 'Carregando dados agrícolas…';
-  fetch('data/pkg.json')
+  fetch('data/pkg.json', CONFERIR)
     .then(r => r.json())
     .then(d => { _pkg = d; msg.textContent = 'Carregando mapa UF…'; tryInit(_pkg, _geoUF, _geoMic); })
     .catch(e => { msg.textContent = 'Erro ao carregar pkg.json — rode process_pam.py primeiro.'; console.error(e); });
 
-  fetch('data/geo_uf.json')
+  fetch('data/geo_uf.json', CONFERIR)
     .then(r => r.json())
     .then(d => { _geoUF = d; tryInit(_pkg, _geoUF, _geoMic); })
     .catch(e => { msg.textContent = 'Erro ao carregar geo_uf.json'; console.error(e); });
 
-  fetch('data/geo_mic.json')
+  fetch('data/geo_mic.json', CONFERIR)
     .then(r => r.json())
     .then(d => { _geoMic = d; tryInit(_pkg, _geoUF, _geoMic); })
     .catch(e => { msg.textContent = 'Erro ao carregar geo_mic.json'; console.error(e); });
