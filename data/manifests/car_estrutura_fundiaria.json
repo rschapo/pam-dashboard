@@ -1,0 +1,70 @@
+{
+  "dataset": "car_estrutura_fundiaria",
+  "source": "SICAR — CAR; INCRA — módulo fiscal",
+  "extraction_date": "2026-09-26",
+  "reference_date": null,
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 5562,
+  "municipality_count": 5562,
+  "rejected_rows": 135261,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "car_estrutura_fundiaria.parquet",
+      "sha256": "e417f35908e5e25bc0be71953a1b4d95cb36dabcfdeb52cbcbdf936e3ef2d26e",
+      "bytes": 481251
+    },
+    {
+      "file": "car_estrutura_fundiaria.csv",
+      "sha256": "157f39fb6e45e81e1e7e0c801d34a4796eafe86dc31cfe493666f96cd5d01ea6",
+      "bytes": 1064042
+    }
+  ],
+  "generated_at": "2026-09-26T08:22:33-04:00",
+  "metodo": "área geométrica ÷ módulo fiscal do município principal; sem cancelados",
+  "imoveis": 8326008,
+  "cancelados_excluidos": 135261,
+  "imoveis_sem_classe": 146,
+  "imoveis_por_classe": {
+    "ate_4_mf": 7796640,
+    "mais_4_ate_15_mf": 387942,
+    "mais_15_mf": 141280
+  },
+  "imoveis_por_classe_sicar": {
+    "ate_4_mf": 7814967,
+    "mais_4_ate_15_mf": 378601,
+    "mais_15_mf": 132440
+  },
+  "concordancia_classe_sicar_pct": {
+    "BR": 99.74,
+    "RO": 99.57,
+    "AC": 99.44,
+    "AM": 98.97,
+    "RR": 98.86,
+    "PA": 99.55,
+    "AP": 99.46,
+    "TO": 99.56,
+    "MA": 99.53,
+    "PI": 99.75,
+    "CE": 99.69,
+    "RN": 99.41,
+    "PB": 99.7,
+    "PE": 99.71,
+    "AL": 99.73,
+    "SE": 99.72,
+    "BA": 99.83,
+    "MG": 99.75,
+    "ES": 99.57,
+    "RJ": 99.56,
+    "SP": 99.81,
+    "PR": 99.9,
+    "SC": 99.94,
+    "RS": 99.92,
+    "MS": 99.68,
+    "MT": 99.66,
+    "GO": 99.67,
+    "DF": 99.82
+  }
+}

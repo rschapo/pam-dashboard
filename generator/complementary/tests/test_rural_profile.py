@@ -135,3 +135,24 @@ def test_rodar_o_perfil_regrava_o_stage2_junto_com_o_stage1(tmp_path, monkeypatc
     s2 = pd.read_parquet(tmp_path / "rural_profile_stage2.parquet").set_index("cod_municipio").loc[cod]
     assert s2.get("numero_estabelecimentos_censo") == 2886
     assert s2.get("quantidade_cadastros_car") == 3100   # é o stage2 de fato, com o CAR
+
+
+def test_stage2_traz_a_estrutura_fundiaria_do_car(tmp_path, monkeypatch):
+    """O stage2 leva a estrutura fundiária do CAR com o sufixo _car; município sem imóvel
+    no CAR fica nulo, nunca zero."""
+    cods = ["5107925", SEM_PEVS]
+    base = pd.DataFrame({"cod_municipio": cods, "uf": [uf_from_cod(c) for c in cods]})
+    pd.DataFrame({"cod_municipio": ["5107925"], "modulos_fiscais_mediana": [1.5],
+                  "percentual_imoveis_ate_4_mf": [66.67], "percentual_imoveis_4_15_mf": [0.0],
+                  "percentual_imoveis_acima_15_mf": [33.33], "percentual_area_ate_4_mf": [1.96],
+                  "percentual_area_4_15_mf": [0.0], "percentual_area_acima_15_mf": [98.04]}).to_parquet(
+        tmp_path / "car_estrutura_fundiaria.parquet", index=False)
+    monkeypatch.setattr(brp, "GEO", tmp_path)
+    monkeypatch.setattr(brp, "MUN", tmp_path)
+
+    s2 = brp.stage2(base).set_index("cod_municipio")
+
+    assert s2.at["5107925", "percentual_pequenos_imoveis_car"] == 66.67
+    assert s2.at["5107925", "percentual_area_grandes_imoveis_car"] == 98.04
+    assert s2.at["5107925", "mediana_modulos_fiscais_car"] == 1.5
+    assert pd.isna(s2.at[SEM_PEVS, "percentual_pequenos_imoveis_car"])

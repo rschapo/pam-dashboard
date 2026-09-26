@@ -109,8 +109,8 @@ nível de produto (ver METHODOLOGY, "PEVS — grupos de produtos"): somar as lin
 
 ## rural_profile_stage1 / stage2  (`municipality/`)
 Perfil municipal agregado. Stage 1: módulo fiscal, SNCR, Censo, PEVS (sem cruzar
-PAM/PPM). Stage 2: acrescenta CAR (cadastros, área união, sobreposição) e MapBiomas
-(agricultura/pastagem/silvicultura, ha).
+PAM/PPM). Stage 2: acrescenta CAR (cadastros, área união, sobreposição e estrutura
+fundiária) e MapBiomas (agricultura/pastagem/silvicultura, ha).
 
 Da PEVS entra só a silvicultura (tabela 291), no **último ano** da `pevs_municipio` e só
 no **nível de produto**, as linhas com `grupo` (ver pevs_municipio): subtotais e espécies
@@ -123,6 +123,9 @@ conta contra o consolidado.
 | Campo | Tipo | Descrição |
 |---|---|---|
 | modulo_fiscal_ha | float | Módulo fiscal do município (ha), da `dim_modulo_fiscal`; `null` em Fernando de Noronha e Boa Esperança do Norte |
+| mediana_modulos_fiscais_car | float | Stage 2. Mediana do número de módulos fiscais das inscrições do CAR (`car_estrutura_fundiaria`) |
+| percentual_pequenos_imoveis_car, _medios_, _grandes_ | float | Stage 2. % das inscrições do CAR até 4 MF, de 4 a 15 e acima de 15; `null` sem inscrição no CAR |
+| percentual_area_pequenos_imoveis_car, _medios_, _grandes_ | float | Stage 2. % da área das inscrições em cada classe, com a sobreposição entre cadastros |
 | valor_producao_florestal | float | Valor da produção da silvicultura no ano, R$ mil nominais; em cada município e somado no Brasil, é o Total do IBGE. `0` quando a fonte informa zero (valor arredondado); `null` sem silvicultura no ano ou sem informação |
 | produto_florestal_predominante | str | Produto de maior valor no ano, com o rótulo do SIDRA ("1.2 - Lenha", "2.3 - Resina"). É o `produto`, e não o `grupo`: o grupo só junta casca de acácia-negra, folha de eucalipto e resina, e o produto diz qual deles. No empate, o primeiro rótulo; `null` sem valor positivo |
 | silvicultura_presente | bool | O município tem valor da silvicultura no ano (o zero conta) |
@@ -157,6 +160,27 @@ CEFIR registra o imóvel em fatias separadas): `vegetacao_nativa_composta_ha`
 (atividades desenvolvidas do CEFIR ∪ área consolidada do SICAR). Sergipe (a maioria
 dos imóveis declara reserva legal sem vegetação nativa): `vegetacao_nativa_composta_ha`
 (vegetação nativa ∪ reserva legal ∪ APP, sem desconto). Com `uf` e `metodo`.
+
+## car_estrutura_fundiaria  (`geospatial/`)
+Estrutura fundiária pelo CAR, uma linha por município com inscrição
+(`process_car_estrutura.py`; método em METHODOLOGY, "Estrutura fundiária pelo CAR"). Conta
+as inscrições não canceladas no município principal. O número de módulos de cada uma é a
+área geométrica dividida pelo módulo fiscal do município. Usa os nomes do
+`sncr_municipio_summary`, mas o universo é outro (ver CAR_LIMITATIONS).
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| quantidade_imoveis | int | Inscrições não canceladas |
+| area_imoveis_ha | float | Soma das áreas geométricas, com a sobreposição entre cadastros |
+| quantidade_sem_modulo | int | Inscrições sem classe: área geométrica zero ou município sem módulo fiscal |
+| modulos_fiscais_mediana | float | Mediana do número de módulos fiscais |
+| quantidade_ate_1_mf, _1_2_mf, _2_4_mf, _4_15_mf, _acima_15_mf | int | Inscrições por faixa; somadas a `quantidade_sem_modulo`, dão `quantidade_imoveis` |
+| area_ate_4_mf_ha, area_4_15_mf_ha, area_acima_15_mf_ha | float | Área das inscrições em cada classe |
+| percentual_imoveis_ate_4_mf, _4_15_mf, _acima_15_mf | float | % das inscrições com classe: pequena (até 4 MF), média (4 a 15) e grande (acima de 15) |
+| percentual_area_ate_4_mf, _4_15_mf, _acima_15_mf | float | % da área das inscrições com classe |
+| metodo | str | Como a classe foi calculada |
+
+Onde nenhuma inscrição tem classe, as faixas e os percentuais ficam nulos, nunca zero.
 
 ## car_mapbiomas_uf  (`state/`)
 Validação das camadas dissolvidas contra o MapBiomas, por UF

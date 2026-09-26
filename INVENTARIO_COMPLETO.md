@@ -82,7 +82,7 @@ consolidada e uso restrito), em hectares e em % do território (ver 3.3).
 
 | Arquivo | Conteúdo | Municípios |
 |---|---|---|
-| `data/frontend/perfil_rural.json` | Perfil rural: módulo fiscal, Censo Agro, silvicultura, CAR e MapBiomas | 5.571 |
+| `data/frontend/perfil_rural.json` | Perfil rural: módulo fiscal, Censo Agro, silvicultura, CAR (com a estrutura fundiária) e MapBiomas | 5.571 |
 | `data/processed/dimensions/dim_modulo_fiscal` | Índices básicos do INCRA (módulo fiscal, fração mínima, zona típica) | 5.569 |
 | `data/processed/municipality/censo_agro_*` | Temas do Censo Agro 2017 com as categorias (o de máquinas já alimenta a aba Tratores) | 5.563 no resumo |
 
@@ -134,6 +134,12 @@ antiga `Base_Municipios_Brasil` foi auditada, migrada e apagada).
   a área onde cadastros se sobrepõem conta uma vez). BA e SE declaram de outro jeito
   e têm medidas compostas (`car_ambiental_composta_<UF>`). A APP dissolvida soma
   30,7 Mi ha, 3,6% do território.
+- **Estrutura fundiária** (`car_estrutura_fundiaria`, 2026-09-26): cada inscrição não
+  cancelada classificada pelo número de módulos fiscais (área geométrica ÷ módulo fiscal
+  do município). No Brasil, das 8.326.008 inscrições, 93,6% têm até 4 MF, 4,7% de 4 a 15
+  e 1,7% mais de 15; somam 24,7%, 16,8% e 58,6% da área cadastrada. A classe bate com a
+  que o próprio SICAR calcula em 99,7% das inscrições. Conta inscrições, não
+  propriedades, e a área inclui a sobreposição entre cadastros. Entra no perfil rural.
 - **Validação contra o MapBiomas** por UF (`processed/state/car_mapbiomas_uf`): na
   mediana das UFs, a vegetação nativa fica em 73% do esperado e a área consolidada em
   86% da agropecuária, com correlações por município de 0,90 e 0,94.
@@ -193,6 +199,7 @@ só a linha Total: no Brasil, **5.073.324** estabelecimentos, o número oficial 
   (`modulo_fiscal_ha`). Método em `generator/complementary/docs/METHODOLOGY.md`.
 - **SNCR:** `<brutos>/sncr/` continua vazia — o INCRA publica por UF, sem endpoint
   automatizável; o script (`download_sncr.py`) só inventaria o que for colocado lá.
+  Enquanto isso, a estrutura fundiária sai do CAR (3.3).
 
 ---
 
@@ -243,7 +250,8 @@ paralela de dado de produção agro em nenhum outro projeto.
    frontend depende de decidir o desenho (ver Parte 2).
 3. **Gestão (TSE)** não tem `cod_ibge` — só isolado por enquanto; precisa de
    um de-para TSE↔IBGE para entrar nos cruzamentos.
-4. **SNCR** — nada baixado: o INCRA publica por UF, e o download é manual.
+4. **SNCR** — nada baixado: o INCRA publica por UF, e o download é manual. A estrutura
+   fundiária já sai do CAR (3.3); o SNCR a daria no universo do cadastro rural.
 5. **CAR** — ler as ressalvas por UF em `CAR_LIMITATIONS.md` antes de comparar
    estados (BA e SE usam as medidas compostas; há UFs com camada parcial na base
    nacional). Os ZIPs do CAR (86 GB) ficam guardados por um período.
@@ -251,4 +259,4 @@ paralela de dado de produção agro em nenhum outro projeto.
    o módulo fiscal, ainda marca como pendentes camadas já processadas.
 7. Resolvidos desde a versão anterior: publicação de `geo_mun`/`econ`/`mapbiomas_mun`,
    camadas ambientais do CAR (medida dissolvida, 27 UFs), Censo Agropecuário (5.073.324
-   estabelecimentos, com as categorias) e módulo fiscal.
+   estabelecimentos, com as categorias), módulo fiscal e estrutura fundiária pelo CAR.

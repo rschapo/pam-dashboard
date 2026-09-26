@@ -74,6 +74,7 @@ def stage2(download: bool, uf: str | None):
     if uf:
         _run(PROCESS / "process_car.py", ["--uf", uf])
         _run(QUALITY / "validate_car_geometry.py")
+    _run(PROCESS / "process_car_estrutura.py")
     _run(PROCESS / "process_mapbiomas.py")
     _run(PROCESS / "build_rural_profile.py")
 

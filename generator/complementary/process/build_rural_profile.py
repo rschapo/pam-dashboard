@@ -5,7 +5,8 @@ rural_profile_stage1: reúne SOMENTE agregados da Etapa 1 (módulo fiscal, SNCR,
 Censo Agro, PEVS) por município. NÃO cruza com PAM/PPM (fica pronto p/ isso na fase
 de integração). Da PEVS entra a silvicultura do último ano, só no nível de produto.
 
-rural_profile_stage2: acrescenta os agregados do CAR e do MapBiomas (Etapa 2).
+rural_profile_stage2: acrescenta os agregados do CAR (cadastros, sobreposição e estrutura
+fundiária por módulos fiscais) e do MapBiomas (Etapa 2).
 
 Cada rodada grava os dois. O export_frontend usa o stage2 quando ele existe: regravar
 só o stage1 deixaria o stage2 da rodada anterior, com os valores velhos, alimentando o
@@ -106,6 +107,21 @@ def stage2(base: pd.DataFrame) -> pd.DataFrame:
             "quantidade_cadastros": "quantidade_cadastros_car",
             "area_geometrica_uniao_ha": "area_car_uniao_ha",
             "percentual_sobreposicao": "percentual_sobreposicao_car"}),
+            on="cod_municipio", how="left")
+    # estrutura fundiária pelo CAR: pequena até 4 MF, média de 4 a 15, grande acima de 15
+    est = _load(GEO / "car_estrutura_fundiaria.parquet")
+    if est is not None:
+        prof = prof.merge(est[["cod_municipio", "modulos_fiscais_mediana",
+                               "percentual_imoveis_ate_4_mf", "percentual_imoveis_4_15_mf",
+                               "percentual_imoveis_acima_15_mf", "percentual_area_ate_4_mf",
+                               "percentual_area_4_15_mf", "percentual_area_acima_15_mf"]].rename(columns={
+            "modulos_fiscais_mediana": "mediana_modulos_fiscais_car",
+            "percentual_imoveis_ate_4_mf": "percentual_pequenos_imoveis_car",
+            "percentual_imoveis_4_15_mf": "percentual_medios_imoveis_car",
+            "percentual_imoveis_acima_15_mf": "percentual_grandes_imoveis_car",
+            "percentual_area_ate_4_mf": "percentual_area_pequenos_imoveis_car",
+            "percentual_area_4_15_mf": "percentual_area_medios_imoveis_car",
+            "percentual_area_acima_15_mf": "percentual_area_grandes_imoveis_car"}),
             on="cod_municipio", how="left")
     mb = _load(MUN / "mapbiomas_municipio.parquet")
     if mb is not None and not mb.empty:

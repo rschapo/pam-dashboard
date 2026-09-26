@@ -68,6 +68,33 @@ Dois municípios ficam sem índice: Fernando de Noronha, distrito estadual que a
 INCRA não lista, e Boa Esperança do Norte (MT), instalado em 2025, depois da tabela de
 2013.
 
+### Estrutura fundiária pelo CAR
+
+O SNCR, que daria a estrutura fundiária oficial, é baixado à mão, por UF, e ainda não foi.
+`process_car_estrutura.py` faz a mesma conta com as inscrições do CAR, que cobrem o país
+(`car_estrutura_fundiaria`):
+
+- **Inscrições:** entram todas as não canceladas, cada uma contada uma vez. Os cancelados
+  ficam de fora, como nas camadas ambientais: são 135.261.
+- **Município:** cada inscrição vai para o município principal, onde está a maior parte
+  da sua área, como no `car_municipio_summary`. As 25 inscrições sem interseção com a
+  malha ficam no município declarado; o resumo as descarta, por isso 3 municípios têm 1
+  ou 2 inscrições a mais aqui.
+- **Número de módulos:** é a área geométrica dividida pelo módulo fiscal do município.
+  Não se usa a área declarada, como em todo o CAR.
+- **Classes:** as mesmas do SNCR (`_stats.FAIXAS_MF_LEGAL`). A pequena propriedade abre
+  em até 1, de 1 a 2 e de 2 a 4 MF.
+- **Área por classe:** é a soma das áreas das inscrições, com a sobreposição entre
+  cadastros. Diz como a área cadastrada se divide, não quanto do território cada classe
+  ocupa.
+
+Ficam 146 inscrições sem classe: com área geométrica zero ou em município sem módulo
+fiscal. O SICAR traz o número de módulos de cada inscrição, calculado com a área
+declarada e o módulo fiscal do município declarado. A classe dele é a mesma daqui em
+99,7% das inscrições, de 98,9% (RR) a 99,9% (SC). No Brasil, das 8.326.008 inscrições,
+93,6% têm até 4 MF, 4,7% de 4 a 15 e 1,7% mais de 15. Elas somam, respectivamente,
+24,7%, 16,8% e 58,6% da área cadastrada.
+
 ## Faixas de área do Censo (harmonização)
 
 `config/area_groups.csv` mapeia cada classe original do Censo às faixas harmonizadas

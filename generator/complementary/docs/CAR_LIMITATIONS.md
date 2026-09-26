@@ -31,6 +31,12 @@ pode cruzar limites municipais. Distinguimos **contagem principal** (município 
 área), **contagem territorial** (presença em todos os municípios intersectados) e
 **área distribuída** pela interseção — três medidas diferentes, sempre rotuladas.
 
+A estrutura fundiária pelo CAR (`car_estrutura_fundiaria`, método em METHODOLOGY)
+herda esse limite: classifica **inscrições** pelo número de módulos fiscais, não
+propriedades. Quem tem duas inscrições conta duas vezes, e a área de cada classe inclui a
+sobreposição entre cadastros. Serve para comparar municípios e acompanhar a estrutura no
+tempo; não substitui o SNCR nem o Censo Agro.
+
 ## Área declarada × área geométrica
 
 A área declarada pode divergir da área calculada a partir da geometria (erros de

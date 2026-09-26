@@ -61,7 +61,8 @@ python run_pipeline.py --only geography
 1. `process_geography` → `dim_municipio` · 2. `process_modulo_fiscal` ·
 3. `process_censo_agro` · 4. `process_sncr` · 5. `process_pevs` ·
 6. `build_rural_profile` · 7. (Etapa 2) `download_car`/matriz ·
-8. `process_car --uf <UF>` · 9. `process_mapbiomas` · 10. `build_rural_profile` de novo.
+8. `process_car --uf <UF>` · 9. `process_car_estrutura` · 10. `process_mapbiomas` ·
+11. `build_rural_profile` de novo.
 
 O `build_rural_profile` grava sempre o stage1 e o stage2, este com o CAR e o MapBiomas
 que houver em `data/processed`: o `export_frontend` prefere o stage2.
