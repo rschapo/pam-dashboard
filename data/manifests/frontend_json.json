@@ -1,7 +1,7 @@
 {
   "dataset": "frontend_json",
   "source": "Composição das bases complementares (Parquet)",
-  "extraction_date": "2026-09-26",
+  "extraction_date": "2026-10-06",
   "reference_date": null,
   "source_files": [],
   "source_hashes": [],
@@ -13,9 +13,9 @@
   "output_files": [
     {
       "file": "perfil_rural.json",
-      "sha256": "461985f0aa90cd0043fe5041450f8634454e8ac29e6e6b56a5717ef4a282cd4c",
-      "bytes": 5163985
+      "sha256": "9cbe8f986551dd4db1b5e25fa0215aa092a334630005daa785905212ed0d8718",
+      "bytes": 5163984
     }
   ],
-  "generated_at": "2026-09-26T18:26:51-04:00"
+  "generated_at": "2026-10-06T20:52:26-03:00"
 }
