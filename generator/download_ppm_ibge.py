@@ -19,7 +19,7 @@ sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 # ── Configuracoes ──────────────────────────────────────────────────────────
 ANO_INICIO  = 2004
-ANO_FIM     = 2024
+ANO_FIM     = 2025
 # Raiz dos brutos IBGE: PAM_RAW_DIR, data/raw_dir.txt ou data/raw (ibge_common)
 from ibge_common import RAW_IBGE  # brutos fora do projeto: ver ibge_common._raiz_bruta
 PASTA_SAIDA = str(RAW_IBGE / "ppm")

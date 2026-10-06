@@ -1,9 +1,9 @@
 # PAM Dashboard — AgroCore
 
 Dashboard dos Dados de Produção Agrícola Municipal com base no estudo do IBGE.
-Lavouras (PAM) e silvicultura/extração vegetal (PEVS) de 2004 a 2025; pecuária (PPM)
-de 2004 a 2024, porque a PPM 2025 ainda não foi publicada. O seletor de ano segue a PAM, e
-o domínio que não tem o ano escolhido mostra o último que publicou, com aviso.
+Lavouras (PAM), pecuária (PPM) e silvicultura/extração vegetal (PEVS) de 2004 a 2025.
+O seletor de ano segue a PAM, e o domínio que não tem o ano escolhido mostra o último
+que publicou, com aviso.
 
 ## Estrutura do Projeto
 

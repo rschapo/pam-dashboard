@@ -32,7 +32,7 @@ abaixo, `<brutos>` é essa pasta. Em `data/` ficam os processados e os manifesto
 | Arquivo | Aba | Tamanho | Cobertura |
 |---|---|---|---|
 | `data/pkg.json` | 🌾 Agrícola (PAM) | 17,1 MB | 27 UF · 557 microrregiões · 5.540 municípios · 2004–2025 |
-| `data/ppm.json` | 🐄 Pecuária (PPM) | 19,2 MB | 27 UF · 558 microrregiões · 5.546 municípios · 2004–2024 |
+| `data/ppm.json` | 🐄 Pecuária (PPM) | 19,2 MB | 27 UF · 558 microrregiões · 5.547 municípios · 2004–2025 |
 | `data/pevs.json` | 🌲 Silvicultura (PEVS) | 20,0 MB | 27 UF · 557 microrregiões · 5.474 municípios · 2004–2025 |
 | `data/econ.json` | 📊 Economia | 0,6 MB | 5.571 municípios · PIB 2023 · VAB 2021 |
 | `data/mapbiomas_mun.json` | 🗺️ Uso do Solo | 0,7 MB | 5.565 municípios · 2024 · Coleção 10.1 |
@@ -65,9 +65,10 @@ Produção (ton), Valor (mil R$), Rendimento (kg/ha). Fonte: SIDRA tabelas 1612/
 
 **Pecuária (PPM)** — 10 categorias de rebanho + 6 de produção animal (leite, ovos,
 mel, lã, casulos). Métricas: Quantidade (unidade varia por categoria) + Valor (mil
-R$, só produção animal). Fonte: SIDRA tabelas 3939/74. **A PPM 2025 ainda não saiu**:
-em 2026-09-26 as tabelas terminam em 2024, e o calendário do IBGE não traz data até
-2027 (a PPM 2024 saiu em 18/09/2025).
+R$, só produção animal). Fonte: SIDRA tabelas 3939/74. A PPM 2025 entrou em
+2026-10-06, com 2024 baixado de novo: o IBGE revisou 0,5% dos valores municipais de 2024
+nessa divulgação. A soma dos municípios bate com o total Brasil do SIDRA (rebanho exato,
+produção dentro de 0,02%).
 
 **Silvicultura (PEVS)** — 29 categorias de silvicultura (produtos, subtotais e, desde
 2013, a abertura por espécie), 62 de extração vegetal e 7 de área plantada. A série
@@ -255,21 +256,19 @@ paralela de dado de produção agro em nenhum outro projeto.
 
 ## PARTE 5 — Pendências e cautelas para quem for usar esta base
 
-1. **PPM 2025** — aguardar o IBGE (sem data no calendário em 2026-09-26). Quando
-   sair, baixar e regenerar o `ppm.json`; o painel já aceita anos diferentes por aba.
-2. **Temas do Censo no painel** — os temas além de máquinas (uso da terra, irrigação,
+1. **Temas do Censo no painel** — os temas além de máquinas (uso da terra, irrigação,
    assistência técnica, financiamento…) ainda não aparecem; o perfil do município só
    mostra o resumo (estabelecimentos e área).
-3. **Gestão (TSE)** não tem `cod_ibge` — só isolado por enquanto; precisa de
+2. **Gestão (TSE)** não tem `cod_ibge` — só isolado por enquanto; precisa de
    um de-para TSE↔IBGE para entrar nos cruzamentos.
-4. **SNCR** — nada baixado: o INCRA publica por UF, e o download é manual. A estrutura
+3. **SNCR** — nada baixado: o INCRA publica por UF, e o download é manual. A estrutura
    fundiária já sai do CAR (3.3); o SNCR a daria no universo do cadastro rural.
-5. **CAR** — ler as ressalvas por UF em `CAR_LIMITATIONS.md` antes de comparar
+4. **CAR** — ler as ressalvas por UF em `CAR_LIMITATIONS.md` antes de comparar
    estados (BA e SE usam as medidas compostas; há UFs com camada parcial na base
    nacional). Os ZIPs do CAR (86 GB) ficam guardados por um período.
-6. **`QUALITY_REPORT.md`** está no estado de 2026-07-28 e precisa ser refeito: fora
+5. **`QUALITY_REPORT.md`** está no estado de 2026-07-28 e precisa ser refeito: fora
    o módulo fiscal, ainda marca como pendentes camadas já processadas.
-7. Resolvidos desde a versão anterior: publicação de `geo_mun`/`econ`/`mapbiomas_mun`,
+6. Resolvidos desde a versão anterior: publicação de `geo_mun`/`econ`/`mapbiomas_mun`,
    camadas ambientais do CAR (medida dissolvida, 27 UFs), Censo Agropecuário (5.073.324
    estabelecimentos, com as categorias), módulo fiscal, estrutura fundiária pelo CAR e
    perfil do município no painel.
