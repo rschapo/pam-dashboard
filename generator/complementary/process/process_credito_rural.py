@@ -10,7 +10,7 @@ nome_municipio + UF (cdEstado traduzido via sicor_regiaouf_lookup.json),
 mesma técnica usada em process_mapbiomas.py.
 
 Saída: data/processed/municipality/credito_rural.parquet | .csv
-Uso: python process_credito_rural.py [--ano-credito 2024]
+Uso: python process_credito_rural.py [--ano-credito 2025]
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import RAW_DIR, PROCESSED_DIR, cod_mun7, save_table, write_manifest  # noqa: E402
+from common import RAW_DIR, PROCESSED_DIR, ALIASES_MUNICIPIO, cod_mun7, save_table, write_manifest  # noqa: E402
 
 
 def _norm_nome(s) -> str:
@@ -42,12 +42,19 @@ def _cdestado_para_uf() -> dict[str, str]:
 
 
 def _nome_uf_para_cod_ibge() -> dict[str, str]:
-    ref_path = RAW_DIR / "ibge" / "municipios.csv"
+    """Nome+UF → código IBGE, da dim_municipio: ela já tem os municípios instalados
+    depois da lista bruta do IBGE (Boa Esperança do Norte, 2025). Os aliases cobrem
+    os que o SICOR grafa de outro jeito (Açu, Santo Antônio do Leverger...)."""
+    ref_path = PROCESSED_DIR / "dimensions" / "dim_municipio.parquet"
     if not ref_path.exists():
         return {}
-    ref = pd.read_csv(ref_path, sep=";", dtype=str)
-    chave = ref["nome_municipio"].map(_norm_nome) + "|" + ref["sigla_uf"].str.upper()
-    return dict(zip(chave, ref["cod_ibge"].map(cod_mun7)))
+    ref = pd.read_parquet(ref_path, columns=["cod_municipio", "nome_municipio", "uf"])
+    chave = ref["nome_municipio"].map(_norm_nome) + "|" + ref["uf"].str.upper()
+    lookup = dict(zip(chave, ref["cod_municipio"].map(cod_mun7)))
+    for alias, oficial in ALIASES_MUNICIPIO.items():
+        if oficial in lookup:   # se o IBGE mudar o nome, a linha fica sem código e entra no aviso
+            lookup[alias] = lookup[oficial]
+    return lookup
 
 
 def build(ano_credito: int) -> pd.DataFrame:
@@ -108,7 +115,8 @@ def build(ano_credito: int) -> pd.DataFrame:
 
 def main():
     ap = argparse.ArgumentParser(description="Constrói mun_credito_rural (BCB/SICOR)")
-    ap.add_argument("--ano-credito", type=int, default=2024)
+    ap.add_argument("--ano-credito", type=int, default=2025,
+                    help="ano de emissão dos contratos (AnoEmissao); o padrão é o último completo")
     args = ap.parse_args()
 
     df = build(args.ano_credito)

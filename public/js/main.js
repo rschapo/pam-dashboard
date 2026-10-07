@@ -1428,7 +1428,12 @@ const DOMINIOS_SIMPLES = {
   },
   credito: {
     arquivo: 'credito.json', rotulo: 'crédito rural',
-    aplicar: d => { CRED = d; cred_mun = d.mun || {}; },
+    aplicar: d => {
+      CRED = d; cred_mun = d.mun || {};
+      // O ano vem do credito.json: é o de emissão dos contratos, e não o ano-safra.
+      const nota = document.getElementById('cred-nota');
+      if (nota && d.ano) nota.textContent = `BCB/SICOR, contratos emitidos em ${d.ano}`;
+    },
     pronto: () => credLoaded, marcar: v => credLoaded = v,
     pendente: () => credLoading, guardar: p => credLoading = p,
   },

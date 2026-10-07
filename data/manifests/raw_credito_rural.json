@@ -1,8 +1,8 @@
 {
   "dataset": "raw_credito_rural",
   "source": "BCB/SICOR (MDCR)",
-  "extraction_date": "2026-08-08",
-  "reference_date": "2026-08-08",
+  "extraction_date": "2026-10-06",
+  "reference_date": "2026-10-06",
   "source_files": [],
   "source_hashes": [],
   "script_version": "0.1.0",
@@ -17,16 +17,16 @@
       "bytes": 71821
     },
     {
-      "file": "sicor_custeio_2024.json",
-      "sha256": "be598e2a22566709ba4109dec394cc57ce0529422da614ed2b0a7e5654939546",
-      "bytes": 25301485
+      "file": "sicor_custeio_2025.json",
+      "sha256": "f5180a6a6d8d22763fa0d4e30f5ee93e82606ab9a125b7933ac99d4e769b5c69",
+      "bytes": 22525695
     },
     {
-      "file": "sicor_investimento_2024.json",
-      "sha256": "1ac308d087f66bfd5df4b4573fd737d777bdca7b241bcbf6701041450588ed7b",
-      "bytes": 42882266
+      "file": "sicor_investimento_2025.json",
+      "sha256": "b7be296f173b177092ac947422f58618d4e4a512d2403f803b9aa4047dce1a02",
+      "bytes": 45607831
     }
   ],
-  "generated_at": "2026-08-08T15:57:23-04:00",
-  "ano_credito": 2024
+  "generated_at": "2026-10-06T21:09:00-03:00",
+  "ano_credito": 2025
 }

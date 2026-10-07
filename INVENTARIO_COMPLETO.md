@@ -37,7 +37,7 @@ abaixo, `<brutos>` é essa pasta. Em `data/` ficam os processados e os manifesto
 | `data/econ.json` | 📊 Economia | 0,6 MB | 5.571 municípios · PIB 2023 · VAB 2021 |
 | `data/mapbiomas_mun.json` | 🗺️ Uso do Solo | 0,7 MB | 5.565 municípios · 2024 · Coleção 10.1 |
 | `data/maquinas.json` | 🚜 Tratores | 0,3 MB | 5.466 municípios · Censo Agro 2017 (SIDRA 6870) |
-| `data/credito.json` | 💰 Crédito | 0,4 MB | 5.465 municípios · 2024 · BCB/SICOR |
+| `data/credito.json` | 💰 Crédito | 0,4 MB | 5.484 municípios · 2025 (contratos emitidos no ano) · BCB/SICOR |
 | `data/car.json` | 🌳 CAR | 1,3 MB | 5.571 municípios · 27 UF · 5 camadas ambientais · estrutura fundiária |
 | `data/geo_uf.json` | Malha de estados | 0,25 MB | 27 UF |
 | `data/geo_mic.json` | Malha de microrregiões | 4,3 MB | 558 microrregiões |
@@ -166,7 +166,7 @@ antiga `Base_Municipios_Brasil` foi auditada, migrada e apagada).
 | Tabela | Cobertura | Números-chave (Brasil, ano mais recente) |
 |---|---|---|
 | `demografia_pib.csv` (município) + `.csv` (UF) | 5.571 mun / 27 UF | PIB total **R$ 10,94 tri** (2023, bate com oficial) · população **212,58 Mi** (2024) · VAB setorial em **2021** (defasagem real do IBGE — só até esse ano no nível municipal; documentado em `ano_ref_vab`) · agropecuária no VAB total de 2021: **7,66%** (MT 37,98%), a mesma participação da variável 516 do SIDRA; entra no painel pelo `export_econ.py` |
-| `credito_rural.csv` | 5.406–5.396 mun (Custeio/Investimento) | Custeio **R$ 208,7 bi** + Investimento **R$ 105,1 bi** (2024). **Bug real corrigido**: o recurso "Investimento" do SICOR/BCB não tem o campo `codIbge` (só código interno do BCB) — a coleta antiga (Base_Municipios_Brasil) vinha sempre 100% nula para essa finalidade. Resolvido por join nome+UF, 99,9% de correspondência |
+| `credito_rural.csv` | 5.378–5.431 mun (Custeio/Investimento) | Custeio **R$ 191,4 bi** + Investimento **R$ 92,7 bi** (2025, contratos emitidos no ano; em 2024 eram R$ 208,7 bi e R$ 105,1 bi). Bate com o total por UF do próprio SICOR nas 27 UFs. **Bug real corrigido**: o recurso "Investimento" do SICOR/BCB não tem o campo `codIbge` (só código interno do BCB) — a coleta antiga (Base_Municipios_Brasil) vinha sempre 100% nula para essa finalidade. Resolvido por join nome+UF contra a `dim_municipio`, com os aliases de grafia de `common.ALIASES_MUNICIPIO` (Açu, Santo Antônio do Leverger...): 100% de correspondência |
 | `financas.csv` | 5.570 municípios | Receita corrente **R$ 1,17 tri** · Receita total **R$ 1,59 tri** · Transferências correntes **R$ 762 bi** (2023). **Bug real corrigido**: cada conta do DCA-Anexo I-C do SICONFI vem repetida em várias "colunas" do relatório (Receitas Brutas Realizadas / Deduções FUNDEB / Outras Deduções) — a lógica antiga sobrescrevia com a última que aparecesse, pegando valores errados (uma dedução, não o valor bruto). Corrigido filtrando `coluna == "Receitas Brutas Realizadas"` e casando por `cod_conta` exato |
 
 ### 3.5 Estrutural — Censo Agropecuário 2017 — achado bônus (alerta de qualidade resolvido)

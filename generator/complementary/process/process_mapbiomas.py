@@ -27,18 +27,13 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from common import (  # noqa: E402
-    RAW_DIR, PROCESSED_DIR, CONFIG_DIR, MANIFEST_DIR, cod_mun7, save_table, write_manifest, today_iso,
+    RAW_DIR, PROCESSED_DIR, CONFIG_DIR, MANIFEST_DIR, ALIASES_MUNICIPIO, cod_mun7, save_table,
+    write_manifest, today_iso,
 )
 
-# A planilha grafa cinco municípios de outro jeito que o IBGE. Alias explícito, da
-# chave do MapBiomas para a do IBGE (nome sem acento, em maiúsculas, | UF).
-ALIASES_MAPBIOMAS = {
-    "SAO LUIZ|RR": "SAO LUIZ DO ANAUA|RR",
-    "ACU|RN": "ASSU|RN",
-    "ARES|RN": "AREZ|RN",
-    "GRACHO CARDOSO|SE": "GRACCHO CARDOSO|SE",
-    "BARAO DE MONTE ALTO|MG": "BARAO DO MONTE ALTO|MG",
-}
+# A planilha grafa cinco municípios de outro jeito que o IBGE (Açu, Arês, São Luiz,
+# Gracho Cardoso, Barão de Monte Alto). Os aliases ficam em common, junto dos do SICOR.
+ALIASES_MAPBIOMAS = ALIASES_MUNICIPIO
 
 # As lagoas dos Patos e Mirim não pertencem a município: o IBGE as trata como áreas
 # à parte, com código próprio (áreas territoriais: 2.884 km² e 10.199 km², o que o
@@ -104,7 +99,8 @@ def _resolver_cod_ibge(raw: pd.DataFrame, c_municipio: str, c_uf: str) -> tuple[
     ref["_chave"] = ref["nome_municipio"].map(_norm_nome) + "|" + ref["sigla_uf"].str.upper()
     lookup = dict(zip(ref["_chave"], ref["cod_ibge"].map(cod_mun7)))
     for alias, oficial in ALIASES_MAPBIOMAS.items():
-        lookup[alias] = lookup[oficial]          # KeyError se o IBGE mudar o nome: rever o alias
+        if oficial in lookup:   # se o IBGE mudar o nome, a linha fica sem código e entra no aviso
+            lookup[alias] = lookup[oficial]
     for cod, (nome, uf) in AREAS_FORA_DE_MUNICIPIO.items():
         lookup[_norm_nome(nome) + "|" + uf] = cod
 

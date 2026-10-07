@@ -19,7 +19,7 @@ para cod_ibge (via nome+UF, com cdEstado→UF traduzido pelo recurso RegiaoUF)
 fica em process_credito_rural.py.
 
 Roda na máquina do usuário (rede aberta). Uso:
-  python download_credito_rural.py [--ano-credito 2024]
+  python download_credito_rural.py [--ano-credito 2025]
 """
 from __future__ import annotations
 
@@ -101,7 +101,8 @@ def baixar(ano_credito: int) -> list[Path]:
 
 def main():
     ap = argparse.ArgumentParser(description="Baixa SICOR/MDCR brutos (crédito rural municipal)")
-    ap.add_argument("--ano-credito", type=int, default=2024)
+    ap.add_argument("--ano-credito", type=int, default=2025,
+                    help="ano de emissão dos contratos (AnoEmissao); o padrão é o último completo")
     args = ap.parse_args()
 
     require_local_network("BCB/SICOR")

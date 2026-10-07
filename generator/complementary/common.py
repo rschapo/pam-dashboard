@@ -106,6 +106,18 @@ REGION_NAME2COD = {
 UFS = list(UF_NAMES.keys())
 ESTADOS_COD = [int(UF2IBGE[uf]) for uf in UFS]
 
+# Municípios que as fontes sem código IBGE (planilha do MapBiomas, investimento do
+# SICOR) grafam de outro jeito que o IBGE. Chave da fonte → chave do IBGE, as duas
+# como os casamentos por nome+UF as montam: nome sem acento, em maiúsculas, "|UF".
+ALIASES_MUNICIPIO = {
+    "SAO LUIZ|RR": "SAO LUIZ DO ANAUA|RR",
+    "ACU|RN": "ASSU|RN",
+    "ARES|RN": "AREZ|RN",
+    "GRACHO CARDOSO|SE": "GRACCHO CARDOSO|SE",
+    "BARAO DE MONTE ALTO|MG": "BARAO DO MONTE ALTO|MG",
+    "SANTO ANTONIO DO LEVERGER|MT": "SANTO ANTONIO DE LEVERGER|MT",
+}
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Normalização / limpeza
 # ──────────────────────────────────────────────────────────────────────────────
