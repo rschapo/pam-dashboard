@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Google tag (gtag.js) — carregado somente após consentimento; ver banner de cookies no fim do body -->
+<title>Glossário do Dashboard PAM — AgroCore Gestão do Agronegócio</title>
+<meta name="description" content="O que cada métrica do Dashboard PAM mede, como é calculada e o que ela não permite concluir, com as fontes e o período de cada base.">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="gl-body">
+
+<header id="hdr">
+  <div class="logo-wrap">
+    <a class="logo-badge" href="./" title="Voltar ao painel"><img src="assets/logo.png" alt="AgroCore — Gestão do Agronegócio" class="logo-img"></a>
+  </div>
+
+  <div class="hdr-divider"></div>
+
+  <div class="hdr-title">
+    <h1>Glossário do Dashboard PAM</h1>
+    <div class="hdr-sub">Métricas, cálculos, cuidados e fontes</div>
+  </div>
+
+  <a class="hdr-link" href="./">← Voltar ao painel</a>
+</header>
+
+<main class="gl-pagina">
+  <!-- O conteúdo sai de js/glossario.js, o mesmo da aba Glossário do painel -->
+  <div id="glossario" class="gl"><p class="gl-intro">Carregando o glossário…</p></div>
+</main>
+
+<script src="js/glossario.js"></script>
+<script>
+// Confere o JSON com o servidor antes de usar a cópia guardada (ver netlify.toml).
+// Sem ele o texto aparece do mesmo jeito, só sem as listas e a tabela de fontes.
+fetch('data/glossario.json', { cache: 'no-cache' })
+  .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .catch(e => { console.error('Erro ao carregar glossario.json', e); return null; })
+  .then(dados => {
+    GLOSSARIO.render(document.getElementById('glossario'), dados, { hash: true });
+    // glossario.html#gl-car-imov abre na métrica, e #gl-sec-car, na seção.
+    const alvo = decodeURIComponent(location.hash.slice(1)).replace(/^gl-/, '');
+    if (alvo) GLOSSARIO.irPara(alvo, !alvo.startsWith('sec-'));
+  });
+</script>
+<!-- Consentimento de cookies + Google Analytics (Consent Mode) — NÃO REMOVER -->
+<script>
+(function(){
+  var GA_ID='G-8E7DRQNPS7', KEY='agc_cookie_consent';
+  window.dataLayer=window.dataLayer||[];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('consent','default',{ad_storage:'denied',analytics_storage:'denied',ad_user_data:'denied',ad_personalization:'denied'});
+  var gaLoaded=false;
+  function loadGA(){ if(gaLoaded)return; gaLoaded=true; var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID; document.head.appendChild(s); gtag('js',new Date()); gtag('config',GA_ID); }
+  function grant(){ gtag('consent','update',{analytics_storage:'granted'}); loadGA(); }
+  function read(){ try{return localStorage.getItem(KEY);}catch(e){return null;} }
+  function save(v){ try{localStorage.setItem(KEY,v);}catch(e){} }
+  if(read()==='granted'){ grant(); }
+  var css='.agc-cookie{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:99999;width:min(920px,calc(100% - 24px));background:#fff;color:#1c2419;border:1px solid #e4e7e0;border-radius:14px;box-shadow:0 20px 48px rgba(0,0,0,.28);padding:15px 20px;display:flex;gap:12px 18px;align-items:center;flex-wrap:wrap;font:400 14px/1.5 system-ui,Segoe UI,Roboto,sans-serif}.agc-cookie[hidden]{display:none}.agc-cookie__t{flex:1 1 300px;margin:0;color:#4a5445}.agc-cookie__t a{color:#346032;font-weight:600}.agc-cookie__b{display:flex;gap:10px;flex-wrap:wrap}.agc-cookie button{font:inherit;font-weight:600;border-radius:100px;padding:9px 18px;cursor:pointer;border:1.5px solid transparent}.agc-cookie .ok{background:#346032;color:#fff}.agc-cookie .no{background:#fff;color:#22491C;border-color:#e4e7e0}@media(max-width:560px){.agc-cookie{bottom:0;left:0;transform:none;width:100%;border-radius:14px 14px 0 0}.agc-cookie__b{width:100%}.agc-cookie button{flex:1}}';
+  var st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+  var banner=null;
+  function build(){ if(banner)return; banner=document.createElement('aside'); banner.className='agc-cookie'; banner.setAttribute('role','dialog'); banner.setAttribute('aria-label','Aviso de cookies');
+    banner.innerHTML='<p class="agc-cookie__t">Usamos cookies essenciais e, com o seu consentimento, cookies analíticos (Google Analytics) para entender o uso deste dashboard. Veja a <a href="https://www.agrocoregestao.com.br/legal/politica-de-cookies.html" target="_blank" rel="noopener">Política de Cookies</a>.</p><div class="agc-cookie__b"><button type="button" class="no" data-cc="deny">Rejeitar</button><button type="button" class="ok" data-cc="accept">Aceitar</button></div>';
+    document.body.appendChild(banner);
+    banner.addEventListener('click',function(e){ var b=e.target.closest&&e.target.closest('[data-cc]'); if(!b)return; var v=b.getAttribute('data-cc')==='accept'?'granted':'denied'; save(v); if(v==='granted'){grant();} banner.hidden=true; });
+  }
+  function show(){ build(); banner.hidden=false; }
+  if(!read()){ if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',show);}else{show();} }
+})();
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 > Levantamento profundo de **tudo que existe** na pasta única do projeto
 > (`Dados IBGE PAM Culturas/pam-dashboard`) e de **tudo que está de fato
 > publicado** em https://boisterous-maamoul-a8039b.netlify.app/
-> Gerado em: 2026-08-16 · Atualizado em: 2026-09-26 · Repositório: https://github.com/rschapo/pam-dashboard
+> Gerado em: 2026-08-16 · Atualizado em: 2026-10-07 · Repositório: https://github.com/rschapo/pam-dashboard
 
 ---
 
@@ -43,6 +43,7 @@ abaixo, `<brutos>` é essa pasta. Em `data/` ficam os processados e os manifesto
 | `data/geo_mic.json` | Malha de microrregiões | 4,3 MB | 558 microrregiões |
 | `data/geo_mun.json` | Malha municipal | 16,4 MB | 5.570 municípios |
 | `data/perfil.json` | 🧭 Perfil do município | 1,0 MB | 5.571 municípios · INCRA, CAR, Censo 2017, MapBiomas 2024, PEVS 2025 |
+| `data/glossario.json` | 📖 Glossário (aba e `glossario.html`) | 16 KB | 11 fontes com período e data do download · 81 culturas nos 4 grupos · 16 categorias da PPM · 98 da PEVS · ressalvas do CAR |
 
 **O dashboard tem 8 abas de tema** (🌾 Agrícola, 🐄 Pecuária, 🌲 Silvicultura,
 📊 Economia, 🗺️ Uso do Solo, 🚜 Tratores, 💰 Crédito, 🌳 CAR) e, conforme o tema,
@@ -52,6 +53,12 @@ demanda. Na visão Municípios, escolher um município abre, em qualquer aba, o 
 **Perfil do município**: módulo fiscal e fração mínima (INCRA), imóveis,
 sobreposição e estrutura fundiária do CAR, estabelecimentos do Censo 2017, uso do
 solo (MapBiomas) e silvicultura (PEVS).
+
+A aba **📖 Glossário**, publicada também como página separada (`glossario.html`),
+explica o que cada métrica mede, como é calculada, o que ela não permite concluir e
+de onde vem cada base, com o período e a data do download. O "ⓘ" ao lado de cada
+seletor de métrica mostra a definição e abre o glossário nela. O texto fica em
+`js/glossario.js`; as listas e as fontes, em `glossario.json` (`export_glossario.py`).
 
 Deploy automático via Netlify a cada push na branch `main`. Conferido em
 2026-09-26: `pkg.json`, `pevs.json` e `car.json` no ar são idênticos aos do

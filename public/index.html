@@ -264,6 +264,7 @@
       <button class="tab-btn serie-temporal" data-tab="historico">📈 Série Histórica</button>
       <button class="tab-btn" data-tab="ranking">🏆 Rankings</button>
       <button class="tab-btn" data-tab="concentracao">📊 Concentração</button>
+      <button class="tab-btn" data-tab="glossario">📖 Glossário</button>
     </div>
 
     <div id="tab-area">
@@ -502,6 +503,12 @@
         </div>
       </div>
 
+      <!-- ═══ GLOSSÁRIO TAB ═══ -->
+      <!-- O conteúdo sai de js/glossario.js, o mesmo da página glossario.html -->
+      <div class="tab-pane" id="tab-glossario">
+        <div id="glossario" class="gl"></div>
+      </div>
+
     </div><!-- end tab-area -->
   </div><!-- end main -->
 </div><!-- end wrap -->
@@ -560,6 +567,7 @@
     .catch(e => { msg.textContent = 'Erro ao carregar geo_mic.json'; console.error(e); });
 })();
 </script>
+<script src="js/glossario.js"></script>
 <script src="js/main.js"></script>
 <!-- Consentimento de cookies + Google Analytics (Consent Mode) — NÃO REMOVER -->
 <script>

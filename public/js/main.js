@@ -374,7 +374,7 @@ function metLabel() {
   if (state.domain === 'maquinas') {
     const ano = MAQ?.ano || 2017;
     if (M === 'trat') return `Frota de tratores (${ano})`;
-    if (M === 'trat_p') return `Tratores até 100 cv (${ano})`;
+    if (M === 'trat_p') return `Tratores com menos de 100 cv (${ano})`;
     if (M === 'trat_g') return `Tratores de 100 cv ou mais (${ano})`;
     if (M === 'est') return `Estabelecimentos com trator (${ano})`;
   }
@@ -1530,19 +1530,76 @@ function switchDomain(dom) {
 // ═══════════════════════════════════════════════════════════
 // TABS
 // ═══════════════════════════════════════════════════════════
-function showTab(name) {
+// `alvo` só vale para o glossário: a métrica ou seção a destacar ("car-imov").
+function showTab(name, alvo) {
   document.querySelectorAll('.tab-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.tab === name));
   document.querySelectorAll('.tab-pane').forEach(p =>
     p.classList.toggle('active', p.id === 'tab-' + name));
   state.tab = name;
   document.body.dataset.tab = name;
+  if (name === 'glossario') { mostrarGlossario(alvo); return; }
   setTimeout(() => {
     if (mapBR  && (name === 'brasil'  || name === 'ranking')) mapBR.invalidateSize();
     if (mapEst && name === 'estados')  mapEst.invalidateSize();
     if (mapMun && name === 'municipio') mapMun.invalidateSize();
     refreshAll();
   }, 60);
+}
+
+// ─── Glossário ───
+// O texto e o desenho estão em glossario.js, o mesmo da página glossario.html. Aqui
+// se baixa o data/glossario.json na primeira visita à aba e se liga o "ⓘ" ao lado
+// de cada seletor de métrica, que mostra a definição e abre o glossário nela.
+let glossarioPendente = null;
+
+function carregarGlossario() {
+  // Falha de rede não fica guardada: a próxima visita tenta de novo.
+  glossarioPendente ||= fetch('data/glossario.json', CONFERIR)
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .catch(e => { console.error('Erro ao carregar glossario.json', e); glossarioPendente = null; return null; });
+  return glossarioPendente;
+}
+
+async function mostrarGlossario(alvo) {
+  const box = document.getElementById('glossario'); if (!box) return;
+  if (!box.dataset.pronto) {
+    if (!box.childElementCount) box.innerHTML = '<p class="gl-intro">Carregando o glossário…</p>';
+    const dados = await carregarGlossario();
+    if (!box.dataset.pronto) {
+      GLOSSARIO.render(box, dados, { linkPagina: 'glossario.html' });
+      if (dados) box.dataset.pronto = '1';
+    }
+  }
+  if (alvo) GLOSSARIO.irPara(alvo);
+}
+
+const SELETORES_METRICA = {
+  agricola: 'f-metrica', pecuaria: 'f-metrica-pec', silvicultura: 'f-metrica-sil',
+  economia: 'f-metrica-econ', terra: 'f-metrica-terra', maquinas: 'f-metrica-maq',
+  credito: 'f-metrica-cred', car: 'f-metrica-car',
+};
+
+function ligarDicasMetrica() {
+  for (const [dom, id] of Object.entries(SELETORES_METRICA)) {
+    const sel = document.getElementById(id), rot = sel?.closest('.filter-block')?.querySelector('label');
+    if (!rot || rot.querySelector('.info-met')) continue;
+    // Com o `for`, clicar no rótulo foca o seletor, e não o botão de dentro dele.
+    rot.htmlFor = id;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'info-met'; b.textContent = 'ⓘ';
+    b.setAttribute('aria-label', 'O que esta métrica mede (abre o glossário)');
+    // A dica é montada na hora: o seletor da pecuária e o da PEVS trocam de opções.
+    const dica = () => {
+      const d = GLOSSARIO.definicao(dom, sel.value);
+      b.title = d ? `${d.nome}: ${d.def}${d.nota ? ' ' + d.nota : ''}\nClique para abrir no glossário.`
+                  : 'Abrir o glossário';
+    };
+    b.addEventListener('pointerenter', dica);
+    b.addEventListener('focus', dica);
+    b.addEventListener('click', () => showTab('glossario', `${dom}-${sel.value}`));
+    rot.appendChild(b);
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1911,4 +1968,5 @@ function bindEvents() {
   document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
     showTab(btn.dataset.tab);
   }));
+  ligarDicasMetrica();
 }
