@@ -95,7 +95,7 @@ def build_econ() -> dict:
         "ano_pib": int(mun_df["ano_ref"].max()),
         "ano_vab": int(mun_df["ano_ref_vab"].max()),
         "ref_pop": str(mun_df["ref_populacao_pib"].dropna().iloc[0]),
-        "fonte": "IBGE/SIDRA 5938 (PIB dos Municípios) + população do ano do PIB (6579 ou Censo 2022, 4709)",
+        "fonte": "IBGE/SIDRA 5938 (PIB dos Municípios) e base do PIB dos Municípios (população do per capita oficial)",
         "gerado_em": now_iso(),
         "mun": mun,
         "uf": uf,
