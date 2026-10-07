@@ -359,7 +359,7 @@ function metLabel() {
     const anoPib = ECON?.ano_pib || 2023, anoVab = ECON?.ano_vab || 2021;
     if (M === 'pib') return `PIB Total (mil R$, ${anoPib})`;
     if (M === 'agro') return `VAB da agropecuária (mil R$, ${anoVab})`;
-    if (M === 'pc') return 'PIB per Capita (R$)';
+    if (M === 'pc') return `PIB per Capita (R$, ${anoPib})`;
     if (M === 'pct') return `Agropecuária no VAB (%, ${anoVab})`;
   }
   if (state.domain === 'terra') {
@@ -1410,7 +1410,14 @@ function loadPEVS() {
 const DOMINIOS_SIMPLES = {
   economia: {
     arquivo: 'econ.json', rotulo: 'economia',
-    aplicar: d => { ECON = d; econ_mun = d.mun || {}; econ_uf = d.uf || {}; },
+    aplicar: d => {
+      ECON = d; econ_mun = d.mun || {}; econ_uf = d.uf || {};
+      // Anos e população vêm do econ.json: o per capita usa a população que o IBGE
+      // usa para o ano do PIB (para 2023, a do Censo 2022).
+      const nota = document.getElementById('econ-nota');
+      if (nota && d.ano_pib) nota.textContent = `PIB ${d.ano_pib} e valor adicionado (VAB) por setor ` +
+        `${d.ano_vab} (IBGE). Per capita: PIB ÷ população${d.ref_pop ? ' (' + d.ref_pop + ')' : ''}.`;
+    },
     pronto: () => econLoaded, marcar: v => econLoaded = v,
     pendente: () => econLoading, guardar: p => econLoading = p,
   },

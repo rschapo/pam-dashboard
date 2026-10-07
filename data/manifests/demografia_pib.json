@@ -1,7 +1,7 @@
 {
   "dataset": "demografia_pib",
-  "source": "IBGE/SIDRA (tabela 5938 PIB total + VAB setorial, tabela 6579 população)",
-  "extraction_date": "2026-09-26",
+  "source": "IBGE/SIDRA (tabela 5938 PIB total + VAB setorial, 6579 população estimada) e base do PIB dos Municípios (população do per capita)",
+  "extraction_date": "2026-10-06",
   "reference_date": "2023-01-01",
   "source_files": [
     "sidra_pibtotal_municipios_2023.json",
@@ -55,28 +55,29 @@
   "output_files": [
     {
       "file": "demografia_pib.parquet",
-      "sha256": "a940cc54278e4310502229f4650cd83a4618d819c3d63c8eb5cab7846d111b8c",
-      "bytes": 402858
+      "sha256": "ccbcd0776b442453665a17a322037b6fafa2d4ba919b717b8675cc19042757e9",
+      "bytes": 437531
     },
     {
       "file": "demografia_pib.csv",
-      "sha256": "c543c398a7451f6d8d50d1bb1c90355a8b08ac9ac1899136502b961d967f3139",
-      "bytes": 740253
+      "sha256": "96ad687522e1d63056a1441e81a6cf08243c226656638b1d45f75746bf67010a",
+      "bytes": 1044578
     },
     {
       "file": "demografia_pib.parquet",
-      "sha256": "74b92c5e40fbb26c6304eb6ac83616822ff854b84b257f3b3014a691172a0852",
-      "bytes": 11110
+      "sha256": "b0d7638d03f33b1d8a482fdb7c1ec43c8ee528ebd21b2533b8eeae6a5141d862",
+      "bytes": 12708
     },
     {
       "file": "demografia_pib.csv",
-      "sha256": "604b033de79cfebc786f0d5efdb29e8126d68ef0e7c4dffcc850b8fc7cc360bf",
-      "bytes": 4153
+      "sha256": "dd393222bb04f03d2af2f3ab2168cb1a75a9f4591136e5b32a62ad2dc3c391a6",
+      "bytes": 5726
     }
   ],
-  "generated_at": "2026-09-26T13:27:13-04:00",
+  "generated_at": "2026-10-06T23:31:44-03:00",
   "ano_pib": 2023,
   "ano_pop": 2024,
+  "populacao_do_per_capita": "base do PIB dos Municípios (PIB ÷ per capita oficial)",
   "anos_vab_efetivos": [
     2021
   ]

@@ -3,7 +3,8 @@ export_econ.py — gera public/data/econ.json (aba Economia do dashboard).
 
 Lê demografia_pib (município e UF) de data/processed e grava, por município, os
 componentes que o front soma por estado e microrregião:
-  pop   população estimada (tabela 6579)
+  pop   população do ano do PIB, a que o IBGE usa no per capita (para 2023, a do
+        Censo 2022, tabela 4709: não há estimativa de 2022 e 2023); ref_pop diz qual
   pib   PIB a preços correntes, mil R$ (ano_pib)
   agro  VAB da agropecuária, mil R$ (ano_vab)
   ind   VAB da indústria, mil R$ (ano_vab)
@@ -37,7 +38,7 @@ from common import IBGE2UF, PROCESSED_DIR, now_iso  # noqa: E402
 PUBLIC_DATA = Path(__file__).resolve().parents[3] / "public" / "data"
 
 CAMPOS = {
-    "populacao": "pop",
+    "populacao_pib": "pop",
     "pib_total": "pib",
     "vab_agropecuaria": "agro",
     "vab_industria": "ind",
@@ -93,7 +94,8 @@ def build_econ() -> dict:
     return {
         "ano_pib": int(mun_df["ano_ref"].max()),
         "ano_vab": int(mun_df["ano_ref_vab"].max()),
-        "fonte": "IBGE/SIDRA 5938 (PIB dos Municípios) + 6579 (população)",
+        "ref_pop": str(mun_df["ref_populacao_pib"].dropna().iloc[0]),
+        "fonte": "IBGE/SIDRA 5938 (PIB dos Municípios) + população do ano do PIB (6579 ou Censo 2022, 4709)",
         "gerado_em": now_iso(),
         "mun": mun,
         "uf": uf,

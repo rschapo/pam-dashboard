@@ -12,6 +12,13 @@ ano do VAB setorial (ano_ref_vab). Não se divide pelo PIB total, que é de outr
 ano (ano_ref), nem pela soma agro + indústria + serviços, que deixa de fora a
 administração pública.
 
+pib_per_capita divide o PIB pela população que o IBGE usa no per capita oficial do
+mesmo ano (populacao_pib). Ela vem da base do PIB dos Municípios, como PIB ÷ per
+capita: para 2023, sem estimativa publicada, é a relação enviada ao TCU em 2023, o
+Censo 2022 com os limites municipais revistos até abril de 2023 (nota 3 da base). A
+tabela 4709 do Censo difere dela em 134 municípios, quase todos de PE, AL e RS.
+populacao segue sendo a estimativa mais recente (--ano-pop), como indicador.
+
 Saídas:
   data/processed/municipality/demografia_pib.parquet | .csv
   data/processed/state/demografia_pib.parquet | .csv
@@ -23,8 +30,11 @@ Uso:
 from __future__ import annotations
 
 import argparse
+import functools
+import io
 import json
 import re
+import zipfile
 import sys
 from pathlib import Path
 
@@ -94,6 +104,24 @@ def _wide_de(js: list, chave: str) -> pd.DataFrame:
     return df.pivot_table(index=chave, columns="campo", values="valor", aggfunc="first").reset_index()
 
 
+@functools.lru_cache(maxsize=None)
+def _populacao_do_pib(ano_pib: int) -> pd.DataFrame:
+    """População do per capita oficial por município: PIB ÷ PIB per capita da base do
+    PIB dos Municípios (download_demografia_pib.baixar_base_pib)."""
+    p = RAW_DIR / "ibge" / f"pib_municipios_base_2010_{ano_pib}.zip"
+    if not p.exists():
+        raise SystemExit(f"Não encontrado: {p}\nRode antes: python download_demografia_pib.py")
+    with zipfile.ZipFile(p) as z:
+        nome = next(n for n in z.namelist() if n.lower().endswith(".xlsx"))
+        b = pd.read_excel(io.BytesIO(z.read(nome)), sheet_name=0)
+    b.columns = [re.sub(r"\s+", " ", str(c)).strip() for c in b.columns]
+    b = b[b["Ano"] == ano_pib]
+    pib = next(c for c in b.columns if c.startswith("Produto Interno Bruto, "))
+    pc = next(c for c in b.columns if "per capita" in c)
+    return pd.DataFrame({"cod_ibge": b["Código do Município"].map(cod_mun7),
+                         "populacao_pib": (b[pib] * 1000 / b[pc]).round()})
+
+
 def build(nivel: str, ano_pib: int, ano_pop: int) -> pd.DataFrame:
     escopo = "municipios" if nivel == "6" else "uf"
     chave = "cod_ibge" if nivel == "6" else "cod_uf"
@@ -108,6 +136,12 @@ def build(nivel: str, ano_pib: int, ano_pop: int) -> pd.DataFrame:
         pop[chave] = pop["D1C"].map(lambda v: _norm_cod(v, chave))
         pop["populacao"] = pd.to_numeric(pop["V"], errors="coerce")
         pop = pop[[chave, "populacao"]]
+
+    pop_pib = _populacao_do_pib(ano_pib)
+    if chave == "cod_uf":
+        pop_pib = (pop_pib.assign(cod_uf=pop_pib["cod_ibge"].str[:2])
+                   .groupby("cod_uf", as_index=False)["populacao_pib"].sum())
+    pop = pop.merge(pop_pib, on=chave, how="outer") if not pop.empty else pop_pib
 
     pibtotal_wide = _wide_de(pibtotal_js, chave)
     vab_wide = _wide_de(vab_js, chave)
@@ -125,14 +159,13 @@ def build(nivel: str, ano_pib: int, ano_pop: int) -> pd.DataFrame:
     agro = pd.to_numeric(df["vab_agropecuaria"], errors="coerce")
     vab_total = pd.to_numeric(df["vab_total"], errors="coerce")
     df["pct_agro_no_vab"] = (100 * agro / vab_total.replace(0, float("nan"))).round(2)
-    # PIB per capita (R$): não existe como variável na 5938 — calculado aqui.
-    # pib_total vem em Mil Reais (unidade da tabela) -> x1000 para reais correntes.
-    if "populacao" in df:
-        pib_total_reais = pd.to_numeric(df["pib_total"], errors="coerce") * 1000
-        pop_num = pd.to_numeric(df["populacao"], errors="coerce")
-        df["pib_per_capita"] = (pib_total_reais / pop_num.replace(0, float("nan"))).round(2)
-    else:
-        df["pib_per_capita"] = None
+    # PIB per capita (R$): não existe como variável na 5938 — calculado aqui, com a
+    # população do per capita oficial. pib_total vem em Mil Reais -> x1000.
+    pib_total_reais = pd.to_numeric(df["pib_total"], errors="coerce") * 1000
+    pop_num = pd.to_numeric(df["populacao_pib"], errors="coerce")
+    df["pib_per_capita"] = (pib_total_reais / pop_num.replace(0, float("nan"))).round(2)
+    df["ref_populacao_pib"] = (f"Censo 2022, como no per capita oficial do IBGE" if ano_pib >= 2022
+                               else f"estimativa de {ano_pib}, como no per capita oficial do IBGE")
     df["ano_ref"] = ano_pib          # população + PIB total
     df["ano_ref_vab"] = ano_vab      # VAB setorial + pct_agro_no_vab (pode ser < ano_ref)
     df["fonte"] = "IBGE/SIDRA (tabelas 5938 e 6579)"
@@ -167,12 +200,14 @@ def main():
 
     write_manifest(
         "demografia_pib",
-        source="IBGE/SIDRA (tabela 5938 PIB total + VAB setorial, tabela 6579 população)",
+        source="IBGE/SIDRA (tabela 5938 PIB total + VAB setorial, 6579 população estimada) "
+               "e base do PIB dos Municípios (população do per capita)",
         reference_date=f"{args.ano_pib}-01-01",
         source_files=[str(p) for p in (RAW_DIR / "ibge").glob("sidra_p*_*.json")]
                      + [str(p) for p in (RAW_DIR / "ibge").glob("sidra_vabsetorial_*.json")],
         output_files=outs_all,
         extra={"ano_pib": args.ano_pib, "ano_pop": args.ano_pop,
+               "populacao_do_per_capita": "base do PIB dos Municípios (PIB ÷ per capita oficial)",
                "anos_vab_efetivos": sorted(anos_vab)},
     )
     print("Concluído.")

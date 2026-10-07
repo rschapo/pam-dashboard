@@ -95,6 +95,7 @@ def baixar(ano_pib: int, ano_pop: int) -> dict[str, Path]:
         p.write_text(json.dumps(pop, ensure_ascii=False), encoding="utf-8")
         saidas[f"pop_{escopo}"] = p
 
+
         print(f"[PIB total] tabela 5938 — {escopo}, ano {ano_pib}")
         pib_total = _get(_sidra_url("5938", nivel, PIB_TOTAL_VAR, ano_pib))
         p2 = dst / f"sidra_pibtotal_{escopo}_{ano_pib}.json"
@@ -124,7 +125,32 @@ def baixar(ano_pib: int, ano_pop: int) -> dict[str, Path]:
         print(f"    VAB setorial efetivo: {ano_tentativa}")
 
     saidas["_ano_vab_efetivo"] = ano_vab_efetivo
+    saidas["base_pib"] = baixar_base_pib(ano_pib, dst)
     return saidas
+
+
+def baixar_base_pib(ano_pib: int, dst: Path) -> Path:
+    """Base de dados do PIB dos Municípios (FTP do IBGE), que traz o PIB per capita
+    oficial de cada município. A SIDRA não o publica, e a população que o IBGE usa nele
+    não é a da tabela 6579: para 2023, sem estimativa, é a relação enviada ao TCU em
+    2023 (Censo 2022 com os limites municipais revistos até abril de 2023; nota 3 da
+    base). O processamento tira dela a população do per capita (PIB ÷ per capita)."""
+    import re
+    import urllib.request
+    raiz = "https://ftp.ibge.gov.br/Pib_Municipios/"
+    ler = lambda u: urllib.request.urlopen(u, timeout=120).read().decode("utf-8", "replace")
+    pastas = sorted({m for m in re.findall(r'href="(\d{4}(?:_\d{4})?)/"', ler(raiz))
+                     if str(ano_pib) in m}, reverse=True)
+    for pasta in pastas:
+        base = f"{raiz}{pasta}/base/"
+        arqs = re.findall(rf'href="(base_de_dados_2010_{ano_pib}_xlsx\.zip)"', ler(base))
+        if arqs:
+            url = base + arqs[0]
+            print(f"[PIB per capita] base do PIB dos Municípios — {url}")
+            p = dst / f"pib_municipios_base_2010_{ano_pib}.zip"
+            p.write_bytes(urllib.request.urlopen(url, timeout=600).read())
+            return p
+    raise SystemExit(f"Base do PIB dos Municípios de {ano_pib} não encontrada em {raiz}")
 
 
 def main():

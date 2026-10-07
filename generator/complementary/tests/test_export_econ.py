@@ -6,13 +6,14 @@ import pytest
 import export_econ as ee
 
 SORRISO, BOA_ESPERANCA = "5107925", "5101837"
-COLUNAS = ["populacao", "pib_total", "vab_agropecuaria", "vab_industria", "vab_servicos",
+COLUNAS = ["populacao", "populacao_pib", "pib_total", "vab_agropecuaria", "vab_industria", "vab_servicos",
            "vab_adm_publica", "vab_total", "impostos_liquidos"]
 
 
 def _tabela(chave, linhas):
     df = pd.DataFrame([{chave: cod, **dict(zip(COLUNAS, v))} for cod, v in linhas])
     df["ano_ref"], df["ano_ref_vab"] = 2023, 2021
+    df["ref_populacao_pib"] = "Censo 2022, como no per capita oficial do IBGE"
     return df
 
 
@@ -20,12 +21,12 @@ def test_econ_json_leva_os_componentes_e_o_vab_total_como_denominador_oculto(tmp
     (tmp_path / "municipality").mkdir()
     (tmp_path / "state").mkdir()
     _tabela("cod_ibge", [
-        (SORRISO, (110_000, 12_000_000.0, 5_000_000.0, 1_000_000.0, 3_000_000.0,
+        (SORRISO, (110_000, 106_000, 12_000_000.0, 5_000_000.0, 1_000_000.0, 3_000_000.0,
                    500_000.0, 9_500_000.0, 2_500_000.0)),
         (BOA_ESPERANCA, (None,) * len(COLUNAS)),
     ]).to_parquet(tmp_path / "municipality" / "demografia_pib.parquet", index=False)
     _tabela("cod_uf", [
-        ("51", (3_836_399, 273_008_586.0, 79_882_439.0, 32_177_974.0, 73_276_756.0,
+        ("51", (3_836_399, 3_658_813, 273_008_586.0, 79_882_439.0, 32_177_974.0, 73_276_756.0,
                 25_007_411.0, 210_344_581.0, 23_045_622.0)),
     ]).to_parquet(tmp_path / "state" / "demografia_pib.parquet", index=False)
     monkeypatch.setattr(ee, "PROCESSED_DIR", tmp_path)
@@ -33,7 +34,9 @@ def test_econ_json_leva_os_componentes_e_o_vab_total_como_denominador_oculto(tmp
     e = ee.build_econ()
 
     assert (e["ano_pib"], e["ano_vab"]) == (2023, 2021)
-    assert e["mun"][SORRISO] == {"pop": 110000, "pib": 12000000, "agro": 5000000,
+    # pop é a população do per capita oficial, e não a estimativa mais recente
+    assert e["ref_pop"] == "Censo 2022, como no per capita oficial do IBGE"
+    assert e["mun"][SORRISO] == {"pop": 106000, "pib": 12000000, "agro": 5000000,
                                  "ind": 1000000, "serv": 3000000, "_vab": 9500000}
     assert BOA_ESPERANCA not in e["mun"]      # sem dado: fica fora, e o front mostra "—"
     assert e["uf"]["MT"]["_vab"] == 210344581
