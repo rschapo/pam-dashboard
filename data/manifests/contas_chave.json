@@ -1,0 +1,73 @@
+{
+  "dataset": "contas_chave",
+  "source": "Receita Federal CNPJ 2026-10; ANP 09/2026",
+  "extraction_date": "2026-10-21",
+  "reference_date": "2026-10",
+  "source_files": [
+    "pb-da-etanol_2026-10-21.zip"
+  ],
+  "source_hashes": [
+    {
+      "file": "pb-da-etanol_2026-10-21.zip",
+      "sha256": "30f9150a722e1f21e7d4aa7d38be6fcb9950ece87bca5531b29154d9122c9010"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 20956,
+  "municipality_count": 3837,
+  "rejected_rows": 0,
+  "warnings": [
+    "sem ponto: 5101837"
+  ],
+  "output_files": [
+    {
+      "file": "contas_chave_municipio.parquet",
+      "sha256": "9eed1e244a86c00b952bb2f5acb34118a11dc9f40483603ba0bb1f406abc77bd",
+      "bytes": 42567
+    },
+    {
+      "file": "contas_chave_municipio.csv",
+      "sha256": "8314e17fb741eefd1f8ff0a1724be923f45177f0b9e3dc52cac59fc7252e89dc",
+      "bytes": 219062
+    },
+    {
+      "file": "contas_chave.json",
+      "sha256": "c8d94e05e66735e4345a88594de497da51e71ebffe28be41e3134a162f5957b4",
+      "bytes": 252142
+    }
+  ],
+  "generated_at": "2026-10-21T16:30:24-04:00",
+  "validacao": {
+    "periodo_rfb": "2026-10",
+    "mes_anp": "09/2026",
+    "arquivo_anp": "pb-da-etanol_2026-10-21.zip",
+    "plantas_anp": 370,
+    "capacidade_anp_m3d": 442294,
+    "anp_ativas_na_receita": 367,
+    "anp_inativas_na_receita": 3,
+    "anp_nao_encontradas_na_receita": 0,
+    "receita_cnae_de_usina": 1724,
+    "receita_cnae_de_usina_e_anp": 350,
+    "anp_com_outro_cnae_na_receita": 17,
+    "receita_cnae_de_usina_sem_anp_confirmar": 1374,
+    "usinas_em_recuperacao_judicial": 177,
+    "grupos_sucroenergeticos_raiz": 1283,
+    "unidades_agricolas_de_grupo": 2169,
+    "excluidos_produtor_rural_pf": 152231,
+    "excluidos_outras_naturezas": 102,
+    "sem_municipio_ibge": 23,
+    "municipios_rfb_sem_par": [
+      "EXTERIOR (EX)"
+    ]
+  },
+  "totais": {
+    "usina_anp": 367,
+    "usina_conf": 1370,
+    "usina_agricola": 2169,
+    "sucos": 172,
+    "pos_colheita": 1958,
+    "cafe": 3147,
+    "florestal": 2306,
+    "cooperativa": 9444
+  }
+}

@@ -15,6 +15,8 @@ Detalhes operacionais em `config/sources.yaml` (campos de rastreabilidade da se�
 | SNCR | INCRA | gov.br/incra; acervofundiario.incra.gov.br | CSV/SHP por UF | manual, por UF |
 | CAR | SICAR / Serviço Florestal Brasileiro | car.gov.br; consultapublica.car.gov.br | SHP por UF/mun. | manual, com termos de uso |
 | Uso e cobertura | MapBiomas | brasil.mapbiomas.org/estatisticas | XLSX / GeoTIFF (GEE) | manual, complementar |
+| Contas-chave e produtores rurais | Receita Federal, Dados Abertos CNPJ | arquivos.receitafederal.gov.br (base local `cnpj_<período>.duckdb` da pasta Dados Receita Federal; em uso, 2026-10, aberturas até 11/10/2026) | CSV → DuckDB | automático (scripts da pasta Dados Receita Federal) |
+| Usinas (validação) | ANP, Painel Dinâmico de Produtores de Etanol | gov.br/anp/.../arquivos-etanol/pb-da-etanol.zip (baixado em 21/10/2026, sha256 30f9150a722e1f21e7d4aa7d38be6fcb9950ece87bca5531b29154d9122c9010; último mês 09/2026) | ZIP/CSV | automático (`download_anp_etanol.py`) |
 
 ## Registro de extração (o que anotar por arquivo)
 
@@ -29,6 +31,10 @@ método de download, filtros aplicados e observações de cobertura/limitação.
 - INCRA/SNCR e SICAR/CAR: dados públicos com **restrições de privacidade** — não
   divulgar titular; ver `CAR_LIMITATIONS.md`. Registrar os termos de uso do SICAR.
 - MapBiomas: **CC-BY-SA** — citar coleção e versão; fonte complementar.
+- Receita Federal (CNPJ) e ANP: dados públicos. No painel, só contagens por município: não
+  publicar sócios (QSA) nem dado de pessoa física (nome, CPF/CNPJ de pessoa física, endereço,
+  contato, coordenada, data de abertura individual). Regra completa em
+  `RECEITA_CONTAS_E_PRODUTORES.md`.
 
 ## Não fazer
 

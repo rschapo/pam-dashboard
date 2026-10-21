@@ -244,7 +244,7 @@ print("Sanitizing NaN values …")
 PEVS = _clean(PEVS)
 
 print("Writing pevs.json …")
-OUT.write_text(json.dumps(PEVS, ensure_ascii=False, separators=(',', ':')), encoding="utf-8")
+OUT.write_text(json.dumps(PEVS, ensure_ascii=False, separators=(',', ':'), allow_nan=False), encoding="utf-8")
 size = OUT.stat().st_size / 1_048_576
 print(f"  pevs.json: {size:.1f} MB  ->  {OUT}")
 

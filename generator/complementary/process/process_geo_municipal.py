@@ -75,7 +75,7 @@ def main():
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     # geometry.__geo_interface__ evita casas decimais excessivas do to_json() padrão
     fc = json.loads(gdf.to_json(drop_id=True))
-    OUT_PATH.write_text(json.dumps(fc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    OUT_PATH.write_text(json.dumps(fc, ensure_ascii=False, separators=(",", ":"), allow_nan=False), encoding="utf-8")
 
     size_mb = OUT_PATH.stat().st_size / 1_048_576
     print(f"  Municípios: {len(gdf):,}")

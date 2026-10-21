@@ -59,6 +59,29 @@ let cred_mun;
 let CAR = null, carLoaded = false, carLoading = false;
 let car_mun, car_razoes = {};
 
+// PRODUTORES (Receita, CNPJ) — só contagens de cadastros por município e atividade
+let PROD = null, prodLoaded = false, prodLoading = false;
+let prod_mun;
+
+// Partes que a PAM também publica no total (café Arábica e Canephora, dentro do Café
+// Total): selecionáveis uma a uma, nunca somadas em grupo. arq_cultura dá o arquivo
+// de pam_mun/ de cada cultura; terr_ha, a área de cada município (IBGE, ha).
+let filhas = {}, arqCultura = {}, terr_ha = {};
+
+// Uma cultura por município e ano (pam_mun/<arquivo>.json), baixada quando é escolhida:
+// o pkg.json só tem o município pelo total e pelos grupos.
+const CULT_MUN = {}, cultMunPendente = {};
+
+// Grupos e cultura dominante no último ano (pam_grupos.json), para as densidades
+// prontas e a cultura dominante.
+let PAM_GRUPOS = null, pamGruposPendente = null;
+
+// Contas-chave da Receita (contas_chave.json): camada de círculos sobre qualquer aba.
+let CONTAS = null, contasPendente = null;
+
+// Ausente (não publicado) no mapa das leituras novas: cinza, nunca a cor do zero.
+const COR_SEM_DADO = '#C9CEC4';
+
 // Unidade de cada categoria pecuária (rebanho = sempre cabeças; produção varia)
 const PEC_UNITS = {
   'Bovino': 'cab.', 'Bubalino': 'cab.', 'Caprino': 'cab.', 'Codornas': 'cab.', 'Equino': 'cab.',
@@ -78,11 +101,15 @@ let state = {
   metricaMaq: 'trat',
   metricaCred: 'total',
   metricaCar: 'imov',
+  // Produtores abrem em pessoa jurídica: o produtor pessoa física só tem CNPJ em SP (e em AL)
+  metricaProd: 'n', prodAtiv: '', prodTipo: 'PJ',
+  pronta: '', contas: '',
   ufSel: '', microSel: '', munSel: '', anoIdx: 0
 };
 
 function curMetrica() {
   if (state.domain === 'pecuaria') return state.metricaPec;
+  if (state.domain === 'produtores') return state.metricaProd;
   if (state.domain === 'silvicultura') return state.metricaSil;
   if (state.domain === 'economia') return state.metricaEcon;
   if (state.domain === 'terra') return state.metricaTerra;
@@ -105,6 +132,8 @@ window.initDashboard = function(pkg, geoUF, geoMic, dimMun) {
 
   ({ anos, culturas, colheitadeiras, tratores, permanentes, temporarias,
      ufs_info, mic_info, mun_info, est_data, mic_data, mun_data, mun_grp_data } = PKG);
+  filhas = PKG.filhas || {};
+  arqCultura = PKG.arq_cultura || {};
   completarMunicipios(dimMun);
 
   N_ANOS = anos.length;
@@ -125,6 +154,7 @@ window.initDashboard = function(pkg, geoUF, geoMic, dimMun) {
   populateMicros();
   populateMunicipios();
   populateMetricaPecOptions();
+  montarProntas();
   initMapBR();
   initMapEst();
   initMapMun();
@@ -137,10 +167,14 @@ window.initDashboard = function(pkg, geoUF, geoMic, dimMun) {
 // outros 29, o PIB de PE saía 24,6% menor. A divisão territorial do IBGE
 // (municipios.json) completa mun_info e mic_info sem mexer no que a PAM já traz.
 // Nas abas da PAM os rankings não mudam, porque só listam quem tem valor.
+// O quarto campo é a área territorial do IBGE (ha), denominador das densidades.
 function completarMunicipios(dim) {
   if (!dim) return;
   for (const [mid, [n, uf, ms]] of Object.entries(dim.mic || {})) mic_info[mid] ||= { n, uf, ms };
-  for (const [id, [n, uf, mid]] of Object.entries(dim.mun || {})) mun_info[id] ||= { n: `${n} - ${uf}`, uf, mid };
+  for (const [id, [n, uf, mid, ha]] of Object.entries(dim.mun || {})) {
+    mun_info[id] ||= { n: `${n} - ${uf}`, uf, mid };
+    if (ha > 0) terr_ha[id] = ha;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -182,16 +216,191 @@ function getAno() {
 // Ano do seletor nos títulos. Fonte de recorte único já carrega o próprio ano no
 // rótulo da métrica; o do seletor não se aplica a ela e só confundiria ao lado.
 function anoNoTitulo(antes = ' (', depois = ')') {
+  const r = retratoTxt();
+  if (r) return antes.trim() === 'em' ? ' · ' + r : antes + r + depois;
   return baseDominioSimples() ? '' : antes + getAno() + depois;
 }
 
+// A cultura escolhida vale sozinha, mesmo a parte do café; num grupo, as partes ficam
+// fora, porque o Café Total já as contém.
 function getActiveCulturas() {
   if (state.cultura) return [state.cultura];
-  if (state.grupoId === 'COL') return colheitadeiras;
-  if (state.grupoId === 'TRA') return tratores;
-  if (state.grupoId === 'TEM') return temporarias;
-  if (state.grupoId === 'PER') return permanentes;
-  return culturas;
+  let lista = culturas;
+  if (state.grupoId === 'COL') lista = colheitadeiras;
+  if (state.grupoId === 'TRA') lista = tratores;
+  if (state.grupoId === 'TEM') lista = temporarias;
+  if (state.grupoId === 'PER') lista = permanentes;
+  return lista.filter(c => !filhas[c]);
+}
+
+// ─── Leituras do território (domínio Agrícola) ───
+// Densidade: área colhida ÷ área do território (ha/km²). Vocação: parte da área
+// colhida do próprio território que é da seleção (%). Cultura dominante: categoria de
+// maior área entre as lavouras do PAM e a floresta plantada da PEVS. Os atalhos de
+// "Densidades prontas" ficam SEMPRE no último ano publicado, e não no ano do seletor.
+function leituraAgro() {
+  const m = state.metricaAgro;
+  return state.domain === 'agricola' && (m === 'dens' || m === 'voc' || m === 'dom') ? m : null;
+}
+function prontaAtiva() {
+  const m = leituraAgro();
+  return (m === 'dens' || m === 'voc') && state.pronta && PAM_GRUPOS?.grupos?.[state.pronta] ? state.pronta : '';
+}
+function grupoPronta() { return PAM_GRUPOS?.grupos?.[prontaAtiva()] || null; }
+// Texto do ano fixo, quando a leitura não segue o seletor ("último ano do PAM 2025").
+function retratoTxt() {
+  if (state.domain !== 'agricola' || !PAM_GRUPOS) return '';
+  const g = grupoPronta();
+  if (g) return g.fonte === 'pevs' ? `último ano da PEVS ${PAM_GRUPOS.ano_pevs}` : `último ano do PAM ${PAM_GRUPOS.ano_pam}`;
+  if (leituraAgro() === 'dom') return `último ano do PAM ${PAM_GRUPOS.ano_pam} e da PEVS ${PAM_GRUPOS.ano_pevs}`;
+  return '';
+}
+// Leituras que só existem no último ano: sem série histórica.
+function semSerieAgro() { return !!(prontaAtiva() || leituraAgro() === 'dom'); }
+
+function idsDe(nivel, chave) {
+  if (nivel === 'mun') return [chave];
+  if (nivel === 'mic') return indicesMunicipios().mic[chave] || [];
+  if (nivel === 'uf') return indicesMunicipios().uf[chave] || [];
+  return Object.keys(mun_info);                                        // Brasil
+}
+const terrDe = ids => ids.map(id => terr_ha[id]);
+
+// Área de um grupo pronto no município. PAM: sem nenhuma lavoura publicada no último
+// ano, ausente (null); com PAM e sem o grupo, zero. A PEVS cobre todos os municípios.
+function areaGrupoMun(id, g) {
+  const r = PAM_GRUPOS?.mun?.[id], o = PAM_GRUPOS?.grupos?.[g];
+  if (!o) return null;
+  if (o.fonte === 'pevs') return r?.g?.[g] || 0;
+  if (!r || r.t == null) return null;
+  return r.g?.[g] || 0;
+}
+function totalPamMun(id) {
+  const r = PAM_GRUPOS?.mun?.[id];
+  return r && r.t != null ? r.t : null;
+}
+function somaOuNull(vals) {
+  let s = 0, algum = false;
+  for (const v of vals) if (v != null && isFinite(v)) { s += v; algum = true; }
+  return algum ? s : null;
+}
+
+// Área da seleção atual (grupo ou cultura, ou o atalho pronto) e a área colhida total,
+// no mesmo território e ano.
+function areaSelecao(nivel, chave, ai) {
+  const g = prontaAtiva();
+  if (g) return somaOuNull(idsDe(nivel, chave).map(id => areaGrupoMun(id, g)));
+  if (nivel === 'br') return Object.keys(ufs_info).reduce((s, u) => s + (calcEst(u, 'a') || 0), 0);
+  if (nivel === 'uf') return calcEst(chave, 'a');
+  if (nivel === 'mic') return calcMic(chave, 'a');
+  return calcMunVal(chave, 'a', ai);
+}
+function areaTotalPam(nivel, chave, ai) {
+  const g = prontaAtiva();
+  // A floresta plantada não é área colhida: a vocação dela é a parte que ela ocupa nas
+  // lavouras mais a floresta, o mesmo denominador da cultura dominante.
+  if (g && PAM_GRUPOS.grupos[g].fonte === 'pevs')
+    return somaOuNull(idsDe(nivel, chave).map(id => (totalPamMun(id) || 0) + (areaGrupoMun(id, g) || 0)));
+  if (g) return somaOuNull(idsDe(nivel, chave).map(totalPamMun));
+  if (nivel === 'br') return Object.keys(ufs_info).reduce((s, u) => s + areaTotalPam('uf', u, ai), 0);
+  if (nivel === 'uf') {
+    const d = est_data[chave]; if (!d) return 0;
+    return culturas.reduce((s, c) => s + (filhas[c] ? 0 : (d[c]?.a?.[ai] || 0)), 0);
+  }
+  if (nivel === 'mic') return mic_data[chave]?.ALL?.a?.[ai] || 0;
+  return mun_data[chave]?.a?.[ai] || 0;
+}
+function leituraValor(nivel, chave, m, ai) {
+  if (m === 'dens') return LEITURAS.densidade([areaSelecao(nivel, chave, ai)], terrDe(idsDe(nivel, chave)));
+  if (m === 'voc') return LEITURAS.vocacao(areaSelecao(nivel, chave, ai), areaTotalPam(nivel, chave, ai));
+  return null;                                                         // 'dom' é categoria, não número
+}
+
+// Densidade ou vocação de UMA cultura no Brasil ou no estado (gráficos de "Top
+// culturas"). Com um atalho pronto, o ano é o último do PAM.
+function leituraCultura(c, m, uf, ai) {
+  const ufs = uf ? [uf] : Object.keys(ufs_info);
+  const a = ufs.reduce((s, u) => s + (est_data[u]?.[c]?.a?.[ai] || 0), 0);
+  const nivel = uf ? 'uf' : 'br';
+  if (m === 'dens') return LEITURAS.densidade([a], terrDe(idsDe(nivel, uf)));
+  const tot = ufs.reduce((s, u) => s + culturas.reduce((t, k) => t + (filhas[k] ? 0 : (est_data[u]?.[k]?.a?.[ai] || 0)), 0), 0);
+  return LEITURAS.vocacao(a, tot);
+}
+// Culturas e ano dos gráficos de "Top culturas" na leitura atual.
+function culturasDaLeitura() {
+  const g = grupoPronta();
+  if (g) return { lista: g.culturas, ai: Math.max(0, anos.indexOf(PAM_GRUPOS.ano_pam)) };
+  return { lista: getActiveCulturas(), ai: getAnoIdx() };
+}
+
+// Cultura dominante de um território: a do município, ou a categoria de maior área
+// somada nos municípios do estado ou da microrregião.
+function ordemCategorias() { return Object.keys(PAM_GRUPOS?.categorias || {}); }
+function dominanteDe(nivel, chave) {
+  if (!PAM_GRUPOS) return null;
+  const regs = idsDe(nivel, chave).map(id => PAM_GRUPOS.mun[id]).filter(Boolean);
+  const areas = nivel === 'mun' ? (regs[0]?.c || {}) : LEITURAS.somaCategorias(regs);
+  const cat = LEITURAS.dominante(areas, ordemCategorias());
+  if (!cat) return null;
+  const tot = Object.values(areas).reduce((s, v) => s + v, 0);
+  return { cat, a: areas[cat], tot, pct: tot ? areas[cat] / tot * 100 : null };
+}
+
+function carregarJSON(arquivo) {
+  return fetch('data/' + arquivo, CONFERIR)
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
+}
+// Falha de rede não fica guardada: a próxima tentativa baixa de novo.
+function carregarPamGrupos() {
+  if (PAM_GRUPOS) return Promise.resolve(PAM_GRUPOS);
+  pamGruposPendente ||= carregarJSON('pam_grupos.json')
+    .then(d => { PAM_GRUPOS = d; montarProntas(); return d; })
+    .catch(e => { console.error('Erro ao carregar pam_grupos.json', e); pamGruposPendente = null; return null; });
+  return pamGruposPendente;
+}
+function carregarCulturaMun(c) {
+  if (!c || CULT_MUN[c]) return Promise.resolve(CULT_MUN[c] || null);
+  if (!arqCultura[c]) return Promise.resolve(null);
+  cultMunPendente[c] ||= carregarJSON(`pam_mun/${arqCultura[c]}.json`)
+    .then(d => (CULT_MUN[c] = d))
+    .catch(e => { console.error('Erro ao carregar a cultura ' + c, e); delete cultMunPendente[c]; return null; });
+  return cultMunPendente[c];
+}
+// Valor de uma cultura num município: [área, produção, valor] do ano; o rendimento é
+// recomposto. null = linha publicada sem o número.
+function valorCulturaMun(c, munId, m, ai) {
+  const d = CULT_MUN[c]?.mun?.[munId]; if (!d) return 0;
+  const [a, p, v] = [d[0][ai], d[1][ai], d[2][ai]];
+  if (m === 'r') return a > 0 && p != null ? rendimentoPonderado(p, a) : 0;
+  return { a, p, v }[m] ?? null;
+}
+
+// Atalhos de densidade pronta, montados das definições do pam_grupos.json.
+// Antes do pam_grupos.json chegar, os botões saem desta lista; a definição de cada grupo
+// (dica do botão) entra quando o arquivo é baixado, no primeiro clique.
+const PRONTAS_CURTO = { cana: 'Cana', citros: 'Citros', cafe: 'Café', floresta: 'Floresta plantada', hf: 'H&F',
+                        hf_sem_citros: 'H&F sem citros', soja: 'Soja', milho: 'Milho', algodao: 'Algodão',
+                        arroz: 'Arroz', trigo: 'Trigo', fumo: 'Fumo',
+                        tra: '🚜 Tratores', col: '🌾 Colheitadeiras' };
+function montarProntas() {
+  const box = document.getElementById('pronta-btns'); if (!box) return;
+  const grupos = PAM_GRUPOS?.grupos || Object.fromEntries(Object.keys(PRONTAS_CURTO).map(k => [k, null]));
+  box.innerHTML = Object.entries(grupos).map(([k, g]) =>
+    `<button type="button" class="pronta-btn${state.pronta === k ? ' active' : ''}" data-pronta="${k}"
+      title="${escHTML(g ? g.rot + ' · ' + g.def : PRONTAS_CURTO[k])}">${escHTML(PRONTAS_CURTO[k] || g?.rot || k)}</button>`).join('');
+  box.querySelectorAll('.pronta-btn').forEach(b => b.addEventListener('click', () => escolherPronta(b.dataset.pronta)));
+}
+function escolherPronta(k) {
+  state.pronta = state.pronta === k ? '' : k;            // clicar de novo desliga
+  if (state.pronta && state.metricaAgro !== 'dens' && state.metricaAgro !== 'voc') state.metricaAgro = 'dens';
+  document.getElementById('f-metrica').value = state.metricaAgro;
+  document.querySelectorAll('.pronta-btn').forEach(b => b.classList.toggle('active', b.dataset.pronta === state.pronta));
+  atualizar();
+}
+function limparPronta() {
+  if (!state.pronta) return;
+  state.pronta = '';
+  document.querySelectorAll('.pronta-btn').forEach(b => b.classList.remove('active'));
 }
 
 function getMicKey() {
@@ -211,14 +420,22 @@ const RAZOES_ECON = {
   pct: { num: 'agro', den: '_vab', fator: 100, pareado: true },
 };
 
+// Produtores: cadastros por mil ha de área colhida (PAM, último ano) e por km² (área
+// do IBGE). Em estado e microrregião, soma dos cadastros ÷ soma das áreas.
+const RAZOES_PROD = {
+  mil_ha: { num: 'n', den: '_ac', fator: 1000 },
+  km2:    { num: 'n', den: '_km2', fator: 1 },
+};
+
 function baseDominioSimples() {
   return { economia: econ_mun, terra: terra_mun, maquinas: maq_mun,
-           credito: cred_mun, car: car_mun }[state.domain] || null;
+           credito: cred_mun, car: car_mun, produtores: prod_mun }[state.domain] || null;
 }
 
 function razoesDoDominio() {
   if (state.domain === 'economia') return RAZOES_ECON;
   if (state.domain === 'car') return car_razoes;
+  if (state.domain === 'produtores') return RAZOES_PROD;
   return {};
 }
 
@@ -285,6 +502,8 @@ function agregarMunicipios(ids, m, ai) {
 }
 
 function calcEst(uf, m) {
+  if (state.domain === 'agricola' && (m === 'dens' || m === 'voc' || m === 'dom'))
+    return leituraValor('uf', uf, m, getAnoIdx());
   if (state.domain === 'pecuaria') {
     const d = ppm_est_data?.[uf]?.[state.categoriaPec]; if (!d) return 0;
     return d[m]?.[idxDominio(getAnoIdx())] || 0;
@@ -303,6 +522,8 @@ function calcEst(uf, m) {
 }
 
 function calcMic(mid, m) {
+  if (state.domain === 'agricola' && (m === 'dens' || m === 'voc' || m === 'dom'))
+    return leituraValor('mic', mid, m, getAnoIdx());
   if (state.domain === 'pecuaria') {
     const d = ppm_mic_data?.[mid]?.[state.categoriaPec]; if (!d) return 0;
     return d[m]?.[idxDominio(getAnoIdx())] || 0;
@@ -315,12 +536,21 @@ function calcMic(mid, m) {
     return calcSimplesEscopo('mic:' + mid, indicesMunicipios().mic[mid] || [], m);
   }
   const key = getMicKey();
-  const d = mic_data[mid]?.[key]; if (!d) return 0;
   const ai = getAnoIdx();
+  // Cultura fora das Colheitadeiras não tem série própria no mic_data: soma os
+  // municípios da microrregião no arquivo da cultura (sem ele, a micro mostrava o grupo).
+  if (state.cultura && key !== state.cultura) {
+    if (!CULT_MUN[state.cultura]) return 0;
+    const ids = indicesMunicipios().mic[mid] || [];
+    return agregarAgro(m, k => ids.reduce((s, id) => s + (valorCulturaMun(state.cultura, id, k, ai) || 0), 0));
+  }
+  const d = mic_data[mid]?.[key]; if (!d) return 0;
   return agregarAgro(m, k => d[k]?.[ai] || 0);
 }
 
 function calcMunVal(munId, m, ai) {
+  if (state.domain === 'agricola' && (m === 'dens' || m === 'voc' || m === 'dom'))
+    return leituraValor('mun', munId, m, ai);
   if (state.domain === 'pecuaria') {
     const d = ppm_mun_data?.[munId]?.[state.categoriaPec]; if (!d) return 0;
     return d[m]?.[idxDominio(ai)] || 0;
@@ -332,6 +562,8 @@ function calcMunVal(munId, m, ai) {
   // Fontes de recorte único (sem série histórica): o valor não varia com o ano.
   const base = baseDominioSimples();
   if (base) return agregarDominioSimples([munId], m);
+  // Cultura escolhida: o arquivo dela (antes, o município mostrava o total do grupo).
+  if (state.cultura) return valorCulturaMun(state.cultura, munId, m, ai);
   if (state.grupoId && state.grupoId !== 'ALL') {
     const gd = mun_grp_data[state.grupoId]?.[munId];
     if (gd) return agregarAgro(m, k => gd[k]?.[ai] || 0);
@@ -394,6 +626,20 @@ function metLabel() {
     if (M === 'inv') return `Investimento (mil R$, ${ano})`;
     if (M === 'area') return `Área financiada (ha, ${ano})`;
   }
+  if (state.domain === 'produtores') {
+    const per = PROD?.periodo_rfb ? 'Receita ' + PROD.periodo_rfb : 'Receita';
+    const filtro = [PROD?.atividades?.[state.prodAtiv], PROD?.tipos?.[state.prodTipo]].filter(Boolean).join(' · ');
+    const rot = { n: 'Cadastros ativos', n24: 'Cadastros abertos nos últimos 24 meses',
+                  mil_ha: 'Cadastros por mil ha colhidos', km2: 'Cadastros por km²' }[M] || M;
+    return `${rot}${filtro ? ' — ' + filtro : ''} (${per})`;
+  }
+  if (M === 'dens' || M === 'voc' || M === 'dom') {
+    if (M === 'dom') return 'Cultura dominante (maior área)';
+    const g = grupoPronta();
+    const sel = g ? g.rot : state.cultura || ({ ALL: 'todas as culturas', TEM: 'temporárias', PER: 'permanentes',
+                                                COL: 'grãos / colheitadeiras', TRA: 'tratores' }[state.grupoId]);
+    return (M === 'dens' ? 'Densidade (ha/km²)' : 'Vocação (% da área colhida)') + ' — ' + sel;
+  }
   if (M === 'p') return 'Produção (ton)';
   if (M === 'a') return 'Área Colhida (ha)';
   if (M === 'v') return 'Valor (mil R$)';
@@ -402,6 +648,16 @@ function metLabel() {
 
 function fmt(v, m) {
   if (v === 0 && razoesDoDominio()[m]) return '0';   // razão medida; ver agregarDominioSimples
+  // Densidade e vocação: zero é medida (com PAM e sem a cultura); só o ausente é traço.
+  if (state.domain === 'agricola' && (m === 'dens' || m === 'voc')) {
+    if (v == null || !isFinite(v)) return '—';
+    if (m === 'voc') return v.toLocaleString('pt-BR', { maximumFractionDigits: v < 1 && v > 0 ? 2 : 1 }) + '%';
+    return v.toLocaleString('pt-BR', { maximumFractionDigits: LEITURAS.casas([v]) }) + ' ha/km²';
+  }
+  if (state.domain === 'produtores' && (m === 'mil_ha' || m === 'km2')) {
+    if (v == null || !isFinite(v)) return '—';
+    return v.toLocaleString('pt-BR', { maximumFractionDigits: LEITURAS.casas([v]) });
+  }
   if (!v || v === 0) return '—';
   if (m === 'r') return v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' kg/ha';
   if (v >= 1e9) return (v / 1e9).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' Gi';
@@ -435,43 +691,115 @@ function initMapBR() {
   mapBR.fitBounds([[-34, -74], [6, -28]]);
 }
 
+const sw = c => `<span class="leg-swatch" style="background:${c}"></span>`;
+
+// As leituras novas (densidade, vocação, produtores) usam classes por quantis
+// calculados só sobre os territórios com valor, com o ausente em cinza; as demais
+// métricas seguem a escala logarítmica de sempre.
+function usaQuantis() {
+  const m = leituraAgro();
+  return m === 'dens' || m === 'voc' || state.domain === 'produtores';
+}
+
+// Escala de cores de um mapa: { cor(v), legenda() }.
+function escalaMapa(valores, paleta, M) {
+  const vs = Object.values(valores);
+  if (usaQuantis()) {
+    const cortes = LEITURAS.classesQuantis(vs, paleta.length);
+    const n = cortes.length + 1, txt = LEITURAS.textosCortes(cortes);
+    const f = x => txt.get(x);
+    return {
+      cor: v => v == null || !isFinite(v) ? COR_SEM_DADO
+        : cortes.length ? LEITURAS.corDaClasse(LEITURAS.classe(v, cortes), n, paleta) : paleta[0],
+      legenda: () => (cortes.length
+          ? LEITURAS.rotulosClasses(cortes, f).map((r, i) => sw(LEITURAS.corDaClasse(i, n, paleta)) + r).join('<br>')
+          : 'nenhum valor acima de zero no recorte')
+        + `<br>${sw(COR_SEM_DADO)}sem dado (não publicado)`
+        + '<span class="leg-nota">Classes por quantis dos territórios com valor; o zero fica na primeira.</span>',
+    };
+  }
+  // Escala logarítmica: cada tom cobre uma faixa de log(1 + valor). A legenda mostra a
+  // faixa de cada tom (antes mostrava frações lineares do máximo, que não eram as faixas).
+  const max = Math.max(...vs.filter(v => v != null && isFinite(v)), 1);
+  const L1 = Math.log1p(max), k = paleta.length - 1;
+  const lim = i => Math.expm1(L1 * i / k);
+  return {
+    cor: v => getColor(v, max, paleta),
+    legenda: () => paleta.map((c, i) => sw(c) + (i === k ? `${fmt(max, M)} (o maior)`
+        : `${i ? fmt(lim(i), M) : '0'} a < ${fmt(lim(i + 1), M)}`)).join('<br>')
+      + '<span class="leg-nota">Escala logarítmica; zero e sem dado no primeiro tom.</span>',
+  };
+}
+
+// Uma legenda por mapa, trocada a cada pintura.
+const LEGENDAS = {};
+function legendaNoMapa(chave, map, html) {
+  if (LEGENDAS[chave]) { LEGENDAS[chave].remove(); LEGENDAS[chave] = null; }
+  if (!html || !map) return;
+  const leg = L.control({ position: 'bottomright' });
+  leg.onAdd = () => {
+    const d = L.DomUtil.create('div', 'map-legend');
+    d.innerHTML = html;
+    L.DomEvent.disableScrollPropagation(d);
+    return d;
+  };
+  leg.addTo(map);
+  LEGENDAS[chave] = leg;
+}
+
+// Cabeçalho comum das legendas: a métrica, o ano fixo (quando há) e a definição do grupo
+// em linha própria, separada do ano do dado.
+function topoLegenda() {
+  const r = retratoTxt(), g = grupoPronta();
+  return `<b>${metLabel()}</b>` + (r ? `<span class="leg-def">${r}</span>` : '')
+    + (g ? `<span class="leg-def">${escHTML(g.def)}</span>` : '');
+}
+
+// Cultura dominante: cor fixa por categoria, a mesma em todos os mapas e no resumo.
+function corCategoria(cat) { return (cat && PAM_GRUPOS?.categorias?.[cat]) || COR_SEM_DADO; }
+function legendaCategorias(cats, nivelTxt) {
+  const n = {};
+  for (const d of cats) if (d) n[d.cat] = (n[d.cat] || 0) + 1;
+  let h = '';
+  for (const [k, c] of Object.entries(PAM_GRUPOS?.categorias || {}))
+    if (n[k]) h += `${sw(c)}${k} (${n[k].toLocaleString('pt-BR')})<br>`;
+  h += `${sw(COR_SEM_DADO)}sem lavoura nem floresta publicadas`;
+  return h + `<span class="leg-nota">${nivelTxt}. Lavouras do PAM (área colhida, que soma as safras) e floresta plantada da PEVS (área plantada). Pastagem não entra: o PAM não mede pastagem.</span>`;
+}
+function tooltipDominante(nome, d) {
+  return `<b style="color:${BRAND_GREEN}">${nome}</b><br>` + (d
+    ? `Cultura dominante: <b>${d.cat}</b><br>${numBR(d.a)} ha, ${numBR(d.pct, 1)}% das lavouras e da floresta plantada`
+    : 'Sem lavoura nem floresta publicadas');
+}
+
 function updateMapBR() {
   if (!mapBR) return;
   const M = curMetrica();
+  const dom = leituraAgro() === 'dom';
   const vals = {};
-  Object.keys(ufs_info).forEach(uf => { vals[uf] = calcEst(uf, M); });
-  const max = Math.max(...Object.values(vals), 1);
+  Object.keys(ufs_info).forEach(uf => { vals[uf] = dom ? dominanteDe('uf', uf) : calcEst(uf, M); });
+  const esc = dom ? null : escalaMapa(vals, COLORS_BR, M);
 
   if (layerUF) layerUF.remove();
   layerUF = L.geoJSON(GEO_UF, {
     style(f) {
-      const uf = f.properties.uf, v = vals[uf] || 0;
-      return { fillColor: getColor(v, max, COLORS_BR), fillOpacity: .78, color: '#fff', weight: 1 };
+      const v = vals[f.properties.uf];
+      return { fillColor: dom ? corCategoria(v?.cat) : esc.cor(v), fillOpacity: .78, color: '#fff', weight: 1 };
     },
     onEachFeature(f, layer) {
       const uf = f.properties.uf, v = vals[uf];   // cru: fmt distingue sem dado de zero
-      layer.bindTooltip(
-        `<b style="color:${BRAND_GREEN}">${ufs_info[uf]?.n || uf}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
+      layer.bindTooltip(dom ? tooltipDominante(ufs_info[uf]?.n || uf, v)
+        : `<b style="color:${BRAND_GREEN}">${ufs_info[uf]?.n || uf}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
         { sticky: true }
       );
       layer.on('click', () => selectEstado(uf));
     }
   }).addTo(mapBR);
 
-  // Legend
-  const existing = document.querySelector('.map-legend-ctrl');
-  if (existing) existing.remove();
-  const leg = L.control({ position: 'bottomright' });
-  leg.onAdd = () => {
-    const d = L.DomUtil.create('div', 'map-legend map-legend-ctrl');
-    const steps = COLORS_BR.map((_, i) => max * i / (COLORS_BR.length - 1));
-    d.innerHTML = `<b>${metLabel()}</b>` +
-      COLORS_BR.map((c, i) =>
-        `<br><span class="leg-swatch" style="background:${c}"></span>${fmt(steps[i] || 0, M)}`
-      ).join('');
-    return d;
-  };
-  leg.addTo(mapBR);
+  legendaNoMapa('br', mapBR, topoLegenda() + (dom
+    ? legendaCategorias(Object.values(vals), 'Categoria de maior área no estado')
+    : esc.legenda()) + legendaContas());
+  desenharContas('br', mapBR, Object.keys(mun_info));
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -490,24 +818,26 @@ function initMapEst() {
 function updateMapEst() {
   if (!mapEst) return;
   const M = curMetrica(), uf = state.ufSel;
+  const dom = leituraAgro() === 'dom';
   const mids = Object.keys(mic_info).filter(m => !uf || mic_info[m].uf === uf);
   const vals = {};
-  mids.forEach(m => { vals[m] = calcMic(m, M); });
-  const max = Math.max(...Object.values(vals), 1);
+  mids.forEach(m => { vals[m] = dom ? dominanteDe('mic', m) : calcMic(m, M); });
+  const esc = dom ? null : escalaMapa(vals, COLORS_MIC, M);
 
-  const filtered = GEO_MIC.features.filter(f => mids.includes(f.properties.mid));
+  const conj = new Set(mids);
+  const filtered = GEO_MIC.features.filter(f => conj.has(f.properties.mid));
   if (!filtered.length) return;
 
   if (layerMic) layerMic.remove();
   layerMic = L.geoJSON({ type: 'FeatureCollection', features: filtered }, {
     style(f) {
-      const v = vals[f.properties.mid] || 0;
-      return { fillColor: getColor(v, max, COLORS_MIC), fillOpacity: .78, color: '#fff', weight: .8 };
+      const v = vals[f.properties.mid];
+      return { fillColor: dom ? corCategoria(v?.cat) : esc.cor(v), fillOpacity: .78, color: '#fff', weight: .8 };
     },
     onEachFeature(f, layer) {
       const mid = f.properties.mid, v = vals[mid];
-      layer.bindTooltip(
-        `<b style="color:${BRAND_GREEN}">${mic_info[mid]?.n || mid}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
+      layer.bindTooltip(dom ? tooltipDominante(mic_info[mid]?.n || mid, v)
+        : `<b style="color:${BRAND_GREEN}">${mic_info[mid]?.n || mid}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
         { sticky: true }
       );
       layer.on('click', () => selectMicro(mid));
@@ -517,7 +847,33 @@ function updateMapEst() {
 
   const nm = uf ? (ufs_info[uf]?.n || uf) : 'Brasil';
   document.getElementById('est-label').textContent = nm + ' — ' + mids.length + ' microrregiões';
-  updateChartEst(vals, max, M);
+  legendaNoMapa('est', mapEst, topoLegenda() + (dom
+    ? legendaCategorias(Object.values(vals), 'Categoria de maior área na microrregião')
+    : esc.legenda()) + legendaContas());
+  desenharContas('est', mapEst, Object.keys(mun_info).filter(id => !uf || mun_info[id].uf === uf));
+  if (dom) chartDominante(uf);
+  else updateChartEst(vals, null, M);
+}
+
+// Cultura dominante em Estado / Micro: quantos municípios do recorte cada categoria
+// domina, nas cores fixas das categorias.
+function chartDominante(uf) {
+  const ctx = document.getElementById('chart-est')?.getContext('2d'); if (!ctx) return;
+  const R = resumoDominante(idsDe(uf ? 'uf' : 'br', uf)).linhas.filter(x => x.mun);
+  if (chEst) chEst.destroy();
+  chEst = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: R.map(x => x.k),
+            datasets: [{ data: R.map(x => x.mun), backgroundColor: R.map(x => x.cor), borderRadius: 4 }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+                 tooltip: { callbacks: { label: c => `${numBR(c.raw)} municípios` } } },
+      scales: { x: { grid: { color: '#f0f0f0' } }, y: { ticks: { font: { size: 10 } } } },
+    },
+  });
+  document.getElementById('chart-est-title').textContent =
+    `📊 Municípios por cultura dominante — ${uf ? (ufs_info[uf]?.n || uf) : 'Brasil'}`;
 }
 
 function initMapMun() {
@@ -565,22 +921,26 @@ function updateMapMun() {
     if (titleEl) titleEl.textContent = '🗺️ Municípios — (sem geometria para ' + (ufs_info[uf]?.n || uf) + ')';
     return;
   }
+  const dom = leituraAgro() === 'dom';
   const vals = {};
-  feats.forEach(f => { vals[f.properties.cod_ibge] = calcMunVal(f.properties.cod_ibge, M, ai); });
-  const max = Math.max(...Object.values(vals), 1);
+  feats.forEach(f => {
+    const cod = f.properties.cod_ibge;
+    vals[cod] = dom ? dominanteDe('mun', cod) : calcMunVal(cod, M, ai);
+  });
+  const esc = dom ? null : escalaMapa(vals, COLORS_MIC, M);
   if (layerMunMic) layerMunMic.remove();
   layerMunMic = L.geoJSON({ type: 'FeatureCollection', features: feats }, {
     style(f) {
-      const cod = f.properties.cod_ibge, v = vals[cod] || 0;
+      const cod = f.properties.cod_ibge, v = vals[cod];
       const isSel = cod === state.munSel;
-      return { fillColor: getColor(v, max, COLORS_MIC), fillOpacity: .82,
+      return { fillColor: dom ? corCategoria(v?.cat) : esc.cor(v), fillOpacity: .82,
                color: isSel ? BRAND_GOLD : '#fff', weight: isSel ? 2.5 : .5 };
     },
     onEachFeature(f, layer) {
       const cod = f.properties.cod_ibge, v = vals[cod];
       const nm = mun_info[cod]?.n || cod;
-      layer.bindTooltip(
-        `<b style="color:${BRAND_GREEN}">${nm}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
+      layer.bindTooltip(dom ? tooltipDominante(nm, v)
+        : `<b style="color:${BRAND_GREEN}">${nm}</b><br>${metLabel()}: <b>${fmt(v, M)}</b>`,
         { sticky: true }
       );
       layer.on('click', () => toggleMunicipio(cod));
@@ -588,8 +948,79 @@ function updateMapMun() {
   }).addTo(mapMun);
   try { mapMun.fitBounds(layerMunMic.getBounds(), { padding: [10, 10] }); } catch (e) {}
   if (titleEl) titleEl.textContent = '🗺️ Municípios — ' + (ufs_info[uf]?.n || uf) + anoNoTitulo();
+  legendaNoMapa('mun', mapMun, topoLegenda() + (dom
+    ? legendaCategorias(Object.values(vals), 'Categoria de maior área no município')
+    : esc.legenda()) + legendaContas());
+  desenharContas('mun', mapMun, feats.map(f => f.properties.cod_ibge));
 }
 
+
+// ═══════════════════════════════════════════════════════════
+// CAMADA — Contas-chave da Receita (contas_chave.json)
+// ═══════════════════════════════════════════════════════════
+// Só agregado: por município e setor, o número de estabelecimentos ativos de pessoa
+// jurídica empresarial e, nas usinas, as plantas e a capacidade autorizada da ANP.
+// Um círculo por município com área proporcional à QUANTIDADE de estabelecimentos
+// (não ao tamanho das empresas), no centro do município: o endereço não é usado.
+const FILTRO_CONTAS = {
+  usina_anp: ['usina_anp'], usina_conf: ['usina_conf'], usina_agricola: ['usina_agricola'],
+  sucos: ['sucos'], pos_colheita: ['pos_colheita'], cafe: ['cafe'], florestal: ['florestal'],
+  cooperativa: ['cooperativa'],
+  todas: ['usina_anp', 'sucos', 'pos_colheita', 'cafe', 'florestal', 'cooperativa'],
+};
+const CAMADAS_CONTAS = {};
+
+function carregarContas() {
+  if (CONTAS) return Promise.resolve(CONTAS);
+  contasPendente ||= carregarJSON('contas_chave.json')
+    .then(d => (CONTAS = d))
+    .catch(e => { console.error('Erro ao carregar contas_chave.json', e); contasPendente = null; return null; });
+  return contasPendente;
+}
+function contasNoMunicipio(cod) {
+  const r = CONTAS?.mun?.[cod], s = FILTRO_CONTAS[state.contas];
+  if (!r || !s) return 0;
+  return s.reduce((t, k) => t + (r[k] || 0), 0);
+}
+function rotuloContas() {
+  return document.querySelector(`#f-contas option[value="${state.contas}"]`)?.textContent || state.contas;
+}
+function corContas() {
+  return state.contas === 'todas' ? '#37474F' : (CONTAS?.setores?.[state.contas]?.cor || '#37474F');
+}
+function legendaContas() {
+  if (!state.contas || !CONTAS) return '';
+  return `<br><span class="leg-circ" style="background:${corContas()}"></span>${escHTML(rotuloContas())}`
+    + `<span class="leg-nota">Círculo: área proporcional ao nº de estabelecimentos ativos de pessoa jurídica `
+    + `(Receita ${CONTAS.periodo_rfb}), no centro do município.</span>`;
+}
+function tooltipContas(id, n) {
+  const r = CONTAS.mun[id];
+  const linhas = Object.entries(CONTAS.setores).filter(([k]) => r[k])
+    .map(([k, s]) => `${escHTML(s.rot)}: <b>${r[k].toLocaleString('pt-BR')}</b>`).join('<br>');
+  return `<b style="color:${BRAND_GREEN}">${mun_info[id]?.n || id}</b><br>`
+    + `${escHTML(rotuloContas())}: <b>${n.toLocaleString('pt-BR')}</b> estabelecimento${n > 1 ? 's' : ''}<br>`
+    + `<span style="font-size:11px">${linhas}`
+    + (r.cap ? `<br>Capacidade autorizada de etanol (ANP ${CONTAS.mes_anp}): ${numBR(r.cap)} m³/dia` : '')
+    + `</span><br><span style="font-size:10px;color:#6B7C64">Receita Federal ${CONTAS.periodo_rfb} · `
+    + 'posição: centro do município</span>';
+}
+function desenharContas(chave, map, ids) {
+  if (CAMADAS_CONTAS[chave]) { CAMADAS_CONTAS[chave].remove(); CAMADAS_CONTAS[chave] = null; }
+  if (!state.contas || !CONTAS || !map) return;
+  const itens = ids.map(id => [id, contasNoMunicipio(id)]).filter(([id, n]) => n > 0 && CONTAS.mun[id]?.xy);
+  if (!itens.length) return;
+  const nmax = Math.max(...itens.map(x => x[1])), cor = corContas();
+  // Área proporcional à contagem: o raio cresce com a raiz quadrada. O mínimo de 3 px só
+  // existe para o município com um estabelecimento não sumir. Renderizador SVG, o padrão:
+  // um canvas ficava preso à vista anterior quando o mapa reenquadrava o estado.
+  const marcas = itens.sort((a, b) => b[1] - a[1]).map(([id, n]) =>
+    L.circleMarker(CONTAS.mun[id].xy, {
+      radius: Math.max(3, 16 * Math.sqrt(n / nmax)),
+      color: '#1C2319', weight: .8, fillColor: cor, fillOpacity: .72,
+    }).bindTooltip(tooltipContas(id, n), { sticky: true }));
+  CAMADAS_CONTAS[chave] = L.layerGroup(marcas).addTo(map);
+}
 
 // ═══════════════════════════════════════════════════════════
 // CHARTS — Estado & Micro histórico
@@ -598,7 +1029,8 @@ let chEst = null, chMicro = null;
 
 function updateChartEst(vals, max, M) {
   const ctx = document.getElementById('chart-est')?.getContext('2d'); if (!ctx) return;
-  const sorted = Object.entries(vals).sort((a, b) => b[1] - a[1]).slice(0, 15);
+  const sorted = Object.entries(vals).filter(([, v]) => v != null && isFinite(v))
+    .sort((a, b) => b[1] - a[1]).slice(0, 15);
   if (chEst) chEst.destroy();
   chEst = new Chart(ctx, {
     type: 'bar',
@@ -687,9 +1119,13 @@ function updateMunicipio() {
     return;
   }
 
+  const dom = leituraAgro() === 'dom';
   const muns = Object.entries(mun_info)
     .filter(([, i]) => i.uf === uf)
-    .map(([id, i]) => ({ id, n: i.n, mid: i.mid, v: calcMunVal(id, M, ai) }))
+    .map(([id, i]) => {
+      const d = dom ? dominanteDe('mun', id) : null;
+      return { id, n: i.n, mid: i.mid, d, v: dom ? (d ? d.a : 0) : calcMunVal(id, M, ai) };
+    })
     .filter(x => x.v > 0)
     .sort((a, b) => b.v - a.v);
 
@@ -698,21 +1134,41 @@ function updateMunicipio() {
   if (tblTitle) tblTitle.textContent = `🏆 Ranking — ${ufName}${anoNoTitulo()}`;
 
   if (tbl) {
-    const hdr = `<thead><tr><th>#</th><th>Município</th><th>Microrregião</th><th>${metLabel()}</th></tr></thead>`;
+    // Com a camada de contas-chave ligada, a tabela ganha a contagem do setor (e, nas
+    // usinas, a capacidade autorizada de etanol da ANP).
+    const contas = state.contas && CONTAS;
+    const usina = contas && state.contas.startsWith('usina');
+    const colContas = m => !contas ? '' : `<td class="num">${contasNoMunicipio(m.id) ? contasNoMunicipio(m.id).toLocaleString('pt-BR') : '—'}</td>`
+      + (usina ? `<td class="num">${CONTAS.mun[m.id]?.cap ? numBR(CONTAS.mun[m.id].cap) : '—'}</td>` : '');
+    const hdrContas = !contas ? '' : `<th title="${escHTML(rotuloContas())}">Contas-chave</th>`
+      + (usina ? '<th title="Capacidade autorizada de etanol somada (ANP)">Etanol m³/dia</th>' : '');
+    const hdr = dom
+      ? `<thead><tr><th>#</th><th>Município</th><th>Microrregião</th><th>Cultura dominante</th><th>Área (ha)</th><th>%</th>${hdrContas}</tr></thead>`
+      : `<thead><tr><th>#</th><th>Município</th><th>Microrregião</th><th>${metLabel()}</th>${hdrContas}</tr></thead>`;
     const rows = muns.slice(0, 100).map((m, i) => {
       const micN = mic_info[m.mid]?.n || '';
       const sel  = m.id === state.munSel ? ' selected-row' : '';
+      const vals = dom
+        ? `<td><span class="dom-cor" style="background:${corCategoria(m.d.cat)}"></span>${m.d.cat}</td>
+           <td class="num">${numBR(m.d.a)}</td><td class="num">${numBR(m.d.pct, 1)}%</td>`
+        : `<td class="num">${fmt(m.v, M)}</td>`;
       return `<tr class="${sel}" onclick="toggleMunicipio('${m.id}')" style="cursor:pointer">
         <td class="rank-pos">${i + 1}</td>
         <td><b>${m.n}</b></td>
         <td style="font-size:11px;color:var(--text-lt)">${micN}</td>
-        <td class="num">${fmt(m.v, M)}</td>
+        ${vals}${colContas(m)}
       </tr>`;
     }).join('');
     tbl.innerHTML = hdr + '<tbody>' + rows + '</tbody>';
   }
 
   const topEl = document.getElementById('mun-chart-top-title');
+  if (dom) {
+    if (topEl) topEl.textContent = `📊 Cultura dominante: a área de cada município está na tabela`;
+    if (chMunTop) { chMunTop.destroy(); chMunTop = null; }
+    if (chMunHist) { chMunHist.destroy(); chMunHist = null; }
+    return;
+  }
   if (topEl) topEl.textContent = `📊 Top 15 Municípios — ${ufName}${anoNoTitulo()}`;
   updateMunChartTop(muns.slice(0, 15));
 
@@ -838,6 +1294,7 @@ function updateMunChartTop(muns) {
 function hasMunData(munId) {
   if (state.domain === 'pecuaria') return !!ppm_mun_data?.[munId]?.[state.categoriaPec];
   if (state.domain === 'silvicultura') return !!pevs_mun_data?.[munId]?.[silKey()];
+  if (state.domain === 'agricola' && state.cultura) return !!CULT_MUN[state.cultura]?.mun?.[munId];
   return !!mun_data[munId];
 }
 
@@ -920,10 +1377,12 @@ function updateHistorico() {
     });
     label = ufs_info[uf]?.n || uf;
   } else {
+    const leitura = leituraAgro();
     series = anos.map((_, ai) => {
       if (!temAno(ai)) return null;
       const tmp = state.anoIdx; state.anoIdx = ai;
-      const v = agregarAgro(M, k =>
+      // densidade e vocação do Brasil saem das somas, e não da soma das razões estaduais
+      const v = leitura ? leituraValor('br', '', M, ai) : agregarAgro(M, k =>
         Object.keys(ufs_info).reduce((s, u) => s + calcEst(u, k), 0));
       state.anoIdx = tmp; return v;
     });
@@ -976,6 +1435,10 @@ function updateHistorico() {
         : Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[idxDominio(ai)] || 0), 0);
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  } else if (leituraAgro()) {
+    const { lista, ai: aiL } = culturasDaLeitura();
+    cultVals = lista.map(c => ({ c, v: leituraCultura(c, M, uf, aiL) }))
+      .filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else {
     cultVals = getActiveCulturas().map(c => {
       const v = agregarAgro(M, k => uf
@@ -1014,6 +1477,17 @@ let chRankUF = null, chRankCult = null, chRankMic = null;
 
 function updateRanking() {
   const M = curMetrica(), ai = getAnoIdx();
+
+  // Cultura dominante é uma categoria: não há o que ordenar. O resumo está no Mapa Brasil.
+  const aviso = document.getElementById('rank-aviso');
+  const categorica = leituraAgro() === 'dom';
+  if (aviso) {
+    aviso.style.display = categorica ? '' : 'none';
+    aviso.textContent = categorica ? 'A cultura dominante é uma categoria, e não um número que se ordene. ' +
+      'Veja no Mapa Brasil (ou em Estado / Micro) o resumo com quantos municípios cada categoria domina e a área de cada uma.' : '';
+  }
+  document.querySelectorAll('#tab-ranking .chart-wrap').forEach(e => { e.style.display = categorica ? 'none' : ''; });
+  if (categorica) return;
 
   // Top UFs
   const ufVals = Object.keys(ufs_info)
@@ -1061,6 +1535,10 @@ function updateRanking() {
       const v = Object.keys(ufs_info).reduce((s, u) => s + (pevs_est_data?.[u]?.[k]?.[M]?.[idxDominio(ai)] || 0), 0);
       return { c, v };
     }).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
+  } else if (leituraAgro()) {
+    const { lista, ai: aiL } = culturasDaLeitura();
+    cultVals = lista.map(c => ({ c, v: leituraCultura(c, M, '', aiL) }))
+      .filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 15);
   } else {
     cultVals = getActiveCulturas().map(c => {
       const v = agregarAgro(M, k =>
@@ -1128,23 +1606,89 @@ function updateRanking() {
 // ═══════════════════════════════════════════════════════════
 // KPIs
 // ═══════════════════════════════════════════════════════════
+const KPI_AGRO = { prod: 'Produção Total', area: 'Área Colhida', val: 'Valor da Produção', cult: 'Culturas' };
+function kpi(id, titulo, val, sub) {
+  const t = document.getElementById(`kpi-${id}-title`); if (t) t.textContent = titulo;
+  document.getElementById(`kpi-${id}`).textContent = val;
+  document.getElementById(`kpi-${id}-sub`).textContent = sub;
+}
+
+// Recorte do filtro: microrregião, estado ou Brasil.
+function escopoAtual() {
+  if (state.microSel) return { nivel: 'mic', chave: state.microSel, nome: mic_info[state.microSel]?.n || state.microSel };
+  if (state.ufSel) return { nivel: 'uf', chave: state.ufSel, nome: ufs_info[state.ufSel]?.n || state.ufSel };
+  return { nivel: 'br', chave: '', nome: 'Brasil' };
+}
+
+// Cultura dominante no recorte: quantos municípios cada categoria domina e a área TOTAL
+// de cada categoria (inclusive onde ela não é a dominante).
+function resumoDominante(ids) {
+  const cats = PAM_GRUPOS.categorias, porCat = {}, areaCat = {}, dom = {};
+  let semDado = 0, areaTot = 0;
+  for (const id of ids) {
+    const r = PAM_GRUPOS.mun[id];
+    dom[id] = r?.d || null;
+    if (!r?.d) semDado++;
+    else porCat[r.d] = (porCat[r.d] || 0) + 1;
+    for (const [k, v] of Object.entries(r?.c || {})) { areaCat[k] = (areaCat[k] || 0) + v; areaTot += v; }
+  }
+  const linhas = Object.keys(cats).map(k => ({
+    k, cor: cats[k], mun: porCat[k] || 0, area: areaCat[k] || 0,
+    pctArea: areaTot ? (areaCat[k] || 0) / areaTot * 100 : null,
+  })).filter(x => x.mun || x.area).sort((a, b) => b.mun - a.mun || b.area - a.area);
+  return { ids, dom, linhas, semDado, areaTot };
+}
+
+// Densidades prontas e cultura dominante: os quatro indicadores dizem o que a leitura
+// mostra no recorte, no último ano, e não a produção do ano do seletor.
+function updateKPIsLeitura() {
+  const { nivel, chave, nome } = escopoAtual();
+  const ids = idsDe(nivel, chave), ai = N_ANOS - 1;
+  if (leituraAgro() === 'dom') {
+    const R = resumoDominante(ids), n = ids.length;
+    const top = R.linhas[0], maior = [...R.linhas].sort((a, b) => b.area - a.area)[0];
+    kpi('prod', 'Categoria que mais domina', top ? top.k : '—',
+        top ? `em ${numBR(top.mun)} de ${numBR(n)} municípios · ${nome}` : nome);
+    kpi('area', 'Maior área', maior ? maior.k : '—',
+        maior ? `${numBR(maior.pctArea, 1)}% das lavouras e da floresta plantada` : '');
+    kpi('val', 'Lavouras e floresta', fmt(R.areaTot, 'a') + ' ha', retratoTxt());
+    kpi('cult', 'Sem lavoura nem floresta', numBR(R.semDado), 'municípios sem área publicada');
+    return;
+  }
+  const g = grupoPronta();
+  const a = areaSelecao(nivel, chave, ai);
+  const com = ids.filter(id => (areaGrupoMun(id, state.pronta) || 0) > 0).length;
+  kpi('prod', 'Área — ' + g.rot, a ? fmt(a, 'a') + ' ha' : '—', `${nome} · ${retratoTxt()}`);
+  kpi('area', 'Densidade', fmt(leituraValor(nivel, chave, 'dens', ai), 'dens'), 'área ÷ área do território');
+  kpi('val', 'Vocação', fmt(leituraValor(nivel, chave, 'voc', ai), 'voc'),
+      g.fonte === 'pevs' ? 'das lavouras e da floresta plantada do território' : 'da área colhida do território');
+  kpi('cult', 'Municípios com área', numBR(com), `de ${numBR(ids.length)} no recorte`);
+}
+
 function updateKPIs() {
   if (state.domain === 'pecuaria') { updateKPIsPec(); return; }
   if (state.domain === 'silvicultura') { updateKPIsSil(); return; }
+  if (state.domain === 'agricola' && semSerieAgro()) { updateKPIsLeitura(); return; }
+  for (const [id, t] of Object.entries(KPI_AGRO)) {
+    const el = document.getElementById(`kpi-${id}-title`); if (el) el.textContent = t;
+  }
   const ai = getAnoIdx(), uf = state.ufSel;
   const ufs  = uf ? [uf] : Object.keys(ufs_info);
   const agg  = { a: 0, p: 0, v: 0 };
   const acts = getActiveCulturas();
-  let cultCount = 0;
+  // Culturas distintas com dado no recorte (antes contava cada par estado × cultura:
+  // 1.057 "culturas" no Brasil, quando a PAM de 2025 tem 72).
+  const comDado = new Set();
   ufs.forEach(u => {
     const d = est_data[u]; if (!d) return;
     acts.forEach(c => {
       const dc = d[c]; if (!dc) return;
       const pa = dc.a?.[ai] || 0, pp = dc.p?.[ai] || 0, pv = dc.v?.[ai] || 0;
-      if (pa + pp + pv > 0) cultCount++;
+      if (pa + pp + pv > 0) comDado.add(c);
       agg.a += pa; agg.p += pp; agg.v += pv;
     });
   });
+  const cultCount = comDado.size;
   const year  = getAno();
   const scope = uf ? (ufs_info[uf]?.n || uf) : 'Brasil';
   document.getElementById('kpi-prod').textContent     = fmt(agg.p, 'p');
@@ -1220,6 +1764,143 @@ function updateKPIsSil() {
 }
 
 // ═══════════════════════════════════════════════════════════
+// RESUMO — Cultura dominante (Mapa Brasil e Estado / Micro)
+// ═══════════════════════════════════════════════════════════
+// Leitura rápida, tabela por categoria e um mapa ESTÁTICO em SVG desenhado da malha
+// municipal (sem Leaflet nem tiles), que cabe numa captura ou impressão. O recorte segue
+// o filtro: Brasil, estado ou microrregião.
+function svgDominante(ids, dom, larg = 760, alt = 560) {
+  const conj = new Set(ids);
+  const feats = (GEO_MUN?.features || []).filter(f => conj.has(f.properties.cod_ibge));
+  const aneis = g => g.type === 'Polygon' ? g.coordinates : g.type === 'MultiPolygon' ? g.coordinates.flat() : [];
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const f of feats) for (const a of aneis(f.geometry)) for (const [x, y] of a) {
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (!isFinite(x0)) return '';
+  const k = Math.cos(((y0 + y1) / 2) * Math.PI / 180);            // equirretangular corrigida
+  const esc = Math.min(larg / ((x1 - x0) * k), alt / (y1 - y0));
+  const W = (x1 - x0) * k * esc, H = (y1 - y0) * esc;
+  // Pontos a menos de 0,6 px do anterior não mudam o desenho: o Brasil inteiro cai de
+  // milhões de vértices para dezenas de milhares.
+  const caminho = g => aneis(g).map(a => {
+    let s = '', px = null, py = null;
+    for (const [x, y] of a) {
+      const X = (x - x0) * k * esc, Y = (y1 - y) * esc;
+      if (px !== null && Math.abs(X - px) < .6 && Math.abs(Y - py) < .6) continue;
+      s += (s ? 'L' : 'M') + X.toFixed(1) + ',' + Y.toFixed(1);
+      px = X; py = Y;
+    }
+    return s ? s + 'Z' : '';
+  }).join('');
+  const linha = ids.length > 900 ? .12 : .35;
+  let s = `<svg viewBox="0 0 ${W.toFixed(0)} ${H.toFixed(0)}" role="img"
+    aria-label="Mapa estático da cultura dominante por município">`;
+  for (const f of feats) {
+    const c = f.properties.cod_ibge, cat = dom[c];
+    s += `<path d="${caminho(f.geometry)}" fill="${corCategoria(cat)}" stroke="#fff" stroke-width="${linha}">`
+      + `<title>${escHTML(mun_info[c]?.n || c)}: ${cat || 'sem lavoura nem floresta publicadas'}</title></path>`;
+  }
+  return s + '</svg>';
+}
+
+let resumoPendente = false;
+function renderResumoDominante() {
+  const alvo = { brasil: 'dom-resumo-br', estados: 'dom-resumo-est' }[state.tab];
+  const ativo = leituraAgro() === 'dom' && PAM_GRUPOS;
+  for (const id of ['dom-resumo-br', 'dom-resumo-est']) {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !(ativo && id === alvo);
+  }
+  if (!ativo || !alvo) return;
+  const el = document.getElementById(alvo);
+  if (!geoMunLoaded) {
+    el.innerHTML = '<p class="dom-leg">Carregando a malha dos municípios para o mapa estático…</p>';
+    if (!resumoPendente) {
+      resumoPendente = true;
+      loadGeoMun().then(() => { resumoPendente = false; renderResumoDominante(); });
+    }
+    return;
+  }
+  const { nivel, chave, nome } = escopoAtual();
+  const R = resumoDominante(idsDe(nivel, chave)), n = R.ids.length;
+  const top = R.linhas[0], seg = R.linhas[1];
+  const pctMun = x => n ? x.mun / n * 100 : null;
+  const linhas = R.linhas.map(x => `<tr><td><span class="dom-cor" style="background:${x.cor}"></span>${x.k}</td>
+      <td class="num">${numBR(x.mun)}</td><td class="num">${numBR(pctMun(x), 1)}%</td>
+      <td class="num">${numBR(x.area)}</td><td class="num">${numBR(x.pctArea, 1)}%</td></tr>`).join('');
+  el.innerHTML = `
+    <h3>🗺️ Perfil agrícola do território — cultura dominante por município · ${escHTML(nome)}</h3>
+    <p class="dom-leg">Em cada município, a categoria com a <b>maior área</b> entre as lavouras do PAM e a floresta
+      plantada da PEVS, no último ano publicado (PAM ${PAM_GRUPOS.ano_pam}, PEVS ${PAM_GRUPOS.ano_pevs}). Pastagem não
+      entra: o PAM não mede pastagem. A área colhida soma as safras (o hectare com soja e milho de segunda safra conta
+      duas vezes) e a da floresta é a área plantada: as duas não medem a mesma coisa. Mapa estático; para explorar,
+      use o mapa acima e a aba Municípios.</p>
+    ${top ? `<div class="dom-nota"><b>Leitura rápida.</b> ${top.k} é a cultura dominante em <b>${numBR(top.mun)}</b>
+      dos ${numBR(n)} municípios do recorte (${numBR(pctMun(top), 1)}%)${seg ? `, seguida de ${seg.k.toLowerCase()}
+      (${numBR(seg.mun)} municípios, ${numBR(pctMun(seg), 1)}%)` : ''}. Em área, ${top.k.toLowerCase()} soma
+      ${fmt(top.area, 'a')} ha, ${numBR(top.pctArea, 1)}% das lavouras e da floresta plantada do recorte.
+      ${R.semDado ? (R.semDado > 1 ? `${numBR(R.semDado)} municípios não têm lavoura nem floresta publicadas.`
+        : '1 município não tem lavoura nem floresta publicadas.') : ''}</div>` : ''}
+    <div class="dom-grade">
+      <div>${svgDominante(R.ids, R.dom)}</div>
+      <div><table class="data-tbl"><thead><tr><th>Cultura dominante</th><th class="num">Municípios</th>
+        <th class="num">% dos municípios</th>
+        <th class="num" title="Área total da categoria no recorte, inclusive onde não é a dominante">Área no recorte (ha)</th>
+        <th class="num">% da área</th></tr></thead><tbody>
+        ${linhas}
+        ${R.semDado ? `<tr><td><span class="dom-cor" style="background:${COR_SEM_DADO}"></span>Sem lavoura nem floresta publicadas</td>
+          <td class="num">${numBR(R.semDado)}</td><td class="num">${numBR(R.semDado / n * 100, 1)}%</td>
+          <td class="num">—</td><td class="num">—</td></tr>` : ''}
+        <tr><td><b>Total</b></td><td class="num"><b>${numBR(n)}</b></td><td class="num">100%</td>
+          <td class="num"><b>${numBR(R.areaTot)}</b></td><td class="num">100%</td></tr>
+        </tbody></table>
+        <p class="dom-leg" style="margin-top:8px">Área = lavouras do PAM (área colhida) + floresta plantada da PEVS.
+          Café só pelo Total. Mandioca e cacau têm categoria própria; açaí fica em Frutas e feijão em Grãos
+          (o porquê está no glossário).</p></div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PRODUTORES (Receita) — domínio de contagens anônimas
+// ═══════════════════════════════════════════════════════════
+// Base derivada dos filtros (atividade e tipo): {cod: {n, n24, _ac, _km2}}, com todos os
+// municípios, para que estado e microrregião somem também o território de quem não tem
+// cadastro. _ac é a área colhida do último ano do PAM; _km2, a área do IBGE.
+function baseProdutores() {
+  const base = {}, ai = N_ANOS - 1, at = state.prodAtiv, tp = state.prodTipo;
+  for (const id of Object.keys(mun_info)) {
+    let n = 0, n24 = 0;
+    for (const [k, [a, b]] of Object.entries(PROD?.mun?.[id] || {})) {
+      const [ka, kt] = k.split('|');
+      if ((at && ka !== at) || (tp && kt !== tp)) continue;
+      n += a; n24 += b;
+    }
+    base[id] = { n, n24, _ac: mun_data[id]?.a?.[ai] || 0, _km2: (terr_ha[id] || 0) / LEITURAS.HA_POR_KM2 };
+  }
+  return base;
+}
+function montarFiltrosProdutores() {
+  const opc = (sel, todos, o, v) => {
+    const el = document.getElementById(sel); if (!el) return;
+    el.innerHTML = `<option value="">${todos}</option>` +
+      Object.entries(o || {}).map(([k, r]) => `<option value="${k}">${escHTML(r)}</option>`).join('');
+    el.value = v;
+  };
+  opc('f-prod-ativ', 'Todas as atividades', PROD?.atividades, state.prodAtiv);
+  opc('f-prod-tipo', 'Todos os tipos', PROD?.tipos, state.prodTipo);
+  const nota = document.getElementById('prod-nota');
+  if (nota && PROD) nota.textContent = `Receita Federal, CNPJ ${PROD.periodo_rfb}: cadastros ativos com CNAE principal ` +
+    'da agropecuária e da produção florestal. Só contagens por município: nenhum nome, CNPJ ou endereço. ' +
+    'Retrato de um período, sem série.';
+}
+function aplicarFiltroProdutores() {
+  prod_mun = baseProdutores();
+  _aggCache.clear();
+  refreshAll();
+}
+
+// ═══════════════════════════════════════════════════════════
 // POPULATE SELECTS
 // ═══════════════════════════════════════════════════════════
 function populateCulturas() {
@@ -1229,8 +1910,9 @@ function populateCulturas() {
     : state.grupoId === 'TEM' ? temporarias
     : state.grupoId === 'PER' ? permanentes
     : culturas;
+  // A parte do café aparece, mas avisa que já está no Total (e fica fora do grupo).
   sel.innerHTML = '<option value="">Todas do grupo</option>' +
-    list.map(c => `<option value="${c}">${c}</option>`).join('');
+    list.map(c => `<option value="${c}">${filhas[c] ? `↳ ${c} (parte do ${filhas[c]})` : c}</option>`).join('');
   sel.value = state.cultura || '';
 }
 
@@ -1453,7 +2135,37 @@ const DOMINIOS_SIMPLES = {
     pronto: () => carLoaded, marcar: v => carLoaded = v,
     pendente: () => carLoading, guardar: p => carLoading = p,
   },
+  produtores: {
+    arquivo: 'produtores_mun.json', rotulo: 'produtores rurais',
+    aplicar: d => { PROD = d; montarFiltrosProdutores(); prod_mun = baseProdutores(); },
+    pronto: () => prodLoaded, marcar: v => prodLoaded = v,
+    pendente: () => prodLoading, guardar: p => prodLoading = p,
+  },
 };
+
+// A Receita cobre os estados de modo muito desigual: o produtor rural pessoa física só
+// tem CNPJ em massa em SP (em 10/2026, também alguns em AL); nas outras UFs ele opera
+// com CPF e inscrição estadual e não está na base. Por isso o domínio abre em pessoa
+// jurídica, comparável entre estados, e o aviso fica acima do mapa, não só no glossário.
+function pfPorUF() {
+  const uf = {};
+  for (const [cod, r] of Object.entries(PROD?.mun || {})) {
+    const u = mun_info[cod]?.uf || cod.slice(0, 2);
+    for (const [k, [a]] of Object.entries(r)) if (k.endsWith('|PF')) uf[u] = (uf[u] || 0) + a;
+  }
+  return uf;
+}
+function avisoProdutores() {
+  if (!PROD) return;
+  const pf = Object.entries(pfPorUF()).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  const ondePF = pf.map(([u, n]) => `${u} (${numBR(n)})`).join(' e ');
+  const tipo = state.prodTipo === 'PF'
+    ? `Pessoa física: só ${ondePF || 'nenhuma UF'} têm o produtor rural pessoa física no CNPJ; nas demais ele opera com CPF e inscrição estadual e não aparece, e o mapa delas fica vazio. `
+    : state.prodTipo ? '' : `Todos os tipos juntos misturam o produtor pessoa física, que só aparece em ${ondePF || 'nenhuma UF'}, com as empresas: o mapa nacional vira o mapa desses estados. `;
+  const txt = tipo + 'Cadastro na Receita não é estabelecimento do Censo: compare municípios do mesmo estado, ' +
+    'e use a contagem como sinal de onde há empresas da agropecuária, não como número de produtores.';
+  document.querySelectorAll('.prod-aviso').forEach(el => { el.textContent = txt; });
+}
 
 // Imóveis e camadas ambientais têm ressalvas diferentes: a nota acompanha a métrica.
 function atualizarNotaCar() {
@@ -1577,7 +2289,7 @@ async function mostrarGlossario(alvo) {
 const SELETORES_METRICA = {
   agricola: 'f-metrica', pecuaria: 'f-metrica-pec', silvicultura: 'f-metrica-sil',
   economia: 'f-metrica-econ', terra: 'f-metrica-terra', maquinas: 'f-metrica-maq',
-  credito: 'f-metrica-cred', car: 'f-metrica-car',
+  credito: 'f-metrica-cred', car: 'f-metrica-car', produtores: 'f-metrica-prod',
 };
 
 function ligarDicasMetrica() {
@@ -1616,7 +2328,7 @@ let chPareto = null;
 
 function metricaEhRazao() {
   const M = curMetrica();
-  if (state.domain === 'agricola') return M === 'r';
+  if (state.domain === 'agricola') return M === 'r' || M === 'dens' || M === 'voc' || M === 'dom';
   return !!razoesDoDominio()[M];
 }
 
@@ -1675,10 +2387,12 @@ function updateConcentracao() {
   if (metricaEhRazao()) {
     aviso.style.display = '';
     corpo.style.display = 'none';
-    aviso.textContent =
-      `${metLabel()} é uma razão, não uma quantidade que se reparta entre ` +
-      'municípios. Concentração só se calcula sobre grandezas somáveis — ' +
-      'escolha produção, área, valor ou efetivo.';
+    aviso.textContent = leituraAgro() === 'dom'
+      ? 'A cultura dominante é uma categoria, não uma quantidade que se reparta entre municípios. ' +
+        'Para a concentração, escolha área, produção ou valor.'
+      : `${metLabel()} é uma razão, não uma quantidade que se reparta entre ` +
+        'municípios. Concentração só se calcula sobre grandezas somáveis — ' +
+        'escolha produção, área, valor ou efetivo.';
     return;
   }
   aviso.style.display = 'none';
@@ -1767,9 +2481,42 @@ function updateTabelaConcentracao(c) {
   }
 }
 
+// Nota sob o seletor de métrica do Agrícola: o que a leitura nova mede.
+function notaLeituraAgro() {
+  const el = document.getElementById('agro-leitura-nota'); if (!el) return;
+  const m = leituraAgro();
+  el.hidden = !m;
+  if (!m) return;
+  el.textContent = {
+    dens: 'Área colhida ÷ área do município (IBGE, Áreas Territoriais 2025). Estado e microrregião: soma das áreas ÷ soma dos territórios.',
+    voc: 'Parte da área colhida do próprio território que é da seleção: separa o município especializado do município grande.',
+    dom: 'Categoria de maior área em cada território, entre as lavouras do PAM e a floresta plantada da PEVS, no último ano publicado. Pastagem não entra.',
+  }[m];
+}
+
+// Baixa o que a seleção atual precisa (cultura escolhida, grupos do último ano,
+// contas-chave) e só então redesenha.
+function dadosNecessarios() {
+  const p = [];
+  if (state.domain === 'agricola') {
+    if (state.cultura) p.push(carregarCulturaMun(state.cultura));
+    if (state.pronta || leituraAgro() === 'dom') p.push(carregarPamGrupos());
+  }
+  if (state.contas) p.push(carregarContas());
+  return Promise.all(p);
+}
+function atualizar() { return dadosNecessarios().then(refreshAll); }
+
 function refreshAll() {
   if (state.domain === 'pecuaria' && !ppmLoaded) return;
   if (state.domain === 'silvicultura' && !pevsLoaded) return;
+  // Leituras de um ano só (bases de recorte único, atalhos prontos, cultura dominante)
+  // não têm série histórica.
+  const semSerie = !!DOMINIOS_SIMPLES[state.domain] || semSerieAgro();
+  document.body.dataset.serie = semSerie ? 'ausente' : 'presente';
+  if (semSerie && state.tab === 'historico') { showTab('brasil'); return; }
+  notaLeituraAgro();
+  if (state.domain === 'produtores') avisoProdutores();
   updateKPIs();
   const t = state.tab;
   if (t === 'brasil')    updateMapBR();
@@ -1778,8 +2525,10 @@ function refreshAll() {
   if (t === 'historico') updateHistorico();
   if (t === 'ranking')   { updateMapBR(); updateRanking(); }
   if (t === 'concentracao') updateConcentracao();
-  const al = document.getElementById('ano-label');
-  if (al) al.textContent = getAno() + (getAno() !== anos[state.anoIdx] ? ' (último publicado)' : '');
+  renderResumoDominante();
+  const al = document.getElementById('ano-label'), r = retratoTxt();
+  if (al) al.textContent = r ? `${getAno()} (a leitura usa o ${r})`
+    : getAno() + (getAno() !== anos[state.anoIdx] ? ' (último publicado)' : '');
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1789,7 +2538,7 @@ function refreshAll() {
 // dos componentes: por UF ou, com um estado escolhido, por município. O arquivo leva
 // o domínio, a métrica e o ano da fonte, porque o do seletor não se aplica a ela.
 const PREFIXO_EXPORT = { economia: 'Economia', terra: 'UsoDoSolo', maquinas: 'Tratores',
-                         credito: 'Credito', car: 'CAR' };
+                         credito: 'Credito', car: 'CAR', produtores: 'Produtores' };
 
 // Economia tem dois anos: o do PIB e o do VAB por setor. O CAR é um cadastro
 // contínuo, sem ano de referência no car.json.
@@ -1798,6 +2547,7 @@ function anoDaFonte(M) {
   if (state.domain === 'terra') return TERRA?.ano;
   if (state.domain === 'maquinas') return MAQ?.ano;
   if (state.domain === 'credito') return CRED?.ano;
+  if (state.domain === 'produtores') return PROD?.periodo_rfb;
   return null;
 }
 
@@ -1833,7 +2583,43 @@ function exportarSimples(formato) {
   a.click();
 }
 
+// Leituras do território (densidade, vocação, cultura dominante): exporta o que o mapa
+// mostra, por UF ou, com um estado escolhido, por município. A cultura dominante sai
+// como texto, com a área e a parte dela.
+function exportarLeitura(formato) {
+  const M = curMetrica(), uf = state.ufSel, ai = getAnoIdx(), dom = M === 'dom';
+  const r4 = v => v == null || !isFinite(v) ? null : Math.round(v * 10000) / 10000;
+  const linhas = (uf
+    ? Object.keys(mun_info).filter(id => mun_info[id].uf === uf).map(id => ({ cod: id, nome: mun_info[id].n, nivel: 'mun' }))
+    : Object.keys(ufs_info).sort().map(u => ({ cod: u, nome: ufs_info[u].n, nivel: 'uf' })))
+    .map(x => {
+      if (!dom) return { ...x, v: r4(x.nivel === 'uf' ? calcEst(x.cod, M) : calcMunVal(x.cod, M, ai)) };
+      const d = dominanteDe(x.nivel, x.cod);
+      return { ...x, v: d?.cat ?? null, a: d ? Math.round(d.a) : null, pct: d ? r4(d.pct) : null };
+    });
+  const ano = retratoTxt() || String(getAno());
+  const nome = ['PAM', M, state.pronta || state.cultura || state.grupoId, ano.replace(/\D+/g, '-'), uf || 'Brasil']
+    .filter(Boolean).join('_').replace(/[^\w.-]+/g, '-');
+  let href;
+  if (formato === 'csv') {
+    const cab = [uf ? 'Código IBGE' : 'UF', uf ? 'Município' : 'Estado', metLabel() + ` (${ano})`];
+    if (dom) cab.push('Área da categoria (ha)', '% das lavouras e floresta');
+    const rows = [cab, ...linhas.map(x => [x.cod, x.nome, x.v ?? '', ...(dom ? [x.a ?? '', x.pct ?? ''] : [])])];
+    href = 'data:text/csv;charset=utf-8,﻿' + encodeURIComponent(rows.map(r => r.join(';')).join('\n'));
+  } else {
+    const data = {};
+    linhas.forEach(x => { if (x.v != null) data[x.cod] = dom ? { cat: x.v, area_ha: x.a, pct: x.pct } : x.v; });
+    href = 'data:application/json,' + encodeURIComponent(JSON.stringify(
+      { dominio: 'agricola', metrica: M, rotulo: metLabel(), ano, uf: uf || 'BR', data }));
+  }
+  const a = document.createElement('a');
+  a.href = href;
+  a.download = `${nome}.${formato}`;
+  a.click();
+}
+
 function exportCSV() {
+  if (leituraAgro()) return exportarLeitura('csv');
   if (baseDominioSimples()) return exportarSimples('csv');
   const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel, dom = state.domain;
   const ufs = uf ? [uf] : Object.keys(ufs_info);
@@ -1864,6 +2650,7 @@ function exportCSV() {
 }
 
 function exportJSON() {
+  if (leituraAgro()) return exportarLeitura('json');
   if (baseDominioSimples()) return exportarSimples('json');
   const M = curMetrica(), ai = getAnoIdx(), uf = state.ufSel, dom = state.domain;
   const out = { ano: getAno(), metrica: M, uf: uf || 'BR', data: {} };
@@ -1896,7 +2683,21 @@ function exportJSON() {
 function bindEvents() {
   document.getElementById('f-metrica').addEventListener('change', e => {
     state.metricaAgro = e.target.value; state.cultura = '';
-    populateCulturas(); refreshAll();
+    // o atalho pronto só vale para densidade e vocação
+    if (state.metricaAgro !== 'dens' && state.metricaAgro !== 'voc') limparPronta();
+    populateCulturas(); atualizar();
+  });
+  document.getElementById('f-contas')?.addEventListener('change', e => {
+    state.contas = e.target.value; atualizar();
+  });
+  document.getElementById('f-metrica-prod')?.addEventListener('change', e => {
+    state.metricaProd = e.target.value; refreshAll();
+  });
+  document.getElementById('f-prod-ativ')?.addEventListener('change', e => {
+    state.prodAtiv = e.target.value; aplicarFiltroProdutores();
+  });
+  document.getElementById('f-prod-tipo')?.addEventListener('change', e => {
+    state.prodTipo = e.target.value; aplicarFiltroProdutores();
   });
   document.getElementById('f-metrica-pec').addEventListener('change', e => {
     state.metricaPec = e.target.value; refreshAll();
@@ -1906,6 +2707,7 @@ function bindEvents() {
   });
   document.querySelectorAll('.grp-btn').forEach(btn => btn.addEventListener('click', () => {
     state.grupoId = btn.dataset.grp; state.cultura = '';
+    limparPronta();                         // escolher um grupo desliga o atalho pronto
     document.querySelectorAll('.grp-btn').forEach(b => b.classList.toggle('active', b === btn));
     populateCulturas(); refreshAll();
   }));
@@ -1919,7 +2721,7 @@ function bindEvents() {
     refreshAll();
   }));
   document.getElementById('f-cultura').addEventListener('change', e => {
-    state.cultura = e.target.value; refreshAll();
+    state.cultura = e.target.value; limparPronta(); atualizar();
   });
   document.getElementById('f-categoria-pec').addEventListener('change', e => {
     state.categoriaPec = e.target.value; refreshAll();

@@ -55,6 +55,7 @@
       <button class="dom-btn" data-dom="maquinas">🚜 Tratores</button>
       <button class="dom-btn" data-dom="credito">💰 Crédito</button>
       <button class="dom-btn" data-dom="car">🌳 CAR</button>
+      <button class="dom-btn" data-dom="produtores">👨‍🌾 Produtores</button>
     </div>
 
     <div class="sidebar-section-title">Indicadores</div>
@@ -66,7 +67,21 @@
         <option value="a">Área Colhida (ha)</option>
         <option value="v">Valor (mil R$)</option>
         <option value="r">Rendimento (kg/ha)</option>
+        <optgroup label="Leituras do território">
+          <option value="dens">Densidade (ha/km²)</option>
+          <option value="voc">Vocação (% da área colhida)</option>
+          <option value="dom">Cultura dominante (maior área)</option>
+        </optgroup>
       </select>
+      <div class="filter-note" id="agro-leitura-nota" hidden></div>
+    </div>
+
+    <div class="filter-block dom-agricola">
+      <label>Densidades prontas</label>
+      <div class="grp-btns pronta-btns" id="pronta-btns">
+        <span class="filter-note">Carregando…</span>
+      </div>
+      <div class="filter-note">Sempre no último ano publicado do PAM (floresta: da PEVS); não seguem o seletor de ano.</div>
     </div>
 
     <div class="filter-block dom-pecuaria">
@@ -169,6 +184,27 @@
       <div class="filter-note" id="car-ressalva">SICAR — Cadastro Ambiental Rural</div>
     </div>
 
+    <div class="filter-block dom-produtores">
+      <label>Métrica</label>
+      <select id="f-metrica-prod">
+        <option value="n" selected>Cadastros ativos</option>
+        <option value="n24">Abertos nos últimos 24 meses</option>
+        <option value="mil_ha">Cadastros por mil ha colhidos</option>
+        <option value="km2">Cadastros por km²</option>
+      </select>
+      <div class="filter-note" id="prod-nota">Receita Federal, CNPJ: só contagens por município</div>
+    </div>
+
+    <div class="filter-block dom-produtores">
+      <label for="f-prod-ativ">Atividade (CNAE principal)</label>
+      <select id="f-prod-ativ"><option value="">Todas as atividades</option></select>
+    </div>
+
+    <div class="filter-block dom-produtores">
+      <label for="f-prod-tipo">Tipo de cadastro</label>
+      <select id="f-prod-tipo"><option value="">Todos</option></select>
+    </div>
+
     <div class="filter-block serie-temporal">
       <label>Ano — <span id="ano-label" style="color:var(--gold);font-weight:700">2024</span></label>
       <input type="range" id="f-ano" min="0" max="20" value="20">
@@ -246,6 +282,25 @@
       </select>
     </div>
 
+    <div class="sidebar-section-title">Camada</div>
+
+    <div class="filter-block">
+      <label for="f-contas">Contas-chave (Receita)</label>
+      <select id="f-contas">
+        <option value="" selected>Desligada</option>
+        <option value="usina_anp">Usinas com autorização ANP</option>
+        <option value="usina_conf">CNAE de usina sem ANP (confirmar)</option>
+        <option value="usina_agricola">Unidades agrícolas de grupo sucroenergético</option>
+        <option value="sucos">Indústrias de suco</option>
+        <option value="pos_colheita">Pós-colheita / packing</option>
+        <option value="cafe">Café: beneficiamento e armazéns</option>
+        <option value="florestal">Florestal: celulose e eucalipto</option>
+        <option value="cooperativa">Cooperativas agropecuárias</option>
+        <option value="todas">Todas, exceto unidades agrícolas e "confirmar"</option>
+      </select>
+      <div class="filter-note" id="contas-nota">Círculo com área proporcional ao nº de estabelecimentos ativos no município (só pessoa jurídica).</div>
+    </div>
+
     <hr class="sidebar-sep">
 
     <div class="export-btns hide-municipio">
@@ -271,24 +326,25 @@
 
       <!-- ═══ BRASIL TAB ═══ -->
       <div class="tab-pane active" id="tab-brasil">
+        <div class="conc-aviso dom-produtores prod-aviso" style="margin-bottom:12px"></div>
         <div id="kpi-row-agro" class="dom-agricola" style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
           <div class="kpi-card">
-            <h3>Produção Total</h3>
+            <h3 id="kpi-prod-title">Produção Total</h3>
             <div class="val" id="kpi-prod">—</div>
             <div class="sub" id="kpi-prod-sub"></div>
           </div>
           <div class="kpi-card">
-            <h3>Área Colhida</h3>
+            <h3 id="kpi-area-title">Área Colhida</h3>
             <div class="val" id="kpi-area">—</div>
             <div class="sub" id="kpi-area-sub">ha colhidos</div>
           </div>
           <div class="kpi-card">
-            <h3>Valor da Produção</h3>
+            <h3 id="kpi-val-title">Valor da Produção</h3>
             <div class="val" id="kpi-val">—</div>
             <div class="sub" id="kpi-val-sub">mil R$</div>
           </div>
           <div class="kpi-card">
-            <h3>Culturas</h3>
+            <h3 id="kpi-cult-title">Culturas</h3>
             <div class="val" id="kpi-cult">—</div>
             <div class="sub" id="kpi-cult-sub">culturas com dados</div>
           </div>
@@ -338,10 +394,12 @@
           </div>
         </div>
         <div class="map-box"><div id="map-br"></div></div>
+        <section class="dom-resumo" id="dom-resumo-br" aria-live="polite" hidden></section>
       </div>
 
       <!-- ═══ ESTADOS TAB ═══ -->
       <div class="tab-pane" id="tab-estados">
+        <div class="conc-aviso dom-produtores prod-aviso" style="margin-bottom:10px"></div>
         <div class="estado-bar">
           <span id="est-label" class="sel-label">Selecione um estado no filtro à esquerda</span>
         </div>
@@ -358,10 +416,12 @@
             </div>
           </div>
         </div>
+        <section class="dom-resumo" id="dom-resumo-est" aria-live="polite" hidden></section>
       </div>
 
       <!-- ═══ MUNICÍPIO TAB ═══ -->
       <div class="tab-pane" id="tab-municipio">
+        <div class="conc-aviso dom-produtores prod-aviso" style="margin-bottom:10px"></div>
         <div id="mun-hint">Selecione um estado no filtro à esquerda</div>
         <div class="mun-top-row">
           <div>
@@ -425,6 +485,7 @@
 
       <!-- ═══ RANKING TAB ═══ -->
       <div class="tab-pane" id="tab-ranking">
+        <div id="rank-aviso" class="conc-aviso" style="display:none;margin-bottom:14px"></div>
         <div class="split-layout">
           <div class="chart-wrap">
             <h3 id="rank-uf-title">🏆 Top Estados</h3>
@@ -568,6 +629,7 @@
 })();
 </script>
 <script src="js/glossario.js"></script>
+<script src="js/leituras.js"></script>
 <script src="js/main.js"></script>
 <!-- Consentimento de cookies + Google Analytics (Consent Mode) — NÃO REMOVER -->
 <script>

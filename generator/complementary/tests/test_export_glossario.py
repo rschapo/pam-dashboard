@@ -49,7 +49,9 @@ def base(tmp_path, monkeypatch):
 
 
 def test_fontes_tiram_periodo_e_data_do_download_dos_dados(base):
-    fontes = {f["aba"]: f for f in eg.build_glossario()["fontes"]}
+    fontes = {}
+    for f in eg.build_glossario()["fontes"]:      # a primeira de cada aba (a Agrícola tem duas)
+        fontes.setdefault(f["aba"], f)
 
     assert fontes["Agrícola"]["periodo"] == "2004–2025"
     assert fontes["Agrícola"]["baixado_em"] == "set/2026"
@@ -91,7 +93,7 @@ def test_sem_os_json_do_painel_o_glossario_sai_sem_listas(tmp_path, monkeypatch)
 
     g = eg.build_glossario()
 
-    assert len(g["fontes"]) == 11 and g["fontes"][0]["periodo"] == "—"
+    assert len(g["fontes"]) == 15 and g["fontes"][0]["periodo"] == "—"
     assert all("baixado_em" not in f for f in g["fontes"])
     assert g["culturas"]["temporarias"] == [] and g["pevs"] == {"anos": [], "tipos": {}, "notas": {}}
 

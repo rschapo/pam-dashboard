@@ -257,6 +257,35 @@ def update_global_manifest():
 
 
 # ──────────────────────────────────────────────────────────────────────────────
+# JSON do painel (public/data)
+# ──────────────────────────────────────────────────────────────────────────────
+def json_seguro(obj):
+    """NaN e infinito viram null, e os números do numpy/pandas viram os do Python.
+    O json do Python grava NaN como `NaN`, que não é JSON: o navegador recusa o
+    arquivo inteiro e a aba fica vazia. Ausência continua ausência (null), nunca zero."""
+    import math
+    if isinstance(obj, dict):
+        return {str(k): json_seguro(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [json_seguro(v) for v in obj]
+    if hasattr(obj, "item") and not isinstance(obj, (str, bytes)):   # escalar numpy
+        obj = obj.item()
+    if isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+        return None
+    return obj
+
+
+def write_public_json(path: str | Path, obj) -> Path:
+    """Grava um JSON de public/data compacto, com allow_nan=False: se algo escapar
+    da limpeza, o export falha aqui, e não no navegador de quem abre o painel."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(json_seguro(obj), ensure_ascii=False, separators=(",", ":"),
+                               allow_nan=False), encoding="utf-8")
+    return path
+
+
+# ──────────────────────────────────────────────────────────────────────────────
 # IO de tabelas (CSV de conferência + Parquet analítico)
 # ──────────────────────────────────────────────────────────────────────────────
 def save_table(df, path_no_ext: str | Path, *, csv=True, parquet=True) -> list[str]:

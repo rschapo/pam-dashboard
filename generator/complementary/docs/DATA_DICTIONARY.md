@@ -193,3 +193,82 @@ lista o que ficou fora da faixa.
 `cod_municipio`, `ano`, `classe_id`, `classe_nome`, `grupo_analitico`, `area_ha`,
 `percentual_area_municipal`, `colecao`, `versao`, `data_download`. Original preservada.
 Comparação em `car_mapbiomas_comparacao` (metodológica).
+
+## Tabelas de grupos de culturas  (`generator/`)
+Versionadas ao lado do pipeline do PAM; a data da definição vai no campo `versao`.
+
+- `crop_groups.csv`: `cultura`, `tipo` (TEM/PER), `COL` (0/1, Grãos/Colheitadeiras) e
+  **`pai`**: a cultura que já contém esta. Só o café tem: Arábica e Canephora têm
+  `pai = Café (em grão) Total`, e por isso ficam fora de todo agregado do `pkg.json`
+  (Todas, Permanentes, município, microrregião). O processador aborta se uma parte estiver em
+  COL ou se o pai não existir.
+- `grupos_densidade.csv`: `grupo`, `rotulo`, `subgrupo`, `cultura`, `versao`, `origem`. Os
+  grupos dos atalhos de densidade: cana, citros (laranja, limão, tangerina), café (só o
+  Total), H&F (22 frutas + 3 citros + 13 legumes e hortaliças = 38), H&F sem citros (35),
+  soja, milho (grão), algodão (herbáceo e arbóreo), arroz, trigo e fumo. Colheitadeiras e
+  Tratores saem do `crop_groups.csv` (COL; temporárias fora de COL), e a floresta plantada da
+  PEVS (área plantada, todas as espécies).
+- `grupo_dominante.csv`: `cultura`, `categoria`, `observacao`. As 81 culturas da PAM em 10
+  categorias (Cana, Grãos e oleaginosas, Café, Citros, Frutas, Hortaliças e legumes,
+  Mandioca, Cacau, Outras lavouras) mais a Floresta plantada da PEVS. As partes do café ficam
+  sem categoria. `observacao` registra as decisões (mandioca e cacau com categoria própria;
+  açaí em Frutas; feijão e arroz em Grãos; fumo e erva-mate em Outras lavouras), com o número
+  que as justificou.
+
+## JSON do painel novos ou alterados (`public/data/`)
+
+### pkg.json (alterado)
+Ganha `filhas` (parte → total que a contém) e `arq_cultura` (cultura → nome do arquivo em
+`pam_mun/`). `mic_data`, `mun_data` e `mun_grp_data` saem sem as partes do café; `est_data`
+continua com cada cultura, inclusive as partes.
+
+### pam_mun/<arquivo>.json (novo, 81 arquivos, 22 MB no total, maior 1,6 MB)
+Uma cultura por arquivo, gerada pelo `process_pam.py`: `{cultura, anos, mun: {cod: [[área],
+[produção], [valor]]}}`, uma posição por ano de `anos`. `null` onde a PAM tem a linha sem o
+número; 0 onde o município não tem a cultura no ano. O front baixa o arquivo quando a cultura
+é escolhida (antes, o município e a microrregião mostravam o total do grupo).
+
+### pam_grupos.json (novo, `export_pam_grupos.py`, 1,4 MB)
+`{ano_pam, ano_pevs, grupos: {chave: {rot, fonte (pam|pevs), def, culturas}}, categorias:
+{categoria: cor}, mun: {cod: {t, g, c, d}}}`, no último ano de cada pesquisa. `t`: área
+colhida total do PAM sem as partes do café (ausente = sem lavoura publicada; cinza no mapa,
+nunca zero); `g`: área de cada grupo (> 0); `c`: área de cada categoria da cultura dominante,
+com a Floresta plantada da PEVS; `d`: a categoria de maior área (empate pela ordem de
+`categorias`).
+
+### municipios.json (alterado)
+`mun: {cod: [nome, uf, cod_microrregiao, area_ha]}`: o quarto campo é a área territorial do
+IBGE (Áreas Territoriais 2025) em hectares inteiros, denominador das densidades.
+
+## contas_chave_municipio  (`municipality/`)
+Município × setor das contas-chave da Receita (`process_contas_chave.py`). Sem nome nem CNPJ.
+| campo | descrição |
+|---|---|
+| cod_municipio | código IBGE (7 dígitos) |
+| setor | usina_anp, usina_conf, usina_agricola, sucos, pos_colheita, cafe, florestal, cooperativa |
+| estabelecimentos | estabelecimentos ativos (matriz e filiais) |
+| cap_etanol_m3d | capacidade autorizada de etanol (ANP, anidro + hidratado, m³/dia) somada; só em usina_anp |
+| periodo_rfb | período da base CNPJ (AAAA-MM) |
+
+## produtores_municipio  (`municipality/`)
+Município × atividade × tipo dos cadastros ativos com CNAE principal 01/02
+(`process_produtores.py`). Sem identificador.
+| campo | descrição |
+|---|---|
+| cod_municipio | código IBGE |
+| atividade | cana, citros, cafe, graos, hf, bovinos, aves_suinos, florestal, servicos, outros (`config/cnae_atividade_produtores.csv`) |
+| tipo | PF (natureza 4120), PJ (2xxx), outra |
+| ativos | cadastros ativos |
+| novos_24m | dos ativos, abertos a partir de 24 meses antes da data de referência do período |
+| periodo_rfb | período da base CNPJ |
+
+### contas_chave.json (novo, 0,25 MB)
+`{periodo_rfb, mes_anp, setores {rot, cor}, cautelas, validacao (contagens), totais {setor: n},
+mun {cod: {xy: [lat, lon] ponto representativo do município | null, <setor>: n, cap: m³/d}}}`.
+Só agregado.
+
+### produtores_mun.json (novo, 0,66 MB)
+`{periodo_rfb, data_ref, corte_24m, atividades, tipos, cautelas, suprimido_abaixo (0 = sem
+supressão), comparacao_censo_uf {UF: {cadastros, censo2017, razao}}, mun {cod: {"atividade|tipo":
+[ativos, novos_24m]}}}`. Só códigos IBGE e números; combinações > 0. Método e regra de dados
+pessoais: `RECEITA_CONTAS_E_PRODUTORES.md`.

@@ -3,15 +3,23 @@ PAM Data Processor — Produção Agrícola Municipal 2004-2024
 Reads the IBGE PAM CSV and writes JSON files to public/data/.
 
 Run from the project root:
-    py generator/process_pam.py
+    py generator/process_pam.py              (baixa as malhas de UF e microrregião de novo)
+    py generator/process_pam.py --sem-malha  (só os dados; mantém geo_uf.json e geo_mic.json)
 
 Outputs:
     public/data/pkg.json      — all agricultural data (stats, meta)
+    public/data/pam_mun/*.json — uma cultura por arquivo, por município e ano, lido pelo
+                                 front só quando a cultura é escolhida
     public/data/geo_uf.json   — UF polygon GeoJSON
     public/data/geo_mic.json  — Microregion polygon GeoJSON
+
+Café: a PAM publica "Café (em grão) Total" e, desde 2012, as partes Arábica e
+Canephora. As partes (coluna `pai` do crop_groups.csv) ficam selecionáveis uma a uma,
+mas não entram em nenhum agregado (Todas, Permanentes, municípios, microrregiões):
+somadas ao Total, contavam o café duas vezes (1,94 Mha a mais em 2025).
 """
 
-import sys, json, os, math
+import sys, json, os, math, re, unicodedata
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
@@ -30,7 +38,9 @@ OUT_DIR  = Path(__file__).parent.parent / "public" / "data"
 OUT_PKG  = OUT_DIR / "pkg.json"
 OUT_GEO_UF  = OUT_DIR / "geo_uf.json"
 OUT_GEO_MIC = OUT_DIR / "geo_mic.json"
+OUT_MUN_CULT = OUT_DIR / "pam_mun"
 CROP_GROUPS_CSV = Path(__file__).parent / "crop_groups.csv"
+SEM_MALHA = "--sem-malha" in sys.argv
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -122,7 +132,10 @@ else:
     print("crop_groups.csv não encontrado — gerando pela primeira vez ...")
     grp_df = _bootstrap_group_table(culturas)
 
-GROUP_COLS = [c for c in grp_df.columns if c not in ("cultura","tipo")]
+if "pai" not in grp_df.columns:
+    grp_df["pai"] = ""
+grp_df["pai"] = grp_df["pai"].fillna("").astype(str).str.strip()
+GROUP_COLS = [c for c in grp_df.columns if c not in ("cultura","tipo","pai")]
 for g in GROUP_COLS:
     grp_df[g] = grp_df[g].fillna(0).astype(int)
 
@@ -141,7 +154,7 @@ if novas:
     extra = pd.DataFrame([
         {"cultura": c,
          "tipo": "PER" if str(tipo_lavoura_map.get(c, "Temporaria")).startswith("Perm") else "TEM",
-         **{g: 0 for g in GROUP_COLS}}
+         **{g: 0 for g in GROUP_COLS}, "pai": ""}
         for c in novas
     ])
     grp_df = pd.concat([grp_df, extra], ignore_index=True)
@@ -149,6 +162,20 @@ if novas:
 
 TIPO_MAP = dict(zip(grp_df["cultura"], grp_df["tipo"]))
 df["_tipo"] = df["Cultura"].map(TIPO_MAP).fillna("TEM")
+
+# Partes de uma cultura que a PAM também publica no total (café Arábica e Canephora,
+# dentro do Café Total): ficam fora de todo agregado. Um pai que não existe na PAM
+# deixaria a parte sem total nenhum, e uma parte em grupo de máquina contaria duas vezes.
+FILHAS = {c: p for c, p in zip(grp_df["cultura"], grp_df["pai"]) if p}
+for filha, pai in FILHAS.items():
+    if pai not in set(grp_df["cultura"]):
+        sys.exit(f"[ERRO] crop_groups.csv: o pai '{pai}' de '{filha}' não é cultura da tabela")
+    if filha in set(grp_df.loc[grp_df["COL"] == 1, "cultura"]):
+        sys.exit(f"[ERRO] crop_groups.csv: '{filha}' é parte de '{pai}' e não pode estar em COL")
+filha_mask = df["Cultura"].isin(FILHAS)
+if FILHAS:
+    print(f"  Partes fora dos agregados: {', '.join(FILHAS)} "
+          f"({df.loc[filha_mask, 'Area_Colhida_ha'].sum():,.0f} ha somados na série)")
 
 perm_culturas = sorted(df.loc[df["_tipo"]=="PER","Cultura"].unique().tolist())
 temp_culturas = sorted(df.loc[df["_tipo"]=="TEM","Cultura"].unique().tolist())
@@ -202,25 +229,28 @@ def _mic_grupo(c):
 
 df["_grupo"] = df["Cultura"].apply(_mic_grupo)
 
+# Daqui em diante, todo agregado (micro, município, grupo) sai sem as partes do café.
+dfa = df[~filha_mask]
+
 GROUP_MASKS = {
-    "TEM": df["_tipo"] == "TEM",
-    "PER": df["_tipo"] == "PER",
-    "COL": df["_grupo"] == "COL",
-    "TRA": df["_grupo"] == "TRA",
+    "TEM": dfa["_tipo"] == "TEM",
+    "PER": dfa["_tipo"] == "PER",
+    "COL": dfa["_grupo"] == "COL",
+    "TRA": dfa["_grupo"] == "TRA",
 }
 
-mic_all = df.groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
+mic_all = dfa.groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
     a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
 mic_all["grupo"] = "ALL"
 
 mic_group_tables = [mic_all]
 for grp, mask in GROUP_MASKS.items():
-    t = df[mask].groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
+    t = dfa[mask].groupby(["Cod_Microrregiao","Ano"], as_index=False, sort=False).agg(
         a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
     t["grupo"] = grp
     mic_group_tables.append(t)
 
-mic_each = df[df["_grupo"]=="COL"].groupby(["Cod_Microrregiao","Cultura","Ano"], as_index=False, sort=False).agg(
+mic_each = dfa[dfa["_grupo"]=="COL"].groupby(["Cod_Microrregiao","Cultura","Ano"], as_index=False, sort=False).agg(
     a=("Area_Colhida_ha","sum"), p=("Quantidade_Produzida_ton","sum"), v=("Valor_Producao_mil_reais","sum"))
 mic_each = mic_each.rename(columns={"Cultura":"grupo"})
 mic_group_tables.append(mic_each)
@@ -249,7 +279,7 @@ print(f"  Microregiões in MIC_DATA: {len(MIC_DATA)}")
 # 4. MUN_DATA
 # ─────────────────────────────────────────────────────────────────────────────
 print("Building MUN_DATA …")
-mun_agg = df.groupby(["Cod_Municipio","Ano"], as_index=False, sort=False).agg(
+mun_agg = dfa.groupby(["Cod_Municipio","Ano"], as_index=False, sort=False).agg(
     a=("Area_Colhida_ha","sum"),
     p=("Quantidade_Produzida_ton","sum"),
     v=("Valor_Producao_mil_reais","sum")
@@ -270,7 +300,7 @@ print(f"  Municípios in MUN_DATA: {len(MUN_DATA)}")
 print("Building MUN_GRP_DATA …")
 MUN_GRP_DATA = {}
 for grp, mask in GROUP_MASKS.items():
-    sub = df[mask]
+    sub = dfa[mask]
     gagg = sub.groupby(["Cod_Municipio","Ano"], as_index=False, sort=False).agg(
         a=("Area_Colhida_ha","sum"),
         p=("Quantidade_Produzida_ton","sum"),
@@ -288,6 +318,49 @@ for grp, mask in GROUP_MASKS.items():
         gd[mid]["v"][ai] = round(float(row.v or 0),1)
     MUN_GRP_DATA[grp] = gd
     print(f"  {grp}: {len(gd)} municipalities")
+
+# 4c. Uma cultura por arquivo (public/data/pam_mun/<slug>.json)
+# O pkg.json só tem o município pelo total e pelos grupos: escolhida uma cultura, o
+# mapa de municípios mostrava o total do grupo. O front baixa o arquivo da cultura
+# quando ela é escolhida. Formato: {cod: [[área...], [produção...], [valor...]]}, uma
+# posição por ano de `anos`; null onde a PAM tem a linha sem o número (ausente,
+# não zero), 0 onde o município não tem a cultura naquele ano.
+def _slug(c):
+    s = unicodedata.normalize("NFKD", c).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+
+def _num(x):
+    if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))):
+        return None
+    x = round(float(x), 1)
+    return int(x) if x.is_integer() else x
+
+print("Building per-crop municipal files …")
+ARQ_CULTURA = {c: _slug(c) for c in culturas}
+if len(set(ARQ_CULTURA.values())) != len(ARQ_CULTURA):
+    sys.exit("[ERRO] duas culturas dão o mesmo nome de arquivo em pam_mun/")
+OUT_MUN_CULT.mkdir(parents=True, exist_ok=True)
+for velho in OUT_MUN_CULT.glob("*.json"):
+    velho.unlink()                  # cultura que saiu da PAM não deixa arquivo esquecido
+# min_count=1: a linha sem número continua sem número (NaN → null), não vira zero
+cult_mun = (df.groupby(["Cultura", "Cod_Municipio", "Ano"], sort=False)
+              [["Area_Colhida_ha", "Quantidade_Produzida_ton", "Valor_Producao_mil_reais"]]
+              .sum(min_count=1).reset_index()
+              .rename(columns={"Area_Colhida_ha": "a", "Quantidade_Produzida_ton": "p",
+                               "Valor_Producao_mil_reais": "v"}))
+maior = (0, "")
+for c, sub in cult_mun.groupby("Cultura", sort=False):
+    mun = {}
+    for row in sub.itertuples(index=False):
+        ai = ano_idx.get(int(row.Ano))
+        if ai is None: continue
+        reg = mun.setdefault(str(row.Cod_Municipio), [[0] * N_ANOS, [0] * N_ANOS, [0] * N_ANOS])
+        reg[0][ai], reg[1][ai], reg[2][ai] = _num(row.a), _num(row.p), _num(row.v)
+    out = OUT_MUN_CULT / f"{ARQ_CULTURA[c]}.json"
+    out.write_text(json.dumps({"cultura": c, "anos": anos, "mun": mun}, ensure_ascii=False,
+                              separators=(",", ":"), allow_nan=False), encoding="utf-8")
+    maior = max(maior, (out.stat().st_size, out.name))
+print(f"  {len(ARQ_CULTURA)} arquivos em {OUT_MUN_CULT.name}/ · maior: {maior[1]} ({maior[0] / 1_048_576:.2f} MB)")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 5. INFO DICTS
@@ -329,14 +402,17 @@ def fetch_mic_geo():
             props["mid"] = str(ca)
     return geo
 
-print("Downloading GeoJSON (parallel) …")
 GEO_UF = GEO_MIC = None
-with ThreadPoolExecutor(max_workers=2) as ex:
-    fut_uf  = ex.submit(fetch_uf_geo)
-    fut_mic = ex.submit(fetch_mic_geo)
-    GEO_UF  = fut_uf.result()
-    GEO_MIC = fut_mic.result()
-print(f"  UF features: {len(GEO_UF['features'])}  |  Micro features: {len(GEO_MIC['features'])}")
+if SEM_MALHA:
+    print("--sem-malha: geo_uf.json e geo_mic.json ficam como estão")
+else:
+    print("Downloading GeoJSON (parallel) …")
+    with ThreadPoolExecutor(max_workers=2) as ex:
+        fut_uf  = ex.submit(fetch_uf_geo)
+        fut_mic = ex.submit(fetch_mic_geo)
+        GEO_UF  = fut_uf.result()
+        GEO_MIC = fut_mic.result()
+    print(f"  UF features: {len(GEO_UF['features'])}  |  Micro features: {len(GEO_MIC['features'])}")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 7. Write JSON files
@@ -355,6 +431,10 @@ PKG = {
     "mic_data":       MIC_DATA,
     "mun_data":       MUN_DATA,
     "mun_grp_data":   MUN_GRP_DATA,
+    # parte → total que já a contém: selecionável sozinha, fora de toda soma
+    "filhas":         FILHAS,
+    # cultura → nome do arquivo em pam_mun/ (sem acento, para a URL)
+    "arq_cultura":    ARQ_CULTURA,
 }
 
 # ── Sanitize NaN / Inf before JSON serialisation ──────────────────────────────
@@ -373,16 +453,18 @@ print("Sanitizing NaN values …")
 PKG = _clean(PKG)
 
 print("Writing JSON files …")
-OUT_PKG.write_text(json.dumps(PKG, ensure_ascii=False, separators=(',',':')), encoding="utf-8")
+# allow_nan=False: NaN no arquivo faria o navegador recusar o pkg.json inteiro
+OUT_PKG.write_text(json.dumps(PKG, ensure_ascii=False, separators=(',',':'), allow_nan=False), encoding="utf-8")
 size = OUT_PKG.stat().st_size / 1_048_576
 print(f"  pkg.json: {size:.1f} MB  ->  {OUT_PKG}")
 
-OUT_GEO_UF.write_text(json.dumps(GEO_UF, ensure_ascii=False, separators=(',',':')), encoding="utf-8")
-size = OUT_GEO_UF.stat().st_size / 1_048_576
-print(f"  geo_uf.json: {size:.1f} MB  ->  {OUT_GEO_UF}")
+if not SEM_MALHA:
+    OUT_GEO_UF.write_text(json.dumps(GEO_UF, ensure_ascii=False, separators=(',',':'), allow_nan=False), encoding="utf-8")
+    size = OUT_GEO_UF.stat().st_size / 1_048_576
+    print(f"  geo_uf.json: {size:.1f} MB  ->  {OUT_GEO_UF}")
 
-OUT_GEO_MIC.write_text(json.dumps(GEO_MIC, ensure_ascii=False, separators=(',',':')), encoding="utf-8")
-size = OUT_GEO_MIC.stat().st_size / 1_048_576
-print(f"  geo_mic.json: {size:.1f} MB  ->  {OUT_GEO_MIC}")
+    OUT_GEO_MIC.write_text(json.dumps(GEO_MIC, ensure_ascii=False, separators=(',',':'), allow_nan=False), encoding="utf-8")
+    size = OUT_GEO_MIC.stat().st_size / 1_048_576
+    print(f"  geo_mic.json: {size:.1f} MB  ->  {OUT_GEO_MIC}")
 
 print("\nDone! Deploy the public/ folder to Netlify.")

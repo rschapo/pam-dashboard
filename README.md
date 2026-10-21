@@ -49,6 +49,26 @@ py generator/process_pam.py
 Isso cria os 3 arquivos JSON em `public/data/` (pode levar alguns minutos na
 primeira execução, pois faz download dos polígonos GeoJSON da API do IBGE).
 
+`process_pam.py` também grava `public/data/pam_mun/`, um arquivo por cultura (lido quando a
+cultura é escolhida). Com `--sem-malha` ele não baixa de novo as malhas de UF e microrregião.
+
+## Densidades, cultura dominante e Receita
+
+Os grupos de culturas ficam em tabelas versionadas ao lado do `crop_groups.csv`
+(`generator/grupos_densidade.csv` e `generator/grupo_dominante.csv`). Depois do PAM, da PEVS
+ou de mudar uma delas:
+
+```bash
+cd generator/complementary
+.venv/Scripts/python run_pipeline.py --only export_pam_grupos     # pam_grupos.json
+.venv/Scripts/python run_pipeline.py --only process_contas_chave  # contas_chave.json (Receita + ANP)
+.venv/Scripts/python run_pipeline.py --only process_produtores    # produtores_mun.json (só contagens)
+.venv/Scripts/python run_pipeline.py --only verificar_lgpd_publico
+```
+
+A base da Receita com identificador nunca entra no projeto: fica no cache fora do OneDrive
+(`generator/complementary/docs/RECEITA_CONTAS_E_PRODUTORES.md`).
+
 ## Glossário
 
 O painel tem a aba 📖 Glossário, e o mesmo conteúdo fica em `glossario.html`, que

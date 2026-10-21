@@ -73,3 +73,7 @@ data/processed/municipality/pevs_municipio.csv
 
 # Aponta o bruto para fora do projeto (caminho local da maquina)
 data/raw_dir.txt
+
+# Ponteiro local para o cache da base da Receita com identificador (dado pessoal, fora do
+# OneDrive e do git): ver generator/complementary/docs/RECEITA_CONTAS_E_PRODUTORES.md
+data/cache_pf_dir.txt

@@ -1,0 +1,40 @@
+{
+  "dataset": "produtores_rurais",
+  "source": "Receita Federal CNPJ 2026-10",
+  "extraction_date": "2026-10-21",
+  "reference_date": "2026-10-11",
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 915003,
+  "municipality_count": 5424,
+  "rejected_rows": 186,
+  "warnings": [
+    "município da Receita sem par IBGE: EXTERIOR (EX)"
+  ],
+  "output_files": [
+    {
+      "file": "produtores_municipio.parquet",
+      "sha256": "398e6e535ba2540323e000c8b31d9fff331e15fa3b0281b3279bee75704fb80a",
+      "bytes": 137725
+    },
+    {
+      "file": "produtores_municipio.csv",
+      "sha256": "b03a8db08e7fe62e68a91c03a27b7cf16be9d9fa514234bae72e9351fef0836b",
+      "bytes": 1005855
+    },
+    {
+      "file": "produtores_mun.json",
+      "sha256": "d4721ac21b36239535c37fad5b8557721e7ca692b3fbcee3afb17846c1e99128",
+      "bytes": 672039
+    }
+  ],
+  "generated_at": "2026-10-21T16:24:55-04:00",
+  "exclusoes_aplicadas": 0,
+  "suprimido_abaixo": 0,
+  "por_tipo": {
+    "PF": 695002,
+    "PJ": 216875,
+    "outra": 3126
+  }
+}

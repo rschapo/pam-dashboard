@@ -21,7 +21,6 @@ Nada aqui depende de rede.
 """
 from __future__ import annotations
 
-import json
 import math
 import sys
 from pathlib import Path
@@ -29,7 +28,7 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import PROCESSED_DIR, now_iso  # noqa: E402
+from common import PROCESSED_DIR, now_iso, write_public_json  # noqa: E402
 
 PUBLIC_DATA = Path(__file__).resolve().parents[3] / "public" / "data"
 
@@ -108,7 +107,7 @@ def main():
     obj = build_perfil()
     PUBLIC_DATA.mkdir(parents=True, exist_ok=True)
     p = PUBLIC_DATA / "perfil.json"
-    p.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    write_public_json(p, obj)   # allow_nan=False: NaN no arquivo derrubaria a aba no navegador
     cobertura = {c: sum(1 for m in obj["mun"].values() if c in m)
                  for c in list(CAMPOS) + list(ESTRUTURA) + ["ppf"]}
     print(f"  perfil.json: {len(obj['mun']):,} municípios · {p.stat().st_size / 1_048_576:.2f} MB · anos {obj['anos']}")

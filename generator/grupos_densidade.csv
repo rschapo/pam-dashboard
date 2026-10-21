@@ -1,0 +1,86 @@
+﻿grupo,rotulo,subgrupo,cultura,versao,origem
+cana,Cana-de-açúcar,,Cana-de-açúcar,2026-10-21,manual
+citros,"Citros (laranja, limão, tangerina)",citros,Laranja,2026-10-21,manual
+citros,"Citros (laranja, limão, tangerina)",citros,Limão,2026-10-21,manual
+citros,"Citros (laranja, limão, tangerina)",citros,Tangerina,2026-10-21,manual
+cafe,Café,,Café (em grão) Total,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Abacate,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Abacaxi*,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Acerola,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Açaí,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Banana (cacho),2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Caqui,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Coco-da-baía*,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Cupuaçu,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Figo,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Goiaba,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Graviola,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Maçã,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Mamão,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Manga,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Maracujá,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Marmelo,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Melancia,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Melão,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Morango,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Pera,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Pêssego,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",frutas,Uva,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",citros,Laranja,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",citros,Limão,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",citros,Tangerina,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Abóbora,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Alface,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Alho,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Batata-doce,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Batata-inglesa,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Cebola,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Cenoura,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Chuchu,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Inhame,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Milho verde,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Pimentão,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Repolho,2026-10-21,manual
+hf,"H&F — frutas, citros, legumes e hortaliças",legumes_hortalicas,Tomate,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Abacate,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Abacaxi*,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Acerola,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Açaí,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Banana (cacho),2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Caqui,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Coco-da-baía*,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Cupuaçu,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Figo,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Goiaba,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Graviola,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Maçã,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Mamão,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Manga,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Maracujá,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Marmelo,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Melancia,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Melão,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Morango,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Pera,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Pêssego,2026-10-21,manual
+hf_sem_citros,H&F sem citros,frutas,Uva,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Abóbora,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Alface,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Alho,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Batata-doce,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Batata-inglesa,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Cebola,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Cenoura,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Chuchu,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Inhame,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Milho verde,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Pimentão,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Repolho,2026-10-21,manual
+hf_sem_citros,H&F sem citros,legumes_hortalicas,Tomate,2026-10-21,manual
+soja,Soja,,Soja (em grão),2026-10-21,manual
+milho,Milho (grão),,Milho (em grão),2026-10-21,manual
+algodao,Algodão (herbáceo e arbóreo),,Algodão herbáceo (em caroço),2026-10-21,manual
+algodao,Algodão (herbáceo e arbóreo),,Algodão arbóreo (em caroço),2026-10-21,manual
+arroz,Arroz (em casca),,Arroz (em casca),2026-10-21,manual
+trigo,Trigo (grão),,Trigo (em grão),2026-10-21,manual
+fumo,Fumo (folha),,Fumo (em folha),2026-10-21,manual

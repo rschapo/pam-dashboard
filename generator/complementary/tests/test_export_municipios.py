@@ -16,13 +16,14 @@ def test_municipios_json_leva_nome_uf_e_microrregiao_de_cada_municipio(tmp_path,
         "cod_microrregiao": ["26017.0", "26019.0", None],
         "nome_microrregiao": ["Recife", "Fernando de Noronha", None],
         "nome_mesorregiao": ["Metropolitana de Recife", "Metropolitana de Recife", None],
+        "area_municipal_ha": [21868.7, 1704.9, None],
     }).to_parquet(tmp_path / "dim_municipio.parquet", index=False)
     monkeypatch.setattr(em, "DIM", tmp_path)
 
     d = em.build_municipios()
 
-    assert d["mun"][RECIFE] == ["Recife", "PE", "26017"]
-    assert d["mun"][BOA_ESPERANCA] == ["Boa Esperança do Norte", "MT", None]   # instalado depois das microrregiões
+    assert d["mun"][RECIFE] == ["Recife", "PE", "26017", 21869]       # área em ha inteiros
+    assert d["mun"][BOA_ESPERANCA] == ["Boa Esperança do Norte", "MT", None, None]   # instalado depois das microrregiões
     assert d["mic"] == {"26017": ["Recife", "PE", "Metropolitana de Recife"],
                         "26019": ["Fernando de Noronha", "PE", "Metropolitana de Recife"]}
 
@@ -40,11 +41,16 @@ def test_municipios_json_real_cobre_o_pais_e_concorda_com_a_pam():
     assert len(d["mun"]) == len(dim)
     assert len(d["mic"]) == dim["cod_microrregiao"].dropna().nunique()
     for cod, i in pam["mun_info"].items():
-        _, uf, mid = d["mun"][cod]
+        _, uf, mid, _ = d["mun"][cod]
         assert uf == i["uf"], cod
         assert mid in (i["mid"], None), cod     # Boa Esperança do Norte: só a PAM a põe numa micro
     for mid, i in pam["mic_info"].items():
         assert d["mic"][mid][:2] == [i["n"], i["uf"]], mid
     # O que a PAM não lista: municípios sem lavoura e a micro de Fernando de Noronha.
-    assert d["mun"][RECIFE] == ["Recife", "PE", "26017"]
+    assert d["mun"][RECIFE][:3] == ["Recife", "PE", "26017"]
     assert d["mun"][NORONHA][2] == "26019" and "26019" not in pam["mic_info"]
+    # A área do município é o denominador das densidades: o país inteiro tem área,
+    # e a soma bate com o território do IBGE sem as lagoas dos Patos e Mirim (~849,6 Mha).
+    areas = [m[3] for m in d["mun"].values()]
+    assert all(a and a > 0 for a in areas)
+    assert sum(areas) == pytest.approx(849_627_713, rel=1e-4)

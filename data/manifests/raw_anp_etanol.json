@@ -1,0 +1,32 @@
+{
+  "dataset": "raw_anp_etanol",
+  "source": "ANP — Painel Dinâmico de Produtores de Etanol (https://www.gov.br/anp/pt-br/assuntos/producao-e-fornecimento-de-biocombustiveis/etanol/arquivos-etanol/pb-da-etanol.zip)",
+  "extraction_date": "2026-10-21",
+  "reference_date": null,
+  "source_files": [
+    "pb-da-etanol_2026-10-21.zip"
+  ],
+  "source_hashes": [
+    {
+      "file": "pb-da-etanol_2026-10-21.zip",
+      "sha256": "30f9150a722e1f21e7d4aa7d38be6fcb9950ece87bca5531b29154d9122c9010"
+    }
+  ],
+  "script_version": "0.1.0",
+  "row_count": 4,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [],
+  "generated_at": "2026-10-21T16:20:32-04:00",
+  "url": "https://www.gov.br/anp/pt-br/assuntos/producao-e-fornecimento-de-biocombustiveis/etanol/arquivos-etanol/pb-da-etanol.zip",
+  "arquivo": "pb-da-etanol_2026-10-21.zip",
+  "sha256": "30f9150a722e1f21e7d4aa7d38be6fcb9950ece87bca5531b29154d9122c9010",
+  "conteudo_zip": [
+    "Etanol_Capacidade 2018-2020.csv",
+    "Etanol_Capacidade 2021-2026.csv",
+    "Etanol_MatériaPrima.csv",
+    "Etanol_Produç╞o.csv"
+  ],
+  "bytes": 988732
+}

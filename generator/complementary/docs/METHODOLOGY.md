@@ -174,3 +174,35 @@ O piloto por imóvel (recorte de raster) só roda após relatório de viabilidad
 sem área vão para a base de rejeições (SNCR). No CAR, geometrias fora do Brasil/UF,
 autointersecção irrecuperável e duplicidades são sinalizadas. Nada é descartado
 silenciosamente; tudo fica no manifesto e no relatório de qualidade.
+
+## Leituras do território no domínio Agrícola (PAM)
+
+- **Densidade (ha/km²)** = área colhida ÷ área territorial (IBGE, Áreas Territoriais 2025,
+  `dim_municipio.area_municipal_ha`). Em estado, microrregião e Brasil: soma das áreas ÷ soma
+  dos territórios de todos os municípios do recorte, nunca média de densidades. Passa de
+  100 ha/km² onde há segunda safra, porque a área colhida conta cada safra.
+- **Vocação (%)** = área da seleção ÷ área colhida de todas as culturas do mesmo território e
+  ano (sem as partes do café). No atalho da floresta plantada, o denominador é lavouras +
+  floresta, o mesmo da cultura dominante.
+- **Densidades prontas**: grupos de `generator/grupos_densidade.csv` (e COL/TRA do
+  `crop_groups.csv`), sempre no último ano publicado do PAM (floresta: da PEVS), e não no ano
+  do seletor. A legenda traz o ano do dado e, em linha separada, a versão da lista de culturas.
+- **Cultura dominante**: em cada município, a categoria de maior área (`grupo_dominante.csv`)
+  entre as lavouras do PAM (área colhida) e a floresta plantada da PEVS (área plantada), no
+  último ano de cada pesquisa; em estado e microrregião, a categoria de maior área somada.
+  Pastagem não entra (o PAM não a mede); um mapa de uso do solo dominante, se vier, fica no
+  domínio Uso do Solo, à parte. As duas áreas não medem a mesma coisa: a colhida soma as
+  safras e a plantada é estoque, o que favorece os grãos onde há segunda safra.
+- **Classes do mapa** (densidade, vocação, produtores): quantis calculados só sobre os
+  territórios com valor positivo (com muitos zeros, quantis sobre todos colapsam numa cor); o
+  zero cai na primeira classe ("0 a < x"); ausente (não publicado) fica em cinza; cada corte
+  com dois algarismos significativos. As regras ficam em `public/js/leituras.js` e têm testes
+  em node (`tests/test_leituras_js.py`). As demais métricas seguem a escala logarítmica, e a
+  legenda delas passou a mostrar a faixa real de cada tom.
+
+## Receita Federal: contas-chave e produtores rurais
+
+Método, setores e CNAEs, validação das usinas pela ANP, regra de dados pessoais (opção A: só
+contagens no painel público) e onde fica cada arquivo: `RECEITA_CONTAS_E_PRODUTORES.md`.
+DuckDB só leitura, filtro por valor distinto e junções por igualdade (Parte 5f do pedido de
+21/10/2026).

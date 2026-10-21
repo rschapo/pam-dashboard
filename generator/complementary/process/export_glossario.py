@@ -9,22 +9,28 @@ que depende do que o painel publica e por isso não pode ser digitado à mão:
   culturas   permanentes, temporárias e os grupos Colheitadeiras e Tratores do pkg.json;
   pecuaria   categorias de rebanho e de produção do ppm.json;
   pevs       categorias de cada tipo da PEVS, com nível, unidade e período, e as notas;
-  car        as ressalvas por camada ambiental e a nota da estrutura fundiária, do car.json.
+  car        as ressalvas por camada ambiental e a nota da estrutura fundiária, do car.json;
+  dominante  os grupos das densidades prontas e as categorias da cultura dominante, com as
+             culturas e a decisão de cada uma (pam_grupos.json e generator/grupo_dominante.csv);
+  receita    períodos, atividades, tipos e setores da Receita e da ANP, e as UFs onde o
+             produtor pessoa física tem CNPJ (produtores_mun.json e contas_chave.json).
 O arquivo é pequeno: a página separada não precisa baixar o pkg.json (17 MB).
 
 Rode depois de qualquer export que mude os dados do painel. Nada aqui depende de rede.
 """
 from __future__ import annotations
 
+import csv
 import json
 import sys
 from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import MANIFEST_DIR, RAW_DIR, now_iso  # noqa: E402
+from common import IBGE2UF, MANIFEST_DIR, RAW_DIR, now_iso, write_public_json  # noqa: E402
 
 PUBLIC_DATA = Path(__file__).resolve().parents[3] / "public" / "data"
+GENERATOR = Path(__file__).resolve().parents[2]
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 
 
@@ -68,7 +74,8 @@ def _periodo(anos: list) -> str:
     return f"{anos[0]}–{anos[-1]}" if anos else "—"
 
 
-def fontes(pkg, ppm, pevs, econ, terra, maq, cred, perfil) -> list[dict]:
+def fontes(pkg, ppm, pevs, econ, terra, maq, cred, perfil, prod=None, contas=None) -> list[dict]:
+    prod, contas = prod or {}, contas or {}
     f = [
         {"aba": "Agrícola", "base": "Produção Agrícola Municipal (PAM)", "instituicao": "IBGE",
          "origem": "SIDRA 1612 (lavouras temporárias) e 1613 (lavouras permanentes)",
@@ -112,8 +119,66 @@ def fontes(pkg, ppm, pevs, econ, terra, maq, cred, perfil) -> list[dict]:
         {"aba": "Mapas e listas", "base": "Malhas e divisão territorial", "instituicao": "IBGE",
          "origem": "API de malhas (UF, microrregião, município) e de localidades",
          "periodo": "divisão vigente", "baixado_em": _baixado_em("raw_ibge_geography")},
+        {"aba": "Agrícola", "base": "Áreas Territoriais", "instituicao": "IBGE",
+         "origem": "área de cada município, denominador da densidade (ha/km²)",
+         "periodo": "2025", "baixado_em": _baixado_em("raw_ibge_areas")},
+        {"aba": "Produtores", "base": "Dados Abertos CNPJ", "instituicao": "Receita Federal",
+         "origem": "estabelecimentos ativos com CNAE principal das divisões 01 e 02, só contados por município",
+         "periodo": f"base de {prod.get('periodo_rfb', '—')}"
+                    + (f", aberturas até {_data_br(prod['data_ref'])}" if prod.get("data_ref") else ""),
+         "baixado_em": _baixado_em("produtores_rurais")},
+        {"aba": "Contas-chave", "base": "Dados Abertos CNPJ", "instituicao": "Receita Federal",
+         "origem": "estabelecimentos ativos de pessoa jurídica empresarial, pelo CNAE principal",
+         "periodo": f"base de {contas.get('periodo_rfb', '—')}", "baixado_em": _baixado_em("contas_chave")},
+        {"aba": "Contas-chave", "base": "Painel Dinâmico de Produtores de Etanol", "instituicao": "ANP",
+         "origem": "capacidade autorizada de etanol por planta (pb-da-etanol.zip)",
+         "periodo": f"mês {contas.get('mes_anp', '—')}", "baixado_em": _baixado_em("raw_anp_etanol")},
     ]
     return [{k: v for k, v in x.items() if v is not None} for x in f]
+
+
+def _data_br(iso: str) -> str:
+    return "/".join(reversed(iso[:10].split("-")))
+
+
+def _dominante(grupos: dict) -> dict:
+    """Categorias da cultura dominante com as culturas de cada uma e a decisão anotada
+    (generator/grupo_dominante.csv), mais os grupos das densidades prontas."""
+    p = GENERATOR / "grupo_dominante.csv"
+    cats: dict[str, dict] = {}
+    if p.exists():
+        with open(p, encoding="utf-8-sig", newline="") as fh:
+            for r in csv.DictReader(fh):
+                k = (r.get("categoria") or "").strip()
+                if not k:
+                    continue
+                o = cats.setdefault(k, {"culturas": [], "notas": []})
+                o["culturas"].append(r["cultura"])
+                if (r.get("observacao") or "").strip():
+                    o["notas"].append(r["observacao"].strip())
+    cores = grupos.get("categorias") or {}
+    ordem = list(cores) or list(cats)
+    return {"anos": {"pam": grupos.get("ano_pam"), "pevs": grupos.get("ano_pevs")},
+            "categorias": [{"k": k, "cor": cores.get(k), **cats.get(k, {"culturas": [], "notas": []})}
+                           for k in ordem],
+            "grupos": {k: {c: g.get(c) for c in ("rot", "def", "fonte", "culturas")}
+                       for k, g in (grupos.get("grupos") or {}).items()}}
+
+
+def _receita(prod: dict, contas: dict) -> dict:
+    """Rótulos e períodos da Receita, e onde o produtor pessoa física tem CNPJ: a
+    cobertura que muda tudo na leitura dos produtores."""
+    pf: dict[str, int] = {}
+    for cod, r in (prod.get("mun") or {}).items():
+        uf = IBGE2UF.get(str(cod)[:2], str(cod)[:2])
+        for k, (n, _) in r.items():
+            if k.endswith("|PF"):
+                pf[uf] = pf.get(uf, 0) + n
+    return {"periodo_rfb": prod.get("periodo_rfb") or contas.get("periodo_rfb"),
+            "corte_24m": prod.get("corte_24m"), "mes_anp": contas.get("mes_anp"),
+            "atividades": prod.get("atividades", {}), "tipos": prod.get("tipos", {}),
+            "setores": {k: s.get("rot") for k, s in (contas.get("setores") or {}).items()},
+            "pf_ufs": dict(sorted(pf.items(), key=lambda x: -x[1]))}
 
 
 def _car(r: dict) -> dict:
@@ -128,6 +193,7 @@ def build_glossario() -> dict:
     pkg, ppm, pevs = _json("pkg.json"), _json("ppm.json"), _json("pevs.json")
     econ, terra, maq = _json("econ.json"), _json("mapbiomas_mun.json"), _json("maquinas.json")
     cred, perfil, car = _json("credito.json"), _json("perfil.json"), _json("car.json")
+    grupos, prod, contas = _json("pam_grupos.json"), _json("produtores_mun.json"), _json("contas_chave.json")
     sep = pevs.get("sep", "||")
     pevs_tipos = {}
     for tipo, cats in (pevs.get("categorias_por_tipo") or {}).items():
@@ -138,20 +204,22 @@ def build_glossario() -> dict:
                             for c in cats]
     return {
         "gerado_em": now_iso(),
-        "fontes": fontes(pkg, ppm, pevs, econ, terra, maq, cred, perfil),
+        "fontes": fontes(pkg, ppm, pevs, econ, terra, maq, cred, perfil, prod, contas),
         "culturas": {k: pkg.get(k, []) for k in ("permanentes", "temporarias", "colheitadeiras", "tratores")},
         "pecuaria": {"rebanho": ppm.get("rebanho_categorias", []),
                      "producao": ppm.get("producao_categorias", [])},
         "pevs": {"anos": _extremos(pevs.get("anos")),
                  "tipos": pevs_tipos, "notas": pevs.get("notas", {})},
         "car": _car(car.get("ressalvas") or {}),
+        "dominante": _dominante(grupos),
+        "receita": _receita(prod, contas),
     }
 
 
 def main():
     obj = build_glossario()
     p = PUBLIC_DATA / "glossario.json"
-    p.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    write_public_json(p, obj)   # allow_nan=False: NaN no arquivo derrubaria a aba no navegador
     print(f"  glossario.json: {len(obj['fontes'])} fontes · "
           f"{sum(len(v) for v in obj['culturas'].values())} entradas de cultura · "
           f"{sum(len(v) for v in obj['pevs']['tipos'].values())} categorias da PEVS · "

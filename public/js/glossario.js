@@ -23,7 +23,9 @@ const LER = [
   ['Série Histórica', 'A evolução ano a ano. Só aparece nas bases com série (PAM, PPM e PEVS); as demais são o retrato de um ano.'],
   ['Rankings', 'Os maiores estados, microrregiões e culturas ou categorias na métrica escolhida.'],
   ['Concentração', 'Quanto da métrica se concentra em poucos municípios. Ver a seção Concentração, abaixo.'],
-  ['Cores do mapa', 'Sete tons em escala logarítmica, do menor ao maior valor do mapa: cada tom cobre uma ordem de grandeza, e não faixas de mesmo tamanho. Zero e sem dado ficam no tom mais claro.'],
+  ['Cores do mapa', 'Nas métricas de sempre, sete tons em escala logarítmica, do menor ao maior valor do mapa: cada tom cobre uma faixa de ordem de grandeza, mostrada na legenda, e zero e sem dado ficam no tom mais claro. Na densidade, na vocação e nos produtores, classes por quantis calculados só sobre os territórios com valor: o zero fica na primeira classe ("0 a < x") e o que não foi publicado fica em cinza.'],
+  ['Densidades prontas', 'Atalhos do Agrícola para grupos de culturas (cana, citros, café, floresta plantada, H&F, soja, milho, algodão, arroz, trigo, fumo, tratores e colheitadeiras). Ficam sempre no último ano publicado do PAM (a floresta, no da PEVS), e não seguem o seletor de ano. A legenda diz o ano do dado e, em linha separada, a data em que a lista de culturas do grupo foi definida.'],
+  ['Camada de contas-chave', 'Círculos sobre qualquer mapa, com área proporcional ao número de estabelecimentos ativos de pessoa jurídica de um setor (usinas, sucos, pós-colheita, café, florestal, cooperativas) no município. O círculo fica no centro do município; o endereço não é usado.'],
   ['Ano', 'O seletor segue a PAM. PPM e PEVS saem em outras datas: o ano que a base ainda não publicou mostra o último que ela tem, com o aviso "(último publicado)". Nas bases de um ano só, o seletor some.'],
   ['Estado e microrregião', 'Os totais somam os municípios. As razões (rendimento, per capita, percentuais, área média) são recalculadas sobre essas somas, e nunca são a média das razões municipais.'],
   ['— (traço)', 'Sem valor: a fonte não informa, o município não tem a atividade ou o dado foi omitido por qualidade. Nas razões, 0 é medida, e o traço quer dizer que falta base para calcular.'],
@@ -36,7 +38,9 @@ const CUIDADOS = [
   'Valor da produção (PAM, PPM, PEVS), valor adicionado (PIB dos Municípios) e crédito rural medem coisas distintas, em anos distintos: não se somam nem se subtraem.',
   'Subtotais não se somam às partes: "Galináceos - total" já inclui as galinhas, o agregado da PEVS já inclui os produtos, e Permanentes, Temporárias, Colheitadeiras e Tratores são recortes que se sobrepõem.',
   'Imóvel do CAR, estabelecimento do Censo e contrato de crédito são unidades diferentes: um imóvel pode ter vários estabelecimentos, e um estabelecimento, vários contratos.',
-  'Bases de um ano só (Economia, Uso do Solo, Tratores, Crédito, CAR) não acompanham o seletor de ano. O ano de cada uma está no rótulo da métrica e na tabela de fontes.',
+  'Bases de um ano só (Economia, Uso do Solo, Tratores, Crédito, CAR, Produtores) não acompanham o seletor de ano. O ano de cada uma está no rótulo da métrica e na tabela de fontes.',
+  'O café: a PAM publica o Café Total e, desde 2012, as partes Arábica e Canephora. As partes podem ser escolhidas uma a uma, mas ficam fora de todo grupo e de todo total, que já as contêm no Café Total. Até outubro de 2026 o painel somava as três, e a área colhida do Brasil saía 1,94 Mha maior em 2025.',
+  'Cultura dominante compara área colhida (PAM, que conta cada safra) com área plantada de floresta (PEVS, estoque): onde há segunda safra, os grãos ganham peso. É uma leitura da ocupação agrícola, e não da área física de cada uso.',
 ];
 
 // ─── Métricas por aba ───
@@ -72,19 +76,56 @@ const ABAS = [
       { id: 'r', nome: 'Rendimento', un: 'kg/ha',
         def: 'Produção dividida pela área colhida do recorte.', calc: 'Σ produção ÷ Σ área colhida × 1.000',
         nota: 'Razão das somas, não média dos rendimentos municipais. Com várias culturas no recorte, mistura produtividades muito diferentes: leia com uma cultura escolhida.' },
+      { id: 'dens', nome: 'Densidade', un: 'ha/km²',
+        def: 'Área colhida da seleção (cultura, grupo ou atalho pronto) dividida pela área do território (IBGE, Áreas Territoriais 2025).',
+        calc: 'Σ área colhida ÷ Σ área dos municípios (km²)',
+        nota: 'Em estado e microrregião é a soma das áreas sobre a soma dos territórios, e nunca a média das densidades. Como a área colhida conta cada safra, passa de 100 ha/km² onde há segunda safra.' },
+      { id: 'voc', nome: 'Vocação', un: '% da área colhida',
+        def: 'Parte da área colhida do próprio território (município, microrregião ou estado) que é da seleção.',
+        calc: 'área da seleção ÷ área colhida de todas as culturas × 100',
+        nota: 'Separa o município especializado do município grande: 30% de vocação em cana num município pequeno pesa menos, em hectares, que 5% num grande. No atalho da floresta plantada, a base é lavouras mais floresta.' },
+      { id: 'dom', nome: 'Cultura dominante', un: 'categoria',
+        def: 'Em cada território, a categoria de maior área entre as lavouras do PAM e a floresta plantada da PEVS, no último ano publicado de cada pesquisa.',
+        nota: 'Pastagem não entra: o PAM não mede pastagem. A área colhida soma as safras e a da floresta é estoque, então a comparação favorece os grãos onde há segunda safra. O resumo, com o mapa estático, fica no Mapa Brasil e em Estado / Micro.' },
     ],
     extra: d => {
       const c = d?.culturas || {};
       const grupo = (titulo, desc, lista) => lista?.length ? `
         <h4>${titulo} <span class="gl-un">${lista.length} culturas</span></h4>
         <p>${desc}</p>${chips(lista)}` : '';
+      const dm = d?.dominante;
+      const prontas = Object.entries(dm?.grupos || {}).map(([, g]) => `
+        <p data-busca="${norm(g.rot + ' ' + g.def + ' ' + (g.culturas || []).join(' '))}"><b>${esc(g.rot)}</b>
+          <span class="gl-un">${esc(g.def)}</span></p>${g.culturas?.length > 1 ? chips(g.culturas) : ''}`).join('');
+      const categorias = (dm?.categorias || []).map(k => `
+        <p data-busca="${norm(k.k + ' ' + k.culturas.join(' ') + ' ' + k.notas.join(' '))}">
+          <span class="gl-cor" style="background:${esc(k.cor)}"></span><b>${esc(k.k)}</b>
+          ${k.k === 'Floresta plantada' ? '<span class="gl-un">área plantada de todas as espécies (PEVS)</span>' : ''}
+          ${k.notas.map(n => `<br><span class="gl-sub">${esc(n)}</span>`).join('')}</p>${k.culturas.length > 1 ? chips(k.culturas) : ''}`).join('');
       return `
+      <h4>Densidades prontas</h4>
+      <p data-busca="${norm('densidades prontas atalhos ultimo ano pam pevs definicao lista')}">Cada atalho soma as culturas
+        do grupo no último ano publicado do PAM${dm?.anos?.pam ? ` (${dm.anos.pam})` : ''}; a floresta plantada vem da PEVS${dm?.anos?.pevs ? ` (${dm.anos.pevs})` : ''}.
+        O café entra só pelo Total. Tratores e Colheitadeiras são dois atalhos separados, das listas de grupos de máquina
+        (abaixo), e nunca um índice combinado.</p>
+      ${dm ? prontas : semDados()}
+      <h4>Cultura dominante: categorias</h4>
+      <p data-busca="${norm('cultura dominante categorias cores mandioca cacau acai feijao fumo erva-mate arroz')}">Cada categoria
+        tem uma cor fixa, a mesma em todos os mapas e no resumo. Mandioca e cacau têm categoria própria; açaí, fumo, erva-mate
+        e o feijão ficam nas categorias maiores, pelos motivos anotados em cada uma.</p>
+      ${dm ? categorias : semDados()}
+      <h4>Café</h4>
+      <p data-busca="${norm('cafe arabica canephora total partes soma dupla contagem')}">"Café (em grão) Total" já contém o Arábica
+        e o Canephora. As partes aparecem no seletor de cultura com a marca ↳ e podem ser vistas sozinhas, mas não entram em
+        nenhum grupo, total, densidade pronta ou cultura dominante.</p>`
+        + `
       <h4>Grupos de culturas</h4>
       <p data-busca="${norm('grupos culturas permanentes temporarias colheitadeiras tratores sobrepostos dupla contagem')}">
         <b>Permanentes</b> e <b>Temporárias</b> seguem a classificação do IBGE (tabelas 1613 e 1612).
         <b>Grãos / Colheitadeiras</b> e <b>Tratores</b> são a visão de máquina do painel: Colheitadeiras reúne
         as temporárias colhidas por colheitadeira, e Tratores, as demais temporárias. Os grupos se sobrepõem:
-        somá-los conta a mesma cultura duas vezes. <b>Todas as Culturas</b> são as permanentes mais as temporárias.</p>
+        somá-los conta a mesma cultura duas vezes. <b>Todas as Culturas</b> são as permanentes mais as temporárias,
+        sem as partes do café.</p>
       ${d ? grupo('Permanentes', 'Lavouras que produzem por vários anos sem replantio.', c.permanentes)
           + grupo('Temporárias', 'Lavouras de ciclo curto, replantadas a cada safra.', c.temporarias)
           + grupo('Grãos / Colheitadeiras', 'Temporárias colhidas por colheitadeira.', c.colheitadeiras)
@@ -255,7 +296,72 @@ const ABAS = [
         ${d?.car?.estrutura ? esc(d.car.estrutura) : ''}</p>
       ${linhas.length ? `<h4>Ressalvas por camada</h4><ul class="gl-lista">${linhas.join('')}</ul>` : ''}`;
     } },
+
+  { dom: 'produtores', nome: 'Produtores', icone: '👨‍🌾', aba: 'Produtores',
+    intro: 'Cadastros ativos na Receita Federal (CNPJ) com atividade principal agropecuária ou de produção florestal, contados por município, atividade e tipo. Só contagens: nenhum nome, CNPJ, endereço ou contato sai da base, que fica guardada fora do painel.',
+    metricas: [
+      { id: 'n', nome: 'Cadastros ativos', un: 'cadastros',
+        def: 'Estabelecimentos com situação ativa na Receita e CNAE principal das divisões 01 (agricultura e pecuária) e 02 (produção florestal), filtrados pela atividade e pelo tipo escolhidos.',
+        nota: 'Cadastro não é produtor nem estabelecimento do Censo: um produtor pode ter vários cadastros, e muitos só têm CPF e inscrição estadual.' },
+      { id: 'n24', nome: 'Abertos nos últimos 24 meses', un: 'cadastros',
+        def: 'Dos cadastros ativos, os que foram abertos nos 24 meses anteriores à data de referência da base.',
+        nota: 'Conta abertura de cadastro, que pode ser só formalização de quem já produzia.' },
+      { id: 'mil_ha', nome: 'Cadastros por mil ha colhidos', un: 'cadastros/mil ha',
+        def: 'Cadastros ativos divididos pela área colhida do último ano do PAM.', calc: 'Σ cadastros ÷ Σ área colhida × 1.000',
+        nota: 'Sem lavoura no PAM não há medida. A pecuária e a floresta não entram no denominador.' },
+      { id: 'km2', nome: 'Cadastros por km²', un: 'cadastros/km²',
+        def: 'Cadastros ativos divididos pela área do território (IBGE).', calc: 'Σ cadastros ÷ Σ área dos municípios (km²)' },
+    ],
+    extra: d => {
+      const r = d?.receita;
+      const pf = Object.entries(r?.pf_ufs || {}).map(([u, n]) => `${u} (${n.toLocaleString('pt-BR')})`).join(' e ');
+      return `
+      <h4>Cobertura por estado</h4>
+      <p class="gl-aviso" data-busca="${norm('pessoa fisica produtor rural cnpj sp al cobertura estados comparar inscricao estadual cpf')}">
+        O produtor rural pessoa física só aparece com CNPJ ${pf ? `em ${esc(pf)}` : 'em poucos estados'}. Nas outras UFs ele opera
+        com CPF e inscrição estadual e não aparece na base. Por isso a aba abre em pessoa jurídica, comparável entre estados,
+        e o tipo "pessoa física" só tem leitura onde há o cadastro. Compare municípios do mesmo estado.</p>
+      <h4>Atividade e tipo</h4>
+      <p data-busca="${norm('atividade cnae principal declarado tipo natureza juridica 4120 2xxx')}">A atividade é a do CNAE principal
+        declarado à Receita, agrupada numa tabela versionada (config/cnae_atividade_produtores.csv); a atividade real pode
+        ser outra ou mais de uma. Tipo: pessoa física (natureza 4120, produtor rural), pessoa jurídica empresarial
+        (naturezas 2xxx, inclusive cooperativas) e outras naturezas.</p>
+      ${r ? `${chips(Object.values(r.atividades || {}))}
+      <p class="gl-fonte">Base da Receita de ${esc(r.periodo_rfb || '—')}; abertos desde ${esc((r.corte_24m || '').split('-').reverse().join('/') || '—')}.</p>` : semDados()}
+      <p data-busca="${norm('censo agropecuario comparacao estabelecimentos lgpd dados pessoais contagens')}">Para cada estado, o total de
+        cadastros é comparado com os estabelecimentos do Censo Agropecuário 2017 no relatório de qualidade, sem corrigir nada:
+        são universos diferentes. Nenhuma contagem pequena é suprimida, porque o cadastro é público e a contagem não
+        revela atributo novo de ninguém.</p>`;
+    } },
 ];
+
+// ─── Contas-chave (camada) ───
+const CONTAS = {
+  intro: 'Camada de círculos sobre os mapas: por município e setor, o número de estabelecimentos ativos de pessoa jurídica empresarial, pelo CNAE principal declarado à Receita. Nas usinas, a lista de plantas com capacidade autorizada de etanol da ANP confirma ou não o CNAE. Só o agregado é publicado: nenhum nome, CNPJ, sócio ou endereço.',
+  itens: [
+    { id: 'usina_anp', nome: 'Usinas com autorização ANP', un: 'estabelecimentos',
+      def: 'CNAE de açúcar ou álcool (1071-6/00, 1072-4/01, 1931-4/00), ou planta com capacidade autorizada de etanol na ANP registrada com outro CNAE.',
+      nota: 'Conta estabelecimentos, não capacidade: a capacidade autorizada somada aparece na dica do município e na tabela de municípios.' },
+    { id: 'usina_conf', nome: 'CNAE de usina sem autorização ANP', un: 'a confirmar',
+      def: 'CNAE de usina sem planta autorizada de etanol na ANP.',
+      nota: 'Pode ser só de açúcar, escritório, refinaria, comercializadora ou empresa em recuperação judicial.' },
+    { id: 'usina_agricola', nome: 'Unidade agrícola de grupo sucroenergético', un: 'estabelecimentos',
+      def: 'Fazenda de cana (0113-0/00) de um CNPJ raiz que tem usina.',
+      nota: 'Mostra onde o grupo opera; não é uma usina a mais.' },
+    { id: 'sucos', nome: 'Indústria de suco', un: 'estabelecimentos',
+      def: 'CNAE 1033-3/01, só empresas com capital social de R$ 1 milhão ou mais.',
+      nota: 'O porte "Demais" da Receita não separa a empresa grande; o corte é pelo capital declarado.' },
+    { id: 'pos_colheita', nome: 'Pós-colheita / packing', un: 'estabelecimentos', def: 'CNAE 0163-6/00.' },
+    { id: 'cafe', nome: 'Café', un: 'estabelecimentos',
+      def: 'Beneficiamento (1081-3/01) e atacado de café em grão (4621-4/00).' },
+    { id: 'florestal', nome: 'Florestal', un: 'estabelecimentos',
+      def: 'Celulose (1710-9/00) e eucalipto (0210-1/01) com capital social de R$ 1 milhão ou mais.' },
+    { id: 'cooperativa', nome: 'Cooperativa agropecuária', un: 'estabelecimentos',
+      def: 'Natureza jurídica 2143 (cooperativa) com CNAE das divisões 01, 10 ou 46.',
+      nota: 'Conta cada estabelecimento (matriz e filiais): uma cooperativa grande aparece em muitos municípios.' },
+  ],
+  extra: 'Só pessoa jurídica empresarial (naturezas 2xxx): o produtor rural pessoa física tem como razão social o próprio nome, e é dado pessoal. O círculo fica no centro do município. Empresário individual e EIRELI (naturezas 2135, 2305 e 2313) entram na contagem, mas a razão social deles costuma ser nome de pessoa, e por isso nunca seria publicada.',
+};
 
 // ─── Concentração ───
 const CONCENTRACAO = {
@@ -356,7 +462,7 @@ function render(el, dados, op = {}) {
   const fontes = dados?.fontes || [];
   const fontesDaAba = aba => fontes.filter(f => f.aba === aba).map(linhaFonte).join('');
   const nav = [['ler', 'Como ler'], ['cuidados', 'Cuidados'],
-               ...ABAS.map(a => [a.dom, a.nome]), ['concentracao', 'Concentração'],
+               ...ABAS.map(a => [a.dom, a.nome]), ['contas', 'Contas-chave'], ['concentracao', 'Concentração'],
                ['perfil', 'Perfil do município'], ['fontes', 'Fontes']];
 
   el.innerHTML = `
@@ -384,6 +490,10 @@ function render(el, dados, op = {}) {
 
   ${ABAS.map(a => secao(a.dom, `${a.icone} ${a.nome}`,
     `${fontesDaAba(a.aba)}<p>${esc(a.intro)}</p>${tabela(a.dom, a.metricas)}${a.extra ? a.extra(dados) : ''}`)).join('')}
+
+  ${secao('contas', '🏭 Contas-chave (camada)', `${fontesDaAba('Contas-chave')}<p>${esc(CONTAS.intro)}</p>
+    ${tabela('contas', CONTAS.itens)}<p data-busca="${norm(CONTAS.extra)}">${esc(CONTAS.extra)}</p>`,
+    'usinas cooperativas receita anp')}
 
   ${secao('concentracao', '📊 Concentração', `<p>${esc(CONCENTRACAO.intro)}</p>${tabela('conc', CONCENTRACAO.itens)}`)}
 

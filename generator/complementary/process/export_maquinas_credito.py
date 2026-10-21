@@ -13,7 +13,6 @@ Nada aqui depende de rede.
 """
 from __future__ import annotations
 
-import json
 import math
 import sys
 from pathlib import Path
@@ -21,7 +20,7 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from common import PROCESSED_DIR, now_iso  # noqa: E402
+from common import PROCESSED_DIR, now_iso, write_public_json  # noqa: E402
 
 PUBLIC_DATA = Path(__file__).resolve().parents[3] / "public" / "data"
 
@@ -132,7 +131,7 @@ def build_credito() -> dict:
 def _write(name: str, obj: dict) -> str:
     PUBLIC_DATA.mkdir(parents=True, exist_ok=True)
     p = PUBLIC_DATA / name
-    p.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    write_public_json(p, obj)   # allow_nan=False: NaN no arquivo derrubaria a aba no navegador
     mb = p.stat().st_size / 1_048_576
     print(f"  {name}: {len(obj['mun']):,} municípios · ano {obj['ano']} · {mb:.2f} MB")
     return str(p)

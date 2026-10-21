@@ -1,0 +1,101 @@
+cnae;descricao;atividade;regra
+0111301;Cultivo de arroz;graos;subclasse
+0111302;Cultivo de milho;graos;subclasse
+0111303;Cultivo de trigo;graos;subclasse
+0111399;Cultivo de outros cereais não especificados anteriormente;graos;subclasse
+0112101;Cultivo de algodão herbáceo;graos;subclasse
+0112102;Cultivo de juta;graos;subclasse
+0112199;Cultivo de outras fibras de lavoura temporária não especificadas anteriormente;graos;subclasse
+0113000;Cultivo de cana-de-açúcar;cana;subclasse
+0114800;Cultivo de fumo;outros;demais subclasses das divisões 01 e 02
+0115600;Cultivo de soja;graos;subclasse
+0116401;Cultivo de amendoim;graos;subclasse
+0116402;Cultivo de girassol;graos;subclasse
+0116403;Cultivo de mamona;graos;subclasse
+0116499;Cultivo de outras oleaginosas de lavoura temporária não especificadas anteriormente;graos;subclasse
+0119901;Cultivo de abacaxi;hf;subclasse
+0119902;Cultivo de alho;hf;subclasse
+0119903;Cultivo de batata-inglesa;hf;subclasse
+0119904;Cultivo de cebola;hf;subclasse
+0119905;Cultivo de feijão;graos;subclasse
+0119906;Cultivo de mandioca;outros;demais subclasses das divisões 01 e 02
+0119907;Cultivo de melão;hf;subclasse
+0119908;Cultivo de melancia;hf;subclasse
+0119909;Cultivo de tomate rasteiro;hf;subclasse
+0119999;Cultivo de outras plantas de lavoura temporária não especificadas anteriormente;outros;demais subclasses das divisões 01 e 02
+0121101;Horticultura, exceto morango;hf;subclasse
+0121102;Cultivo de morango;hf;subclasse
+0122900;Cultivo de flores e plantas ornamentais;outros;demais subclasses das divisões 01 e 02
+0131800;Cultivo de laranja;citros;subclasse
+0132600;Cultivo de uva;hf;subclasse
+0133401;Cultivo de açaí;hf;grupo frutas de lavoura permanente (0133)
+0133402;Cultivo de banana;hf;grupo frutas de lavoura permanente (0133)
+0133403;Cultivo de caju;hf;grupo frutas de lavoura permanente (0133)
+0133404;Cultivo de cítricos, exceto laranja;citros;subclasse
+0133405;Cultivo de coco-da-baía;hf;grupo frutas de lavoura permanente (0133)
+0133406;Cultivo de guaraná;hf;grupo frutas de lavoura permanente (0133)
+0133407;Cultivo de maçã;hf;grupo frutas de lavoura permanente (0133)
+0133408;Cultivo de mamão;hf;grupo frutas de lavoura permanente (0133)
+0133409;Cultivo de maracujá;hf;grupo frutas de lavoura permanente (0133)
+0133410;Cultivo de manga;hf;grupo frutas de lavoura permanente (0133)
+0133411;Cultivo de pêssego;hf;grupo frutas de lavoura permanente (0133)
+0133499;Cultivo de frutas de lavoura permanente não especificadas anteriormente;hf;grupo frutas de lavoura permanente (0133)
+0134200;Cultivo de café;cafe;subclasse
+0135100;Cultivo de cacau;outros;demais subclasses das divisões 01 e 02
+0139301;Cultivo de chá-da-índia;outros;demais subclasses das divisões 01 e 02
+0139302;Cultivo de erva-mate;outros;demais subclasses das divisões 01 e 02
+0139303;Cultivo de pimenta-do-reino;outros;demais subclasses das divisões 01 e 02
+0139304;Cultivo de plantas para condimento, exceto pimenta-do-reino;outros;demais subclasses das divisões 01 e 02
+0139305;Cultivo de dendê;outros;demais subclasses das divisões 01 e 02
+0139306;Cultivo de seringueira;outros;demais subclasses das divisões 01 e 02
+0139399;Cultivo de outras plantas de lavoura permanente não especificadas anteriormente;outros;demais subclasses das divisões 01 e 02
+0141501;Produção de sementes certificadas, exceto de forrageiras para pasto;outros;demais subclasses das divisões 01 e 02
+0141502;Produção de sementes certificadas de forrageiras para formação de pasto;outros;demais subclasses das divisões 01 e 02
+0142300;Produção de mudas e outras formas de propagação vegetal, certificadas;outros;demais subclasses das divisões 01 e 02
+0151201;Criação de bovinos para corte;bovinos;grupo bovinos (0151)
+0151202;Criação de bovinos para leite;bovinos;grupo bovinos (0151)
+0151203;Criação de bovinos, exceto para corte e leite;bovinos;grupo bovinos (0151)
+0152101;Criação de bufalinos;aves_suinos;grupo outros animais de grande porte (0152)
+0152102;Criação de eqüinos;aves_suinos;grupo outros animais de grande porte (0152)
+0152103;Criação de asininos e muares;aves_suinos;grupo outros animais de grande porte (0152)
+0153901;Criação de caprinos;aves_suinos;grupo caprinos e ovinos (0153)
+0153902;Criação de ovinos, inclusive para produção de lã;aves_suinos;grupo caprinos e ovinos (0153)
+0154700;Criação de suínos;aves_suinos;grupo suínos (0154)
+0155501;Criação de frangos para corte;aves_suinos;grupo aves (0155)
+0155502;Produção de pintos de um dia;aves_suinos;grupo aves (0155)
+0155503;Criação de outros galináceos, exceto para corte;aves_suinos;grupo aves (0155)
+0155504;Criação de aves, exceto galináceos;aves_suinos;grupo aves (0155)
+0155505;Produção de ovos;aves_suinos;grupo aves (0155)
+0159801;Apicultura;aves_suinos;grupo outros animais (0159)
+0159802;Criação de animais de estimação;aves_suinos;grupo outros animais (0159)
+0159803;Criação de escargô;aves_suinos;grupo outros animais (0159)
+0159804;Criação de bicho-da-seda;aves_suinos;grupo outros animais (0159)
+0159899;Criação de outros animais não especificados anteriormente;aves_suinos;grupo outros animais (0159)
+0161001;Serviço de pulverização e controle de pragas agrícolas;servicos;grupo atividades de apoio (016)
+0161002;Serviço de poda de árvores para lavouras;servicos;grupo atividades de apoio (016)
+0161003;Serviço de preparação de terreno, cultivo e colheita;servicos;grupo atividades de apoio (016)
+0161099;Atividades de apoio à agricultura não especificadas anteriormente;servicos;grupo atividades de apoio (016)
+0162801;Serviço de inseminação artificial em animais;servicos;grupo atividades de apoio (016)
+0162802;Serviço de tosquiamento de ovinos;servicos;grupo atividades de apoio (016)
+0162803;Serviço de manejo de animais;servicos;grupo atividades de apoio (016)
+0162899;Atividades de apoio à pecuária não especificadas anteriormente;servicos;grupo atividades de apoio (016)
+0163600;Atividades de pós-colheita;servicos;grupo atividades de apoio (016)
+0170900;Caça e serviços relacionados;outros;demais subclasses das divisões 01 e 02
+0210101;Cultivo de eucalipto;florestal;grupo produção florestal (divisão 02)
+0210102;Cultivo de acácia-negra;florestal;grupo produção florestal (divisão 02)
+0210103;Cultivo de pinus;florestal;grupo produção florestal (divisão 02)
+0210104;Cultivo de teca;florestal;grupo produção florestal (divisão 02)
+0210105;Cultivo de espécies madeireiras, exceto eucalipto, acácia-negra, pinus e teca;florestal;grupo produção florestal (divisão 02)
+0210106;Cultivo de mudas em viveiros florestais;florestal;grupo produção florestal (divisão 02)
+0210107;Extração de madeira em florestas plantadas;florestal;grupo produção florestal (divisão 02)
+0210108;Produção de carvão vegetal - florestas plantadas;florestal;grupo produção florestal (divisão 02)
+0210109;Produção de casca de acácia-negra - florestas plantadas;florestal;grupo produção florestal (divisão 02)
+0210199;Produção de produtos não-madeireiros não especificados anteriormente em florestas plantadas;florestal;grupo produção florestal (divisão 02)
+0220901;Extração de madeira em florestas nativas;florestal;grupo produção florestal (divisão 02)
+0220902;Produção de carvão vegetal - florestas nativas;florestal;grupo produção florestal (divisão 02)
+0220903;Coleta de castanha-do-pará em florestas nativas;florestal;grupo produção florestal (divisão 02)
+0220904;Coleta de látex em florestas nativas;florestal;grupo produção florestal (divisão 02)
+0220905;Coleta de palmito em florestas nativas;florestal;grupo produção florestal (divisão 02)
+0220906;Conservação de florestas nativas;florestal;grupo produção florestal (divisão 02)
+0220999;Coleta de produtos não-madeireiros não especificados anteriormente em florestas nativas;florestal;grupo produção florestal (divisão 02)
+0230600;Atividades de apoio à produção florestal;florestal;grupo produção florestal (divisão 02)

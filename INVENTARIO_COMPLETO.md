@@ -3,7 +3,7 @@
 > Levantamento profundo de **tudo que existe** na pasta única do projeto
 > (`Dados IBGE PAM Culturas/pam-dashboard`) e de **tudo que está de fato
 > publicado** em https://boisterous-maamoul-a8039b.netlify.app/
-> Gerado em: 2026-08-16 · Atualizado em: 2026-10-07 · Repositório: https://github.com/rschapo/pam-dashboard
+> Gerado em: 2026-08-16 · Atualizado em: 2026-10-21 (branch painel-brasil-regras-2026-10, ainda não publicado) · Repositório: https://github.com/rschapo/pam-dashboard
 
 ---
 
@@ -43,10 +43,15 @@ abaixo, `<brutos>` é essa pasta. Em `data/` ficam os processados e os manifesto
 | `data/geo_mic.json` | Malha de microrregiões | 4,3 MB | 558 microrregiões |
 | `data/geo_mun.json` | Malha municipal | 16,4 MB | 5.570 municípios |
 | `data/perfil.json` | 🧭 Perfil do município | 1,0 MB | 5.571 municípios · INCRA, CAR, Censo 2017, MapBiomas 2024, PEVS 2025 |
-| `data/glossario.json` | 📖 Glossário (aba e `glossario.html`) | 16 KB | 11 fontes com período e data do download · 81 culturas nos 4 grupos · 16 categorias da PPM · 98 da PEVS · ressalvas do CAR |
+| `data/glossario.json` | 📖 Glossário (aba e `glossario.html`) | 24 KB | 15 fontes com período e data do download · 81 culturas nos 4 grupos · 16 categorias da PPM · 98 da PEVS · ressalvas do CAR · grupos das densidades prontas e categorias da cultura dominante · rótulos da Receita |
+| `data/pam_mun/*.json` | 🌾 Agrícola, cultura escolhida | 22 MB em 81 arquivos (maior 1,6 MB) | uma cultura por arquivo, por município e ano, baixada quando a cultura é escolhida |
+| `data/pam_grupos.json` | 🌾 Agrícola: densidades prontas e cultura dominante | 1,4 MB | 5.523 municípios · PAM 2025 e PEVS 2025 · 14 grupos · 10 categorias |
+| `data/contas_chave.json` | Camada de contas-chave (todas as abas) | 0,25 MB | 3.837 municípios · Receita CNPJ 2026-10 e ANP 09/2026 · só contagens de pessoa jurídica |
+| `data/produtores_mun.json` | 👨‍🌾 Produtores | 0,66 MB | 5.424 municípios · Receita CNPJ 2026-10 · só contagens por atividade e tipo |
 
-**O dashboard tem 8 abas de tema** (🌾 Agrícola, 🐄 Pecuária, 🌲 Silvicultura,
-📊 Economia, 🗺️ Uso do Solo, 🚜 Tratores, 💰 Crédito, 🌳 CAR) e, conforme o tema,
+**O dashboard tem 9 abas de tema** (🌾 Agrícola, 🐄 Pecuária, 🌲 Silvicultura,
+📊 Economia, 🗺️ Uso do Solo, 🚜 Tratores, 💰 Crédito, 🌳 CAR, 👨‍🌾 Produtores) e a camada
+de contas-chave da Receita, que pode ser ligada sobre qualquer aba e, conforme o tema,
 até 6 visões (Mapa Brasil, Estado/Micro, Municípios, Série Histórica, Rankings,
 Concentração). O mapa chega ao **município**: a malha municipal é carregada sob
 demanda. Na visão Municípios, escolher um município abre, em qualquer aba, o quadro
@@ -69,6 +74,10 @@ repositório.
 **Agrícola (PAM)** — 81 culturas: Permanentes (36) / Temporárias (45), com os
 subgrupos 🌾 Colheitadeiras (14) e 🚜 Tratores (31). Métricas: Área Colhida (ha),
 Produção (ton), Valor (mil R$), Rendimento (kg/ha). Fonte: SIDRA tabelas 1612/1613.
+Desde 21/10/2026 (branch): leituras Densidade (ha/km²), Vocação (% da área colhida) e
+Cultura dominante (maior área entre lavouras do PAM e floresta plantada da PEVS, com resumo e
+mapa estático), atalhos de densidade pronta no último ano do PAM, e o café só pelo Total nos
+agregados (as partes Arábica e Canephora eram somadas junto: +1,94 Mha em 2025).
 
 **Pecuária (PPM)** — 10 categorias de rebanho + 6 de produção animal (leite, ovos,
 mel, lã, casulos). Métricas: Quantidade (unidade varia por categoria) + Valor (mil

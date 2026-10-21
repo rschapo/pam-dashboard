@@ -132,7 +132,7 @@ print("Sanitizing NaN values …")
 PPM = _clean(PPM)
 
 print("Writing ppm.json …")
-OUT_PPM.write_text(json.dumps(PPM, ensure_ascii=False, separators=(',', ':')), encoding="utf-8")
+OUT_PPM.write_text(json.dumps(PPM, ensure_ascii=False, separators=(',', ':'), allow_nan=False), encoding="utf-8")
 size = OUT_PPM.stat().st_size / 1_048_576
 print(f"  ppm.json: {size:.1f} MB  ->  {OUT_PPM}")
 
