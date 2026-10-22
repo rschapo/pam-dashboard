@@ -298,25 +298,35 @@ const ABAS = [
     } },
 
   { dom: 'produtores', nome: 'Produtores', icone: '👨‍🌾', aba: 'Produtores',
-    intro: 'Cadastros ativos na Receita Federal (CNPJ) com atividade principal agropecuária ou de produção florestal, contados por município, atividade e tipo. Só contagens: nenhum nome, CNPJ, endereço ou contato sai da base, que fica guardada fora do painel.',
+    intro: 'Duas fontes, só contagens por município. O Censo Agropecuário 2017 (padrão) recenseia todo estabelecimento agropecuário, com CPF ou CNPJ, nas 27 UFs, por atividade predominante e por tipologia (agricultura familiar, Pronaf, Pronamp): é a base para comparar estados. A Receita Federal conta os cadastros ativos no CNPJ com atividade agropecuária ou florestal, por atividade e tipo; é mais recente, mas só vê quem tem CNPJ. Nenhum nome, CNPJ, endereço ou contato sai das bases.',
     metricas: [
-      { id: 'n', nome: 'Cadastros ativos', un: 'cadastros',
-        def: 'Estabelecimentos com situação ativa na Receita e CNAE principal das divisões 01 (agricultura e pecuária) e 02 (produção florestal), filtrados pela atividade e pelo tipo escolhidos.',
-        nota: 'Cadastro não é produtor nem estabelecimento do Censo: um produtor pode ter vários cadastros, e muitos só têm CPF e inscrição estadual.' },
+      { id: 'n', nome: 'Estabelecimentos (Censo) ou cadastros ativos (Receita)', un: 'unidades',
+        def: 'No Censo, os estabelecimentos agropecuários recenseados em 2017, filtrados pela atividade predominante ou pela tipologia. Na Receita, os estabelecimentos com situação ativa e CNAE principal das divisões 01 e 02, filtrados pela atividade e pelo tipo.',
+        nota: 'Estabelecimento é a unidade de produção sob uma administração; cadastro na Receita é outra coisa: um produtor pode ter vários, e muitos só têm CPF e inscrição estadual. No Censo, atividade e tipologia são tabulações separadas e não se cruzam.' },
+      { id: 'pct', nome: 'Parte dos estabelecimentos do município', un: '%',
+        def: 'O recorte escolhido dividido pelo total do município na mesma fonte, como a parte de estabelecimentos de agricultura familiar.',
+        calc: 'Σ recorte ÷ Σ total × 100' },
       { id: 'n24', nome: 'Abertos nos últimos 24 meses', un: 'cadastros',
-        def: 'Dos cadastros ativos, os que foram abertos nos 24 meses anteriores à data de referência da base.',
+        def: 'Só na Receita: dos cadastros ativos, os abertos nos 24 meses anteriores à data de referência da base.',
         nota: 'Conta abertura de cadastro, que pode ser só formalização de quem já produzia.' },
-      { id: 'mil_ha', nome: 'Cadastros por mil ha colhidos', un: 'cadastros/mil ha',
-        def: 'Cadastros ativos divididos pela área colhida do último ano do PAM.', calc: 'Σ cadastros ÷ Σ área colhida × 1.000',
-        nota: 'Sem lavoura no PAM não há medida. A pecuária e a floresta não entram no denominador.' },
-      { id: 'km2', nome: 'Cadastros por km²', un: 'cadastros/km²',
-        def: 'Cadastros ativos divididos pela área do território (IBGE).', calc: 'Σ cadastros ÷ Σ área dos municípios (km²)' },
+      { id: 'mil_ha', nome: 'Por mil ha colhidos', un: 'por mil ha',
+        def: 'A contagem dividida pela área colhida do último ano do PAM.', calc: 'Σ contagem ÷ Σ área colhida × 1.000',
+        nota: 'Sem lavoura no PAM não há medida. A pecuária e a floresta não entram no denominador, e o Censo é de 2017 enquanto a área é do último ano.' },
+      { id: 'km2', nome: 'Por km²', un: 'por km²',
+        def: 'A contagem dividida pela área do território (IBGE).', calc: 'Σ contagem ÷ Σ área dos municípios (km²)' },
     ],
     extra: d => {
       const r = d?.receita;
       const pf = Object.entries(r?.pf_ufs || {}).map(([u, n]) => `${u} (${n.toLocaleString('pt-BR')})`).join(' e ');
       return `
-      <h4>Cobertura por estado</h4>
+      <h4>Censo Agropecuário 2017</h4>
+      <p data-busca="${norm('censo agropecuario 2017 estabelecimentos atividade predominante tipologia agricultura familiar pronaf pronamp comparavel estados')}">
+        A fonte padrão. Conta cada estabelecimento agropecuário recenseado, tenha ele CPF ou CNPJ, e por isso compara
+        estados: no RS são 365 mil estabelecimentos, contra cerca de 16 mil cadastros na Receita em 10/2026. A atividade é a predominante
+        (a que dá mais valor ao estabelecimento). A tipologia separa a agricultura familiar (Lei 11.326) da não
+        familiar, o enquadramento no Pronaf (B e V) e o médio produtor do Pronamp. Atividade e tipologia são duas
+        tabulações do IBGE e não se cruzam. Município criado depois de 2017 fica sem dado.</p>
+      <h4>Receita: cobertura por estado</h4>
       <p class="gl-aviso" data-busca="${norm('pessoa fisica produtor rural cnpj sp al cobertura estados comparar inscricao estadual cpf')}">
         O produtor rural pessoa física só aparece com CNPJ ${pf ? `em ${esc(pf)}` : 'em poucos estados'}. Nas outras UFs ele opera
         com CPF e inscrição estadual e não aparece na base. Por isso a aba abre em pessoa jurídica, comparável entre estados,
@@ -343,8 +353,8 @@ const CONTAS = {
       def: 'CNAE de açúcar ou álcool (1071-6/00, 1072-4/01, 1931-4/00), ou planta com capacidade autorizada de etanol na ANP registrada com outro CNAE.',
       nota: 'Conta estabelecimentos, não capacidade: a capacidade autorizada somada aparece na dica do município e na tabela de municípios.' },
     { id: 'usina_conf', nome: 'CNAE de usina sem autorização ANP', un: 'a confirmar',
-      def: 'CNAE de usina sem planta autorizada de etanol na ANP.',
-      nota: 'Pode ser só de açúcar, escritório, refinaria, comercializadora ou empresa em recuperação judicial.' },
+      def: 'CNAE de usina sem planta autorizada de etanol na ANP, só de empresas com capital social de R$ 1 milhão ou mais.',
+      nota: 'Pode ser só de açúcar, escritório, refinaria, comercializadora ou empresa em recuperação judicial. Abaixo de R$ 1 milhão ficam fora: são, quase sempre, fabricantes de melado, açúcar mascavo e álcool artesanal (no RS, 98 dos 109 casos de 10/2026).' },
     { id: 'usina_agricola', nome: 'Unidade agrícola de grupo sucroenergético', un: 'estabelecimentos',
       def: 'Fazenda de cana (0113-0/00) de um CNPJ raiz que tem usina.',
       nota: 'Mostra onde o grupo opera; não é uma usina a mais.' },

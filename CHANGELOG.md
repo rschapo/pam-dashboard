@@ -1,5 +1,14 @@
 # CHANGELOG — PAM-dashboard
 
+## 2026-10-22 · branch `produtores-censo-2017` (não publicado)
+
+- Produtores: nova fonte, o Censo Agropecuário 2017 (estabelecimentos por atividade
+  predominante e por agricultura familiar, Pronaf e Pronamp), que passa a ser a padrão por
+  cobrir todos os estados por igual; a Receita continua como segunda fonte. Nova métrica:
+  parte dos estabelecimentos do município (%).
+- Contas-chave: usina "a confirmar" (CNAE de usina sem autorização da ANP) só com capital
+  social de R$ 1 mi ou mais. No RS, 98 dos 109 eram fabricantes de melado e açúcar mascavo.
+
 ## 2026-10-21 · branch `painel-brasil-regras-2026-10` (não publicado)
 
 Painel do Brasil, sem concessionário: densidades, cultura dominante, contas-chave e

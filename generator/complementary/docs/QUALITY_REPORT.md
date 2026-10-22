@@ -63,6 +63,26 @@ colhida (PAM) com área plantada (PEVS), e isso está na legenda e no glossário
   serviços agropecuários. Contra 365.094 estabelecimentos do Censo 2017, razão 0,043.
 - Contas-chave: 1.539 estabelecimentos de cooperativas agropecuárias, concentrados no Planalto.
 
+### Atualização de 22/10/2026: Censo 2017 nos Produtores e corte nas usinas a confirmar
+
+- **Produtores comparáveis entre estados.** O domínio Produtores passou a abrir no Censo
+  Agropecuário 2017 (SIDRA 6778, estabelecimentos por atividade predominante e por
+  tipologia), que recenseia todo estabelecimento com CPF ou CNPJ. A Receita fica como
+  segunda fonte. O RS sai de 15.646 cadastros (Receita, só PJ) para 365.094 estabelecimentos
+  (Censo): 193.626 em lavouras temporárias, 130.391 em pecuária, 20.064 em lavouras
+  permanentes, 12.197 em florestas plantadas; 293.892 de agricultura familiar (80,5%; SP:
+  122.555 de 188.620, 65,0%). A tabela foi baixada de novo com o símbolo de cada célula,
+  porque o coletor antigo gravava o "-" (zero) e o "X" (sigilo) como o mesmo vazio; a
+  contagem de estabelecimentos não tem sigilo em nenhum município. Soma municipal =
+  5.073.324, o total oficial.
+- **Usinas "a confirmar" só com capital ≥ R$ 1 mi.** No RS, 98 dos 109 estabelecimentos com
+  CNAE de açúcar ou álcool sem autorização da ANP tinham capital abaixo de R$ 1 mi (mediana
+  de R$ 10 mil): fabricantes de melado, açúcar mascavo e álcool artesanal, e não usinas. Com
+  o corte, "a confirmar" cai de 1.370 para 410 no Brasil (SP 256 → 106, RS 109 → 11); 964
+  estabelecimentos saem. As unidades agrícolas de grupo caem de 2.169 para 2.056, porque a
+  fazenda só conta quando a raiz tem usina, e 16 cooperativas pequenas com CNAE de açúcar
+  passam a contar como cooperativa.
+
 ### Receita: contas-chave e produtores (CNPJ 2026-10, ANP 09/2026)
 
 - ANP × Receita: 370 plantas autorizadas (442.294 m³/d); 367 ativas na Receita, 3 inativas, 0

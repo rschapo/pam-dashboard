@@ -1,0 +1,352 @@
+{
+  "dataset": "raw_censo_estabelecimentos_6778",
+  "source": "IBGE — Censo Agropecuário 2017, SIDRA 6778 (variável 183)",
+  "extraction_date": "2026-10-22",
+  "reference_date": "2017-09-30",
+  "source_files": [],
+  "source_hashes": [],
+  "script_version": "0.1.0",
+  "row_count": 100134,
+  "municipality_count": 0,
+  "rejected_rows": 0,
+  "warnings": [],
+  "output_files": [
+    {
+      "file": "atividade_RO.json",
+      "sha256": "4f23909844dcf53954eba241161008522e8518974e4df0dc8ed0009452e79093",
+      "bytes": 228877
+    },
+    {
+      "file": "atividade_AC.json",
+      "sha256": "283c779d2c1c5bca6d8df4a8c57ec30097b40a9588959a21521f0510371bf466",
+      "bytes": 96814
+    },
+    {
+      "file": "atividade_AM.json",
+      "sha256": "6f23328d28393dd7d3e2992447c6ea2f02f269f4f059713f1e61315252a00102",
+      "bytes": 270274
+    },
+    {
+      "file": "atividade_RR.json",
+      "sha256": "13eeb97184d9e65ae18ee3449daec88c0b27ffa56bb58cde8f4d55975e2fdaa7",
+      "bytes": 65971
+    },
+    {
+      "file": "atividade_PA.json",
+      "sha256": "92c033565fa088cea4d7ead15032dfccbae713feaab75a488ce19d6b709edc1b",
+      "bytes": 629363
+    },
+    {
+      "file": "atividade_AP.json",
+      "sha256": "42747528b98e9dc57fb8568bb289f98e8e50851d7945b74b9a969440ebb99481",
+      "bytes": 70449
+    },
+    {
+      "file": "atividade_TO.json",
+      "sha256": "6ab95a88b936df31f37bb3bc5b829c1bf794e9c45e58f148b9e69869bfb2a401",
+      "bytes": 609475
+    },
+    {
+      "file": "atividade_MA.json",
+      "sha256": "9f01809394d6ce2c6528348c4401c7823dd19b94af2c75bc145b5a902a38ffcd",
+      "bytes": 952162
+    },
+    {
+      "file": "atividade_PI.json",
+      "sha256": "393f88792042080ba4a0a3c9a485beb9f1c15a88462b93936084a1fe1d34670e",
+      "bytes": 984819
+    },
+    {
+      "file": "atividade_CE.json",
+      "sha256": "b81de441003794aafb6f6cf7bdcdc9f1c512a7b949d76f5acc3de1a427bf7ca1",
+      "bytes": 798430
+    },
+    {
+      "file": "atividade_RN.json",
+      "sha256": "3c1f725b09ec5c0f2e201394484dfb5276b7f18289c83eb03cb13b70dd14ecfd",
+      "bytes": 728704
+    },
+    {
+      "file": "atividade_PB.json",
+      "sha256": "c9c0ddb23be23740804bbed9a36c1657f21654c357450f2c21c0038efb631320",
+      "bytes": 971439
+    },
+    {
+      "file": "atividade_PE.json",
+      "sha256": "a0e14c38734f1eedbdd204987fe3677022ba1cefc87b222b307c7b92d4f46633",
+      "bytes": 804745
+    },
+    {
+      "file": "atividade_AL.json",
+      "sha256": "5a579f8fefcd859964350a4da518981ca7bfe4bdf79292b804bda7f1c9821f89",
+      "bytes": 445894
+    },
+    {
+      "file": "atividade_SE.json",
+      "sha256": "e5dc9f8b6f66719ec105cca0396b1a11ee36c4fa3721dd50b2164581d334bc1d",
+      "bytes": 328338
+    },
+    {
+      "file": "atividade_BA.json",
+      "sha256": "1b0d44e8282a3272a9493f35ddb043237ce203b32e86ee1f4c136e8366c15e31",
+      "bytes": 1810438
+    },
+    {
+      "file": "atividade_MG.json",
+      "sha256": "f7b6d48d264ed1badc00d310f42001ba7fd1a9cb78f5c5e2dfdea58b34b6d410",
+      "bytes": 3722154
+    },
+    {
+      "file": "atividade_ES.json",
+      "sha256": "d78274e7d29d6943fbcfebd7c253988ab168d02227f2e3d0712b2a8936f13829",
+      "bytes": 341241
+    },
+    {
+      "file": "atividade_RJ.json",
+      "sha256": "b5f7034078048ffbd407e5bf2693563e966027ac6f2cd8230dd1bf46377a5992",
+      "bytes": 397675
+    },
+    {
+      "file": "atividade_SP.json",
+      "sha256": "85506a186a729214380e5ce6fecaecbcad9662d9fe2b41535d0200bb293f49a7",
+      "bytes": 2783267
+    },
+    {
+      "file": "atividade_PR.json",
+      "sha256": "e3d353b3b18c8ac2aeffc714052a2758f5b8d3b5c1276139331e2f92de6dbcdc",
+      "bytes": 1741903
+    },
+    {
+      "file": "atividade_SC.json",
+      "sha256": "f0c074e9981bb268c1375ef7566b418624c69f1c954d173b521ccdff27b609fa",
+      "bytes": 1284698
+    },
+    {
+      "file": "atividade_RS.json",
+      "sha256": "fce7261734c562ed14e2bfdce641434573e07e2f3bef7159e2176e0b0958d57d",
+      "bytes": 2168751
+    },
+    {
+      "file": "atividade_MS.json",
+      "sha256": "d095d45d646b92922bbe5569e06e51654b8d670947c831db53bda1cf11f4ecd2",
+      "bytes": 344429
+    },
+    {
+      "file": "atividade_MT.json",
+      "sha256": "a2fd70710fce2d1d63956944490c3a900145cdf834d7304518aaa0f3a287dd9c",
+      "bytes": 617258
+    },
+    {
+      "file": "atividade_GO.json",
+      "sha256": "711c57069387cee137966bfa2f2aa12dbe658cc5114159a8f688f35202ab2847",
+      "bytes": 1073864
+    },
+    {
+      "file": "atividade_DF.json",
+      "sha256": "8afc6e872a65d678737830859023cc6e3dde99bb4bbc7801d6efdd253c9f6747",
+      "bytes": 5191
+    },
+    {
+      "file": "tipologia_RO.json",
+      "sha256": "6da4124c578c22d10f9236a4d7b867c958fa96b7b05e5b85b3d8ebaa74eca8bf",
+      "bytes": 181667
+    },
+    {
+      "file": "tipologia_AC.json",
+      "sha256": "373339f3d3cfea868f9214da86efbcde05603b64dc57e8309a0e001f1afb4da8",
+      "bytes": 76916
+    },
+    {
+      "file": "tipologia_AM.json",
+      "sha256": "698481c806eb1f814fbbe808b21fedfa9033e746a1348096017f9fc3fd9c18b2",
+      "bytes": 214309
+    },
+    {
+      "file": "tipologia_RR.json",
+      "sha256": "5d3898f40256da867acacb3e79c15975a1690fcb502ec9f03790e0a9d006691e",
+      "bytes": 52451
+    },
+    {
+      "file": "tipologia_PA.json",
+      "sha256": "72c4719fe0c896a75708a5c4ff6b7aed86b5f087795f64f1ac1847586d249abe",
+      "bytes": 499055
+    },
+    {
+      "file": "tipologia_AP.json",
+      "sha256": "a35fcdf9a18db451acb15210f8d4a1b4bb89a6ef2d104ddaff18c488185638d2",
+      "bytes": 55985
+    },
+    {
+      "file": "tipologia_TO.json",
+      "sha256": "1cdda6543aa05b997fe42c75dd0cf451f3d5cbfe3c9a3b247a8e0fc002e2f999",
+      "bytes": 483252
+    },
+    {
+      "file": "tipologia_MA.json",
+      "sha256": "a0599402ec849eb136b1d92fb811a50e95ec0d28352fddcdb9df1f734f3e9a02",
+      "bytes": 754752
+    },
+    {
+      "file": "tipologia_PI.json",
+      "sha256": "9b3e89f5d4abf4435775eb3bfc0ca5d47a1b7493664e3a7cae11dd5ad14e1c97",
+      "bytes": 780674
+    },
+    {
+      "file": "tipologia_CE.json",
+      "sha256": "3ec8e02ae7ca46dc206e110479ba7ae506e1f708010f21833133fa36f10a4ad1",
+      "bytes": 633074
+    },
+    {
+      "file": "tipologia_RN.json",
+      "sha256": "30e436a9515abdf198fafbd81a0f4cafbe1ffe5752a2062fbcde940f40960517",
+      "bytes": 577539
+    },
+    {
+      "file": "tipologia_PB.json",
+      "sha256": "52584e6d9715067ab500ceb23fe55032d0144461c7619f78b2034d000b70a69b",
+      "bytes": 770003
+    },
+    {
+      "file": "tipologia_PE.json",
+      "sha256": "d094f0b9bf2e19c022b41cc1ac18c1872f3fa7f39a8f83f4c37aebc5cd529dd1",
+      "bytes": 637997
+    },
+    {
+      "file": "tipologia_AL.json",
+      "sha256": "4762a3b5718f043f7a9f381b08058ded4b81811cda526aa3f1bd9eee2093487e",
+      "bytes": 353557
+    },
+    {
+      "file": "tipologia_SE.json",
+      "sha256": "581b5d59ab744a602d67fda67fd04ea626850a7fe21b8804ce3da7dc7a56724f",
+      "bytes": 260421
+    },
+    {
+      "file": "tipologia_BA.json",
+      "sha256": "d50744b989394d653c27657f0ef0d5c9540a37d2ad830936382682910027637a",
+      "bytes": 1435211
+    },
+    {
+      "file": "tipologia_MG.json",
+      "sha256": "3453839cde0a4f76877497dcc544a42036ce75e80d2ca69edfa2ff4fba0dcd14",
+      "bytes": 2950167
+    },
+    {
+      "file": "tipologia_ES.json",
+      "sha256": "168e6a3ded2178406d04480476d20ac6016be8f19333db66e52309e1bd1a588b",
+      "bytes": 270686
+    },
+    {
+      "file": "tipologia_RJ.json",
+      "sha256": "9433753840c38e05da86273e1d7f5a67cd25156e85d9649fb0bac8894e046246",
+      "bytes": 315302
+    },
+    {
+      "file": "tipologia_SP.json",
+      "sha256": "1a2103bfdc9b19a53fe489d45a2fbc4f6959b4abc1f60903c438fcc533f43505",
+      "bytes": 2204844
+    },
+    {
+      "file": "tipologia_PR.json",
+      "sha256": "2b25902711b7918c2799683a287c05cb452f0f7c48713ebaa149c9ef58cd8d60",
+      "bytes": 1380807
+    },
+    {
+      "file": "tipologia_SC.json",
+      "sha256": "81ce5fbf4b29776d6aba29b2958ff2fda49419d7c36d2163d12f56ea86e73aa1",
+      "bytes": 1018218
+    },
+    {
+      "file": "tipologia_RS.json",
+      "sha256": "4980e8afd326297205a754ba37b91ce38c21ea4b3208d08fd4c8267fdd7e99d9",
+      "bytes": 1719127
+    },
+    {
+      "file": "tipologia_MS.json",
+      "sha256": "c1e32959fb8583687af68fe693694083c39cd0f435b40c88ed2a5ad3fc890201",
+      "bytes": 273252
+    },
+    {
+      "file": "tipologia_MT.json",
+      "sha256": "0384bbf8a163912cfa2eeaf74e3f8ac8b8a9553c6420869e0a7ce5dd0a25eadf",
+      "bytes": 489542
+    },
+    {
+      "file": "tipologia_GO.json",
+      "sha256": "85912fce21fb485f569875bf7262628fae8d213dc512fe5b25796b6e6b329715",
+      "bytes": 851424
+    },
+    {
+      "file": "tipologia_DF.json",
+      "sha256": "ecba26a375e7c6f9e93d99c7716d21cd7c3221a358d5f7f49236585294d845f0",
+      "bytes": 4293
+    }
+  ],
+  "generated_at": "2026-10-22T09:55:23-04:00",
+  "aberturas": {
+    "atividade": "grupos de atividade econômica",
+    "tipologia": "tipologia"
+  },
+  "simbolos": {
+    "-": "zero absoluto",
+    "X": "sigilo",
+    "..": "não se aplica",
+    "...": "não disponível"
+  },
+  "sha256": {
+    "atividade_RO.json": "4f23909844dcf53954eba241161008522e8518974e4df0dc8ed0009452e79093",
+    "atividade_AC.json": "283c779d2c1c5bca6d8df4a8c57ec30097b40a9588959a21521f0510371bf466",
+    "atividade_AM.json": "6f23328d28393dd7d3e2992447c6ea2f02f269f4f059713f1e61315252a00102",
+    "atividade_RR.json": "13eeb97184d9e65ae18ee3449daec88c0b27ffa56bb58cde8f4d55975e2fdaa7",
+    "atividade_PA.json": "92c033565fa088cea4d7ead15032dfccbae713feaab75a488ce19d6b709edc1b",
+    "atividade_AP.json": "42747528b98e9dc57fb8568bb289f98e8e50851d7945b74b9a969440ebb99481",
+    "atividade_TO.json": "6ab95a88b936df31f37bb3bc5b829c1bf794e9c45e58f148b9e69869bfb2a401",
+    "atividade_MA.json": "9f01809394d6ce2c6528348c4401c7823dd19b94af2c75bc145b5a902a38ffcd",
+    "atividade_PI.json": "393f88792042080ba4a0a3c9a485beb9f1c15a88462b93936084a1fe1d34670e",
+    "atividade_CE.json": "b81de441003794aafb6f6cf7bdcdc9f1c512a7b949d76f5acc3de1a427bf7ca1",
+    "atividade_RN.json": "3c1f725b09ec5c0f2e201394484dfb5276b7f18289c83eb03cb13b70dd14ecfd",
+    "atividade_PB.json": "c9c0ddb23be23740804bbed9a36c1657f21654c357450f2c21c0038efb631320",
+    "atividade_PE.json": "a0e14c38734f1eedbdd204987fe3677022ba1cefc87b222b307c7b92d4f46633",
+    "atividade_AL.json": "5a579f8fefcd859964350a4da518981ca7bfe4bdf79292b804bda7f1c9821f89",
+    "atividade_SE.json": "e5dc9f8b6f66719ec105cca0396b1a11ee36c4fa3721dd50b2164581d334bc1d",
+    "atividade_BA.json": "1b0d44e8282a3272a9493f35ddb043237ce203b32e86ee1f4c136e8366c15e31",
+    "atividade_MG.json": "f7b6d48d264ed1badc00d310f42001ba7fd1a9cb78f5c5e2dfdea58b34b6d410",
+    "atividade_ES.json": "d78274e7d29d6943fbcfebd7c253988ab168d02227f2e3d0712b2a8936f13829",
+    "atividade_RJ.json": "b5f7034078048ffbd407e5bf2693563e966027ac6f2cd8230dd1bf46377a5992",
+    "atividade_SP.json": "85506a186a729214380e5ce6fecaecbcad9662d9fe2b41535d0200bb293f49a7",
+    "atividade_PR.json": "e3d353b3b18c8ac2aeffc714052a2758f5b8d3b5c1276139331e2f92de6dbcdc",
+    "atividade_SC.json": "f0c074e9981bb268c1375ef7566b418624c69f1c954d173b521ccdff27b609fa",
+    "atividade_RS.json": "fce7261734c562ed14e2bfdce641434573e07e2f3bef7159e2176e0b0958d57d",
+    "atividade_MS.json": "d095d45d646b92922bbe5569e06e51654b8d670947c831db53bda1cf11f4ecd2",
+    "atividade_MT.json": "a2fd70710fce2d1d63956944490c3a900145cdf834d7304518aaa0f3a287dd9c",
+    "atividade_GO.json": "711c57069387cee137966bfa2f2aa12dbe658cc5114159a8f688f35202ab2847",
+    "atividade_DF.json": "8afc6e872a65d678737830859023cc6e3dde99bb4bbc7801d6efdd253c9f6747",
+    "tipologia_RO.json": "6da4124c578c22d10f9236a4d7b867c958fa96b7b05e5b85b3d8ebaa74eca8bf",
+    "tipologia_AC.json": "373339f3d3cfea868f9214da86efbcde05603b64dc57e8309a0e001f1afb4da8",
+    "tipologia_AM.json": "698481c806eb1f814fbbe808b21fedfa9033e746a1348096017f9fc3fd9c18b2",
+    "tipologia_RR.json": "5d3898f40256da867acacb3e79c15975a1690fcb502ec9f03790e0a9d006691e",
+    "tipologia_PA.json": "72c4719fe0c896a75708a5c4ff6b7aed86b5f087795f64f1ac1847586d249abe",
+    "tipologia_AP.json": "a35fcdf9a18db451acb15210f8d4a1b4bb89a6ef2d104ddaff18c488185638d2",
+    "tipologia_TO.json": "1cdda6543aa05b997fe42c75dd0cf451f3d5cbfe3c9a3b247a8e0fc002e2f999",
+    "tipologia_MA.json": "a0599402ec849eb136b1d92fb811a50e95ec0d28352fddcdb9df1f734f3e9a02",
+    "tipologia_PI.json": "9b3e89f5d4abf4435775eb3bfc0ca5d47a1b7493664e3a7cae11dd5ad14e1c97",
+    "tipologia_CE.json": "3ec8e02ae7ca46dc206e110479ba7ae506e1f708010f21833133fa36f10a4ad1",
+    "tipologia_RN.json": "30e436a9515abdf198fafbd81a0f4cafbe1ffe5752a2062fbcde940f40960517",
+    "tipologia_PB.json": "52584e6d9715067ab500ceb23fe55032d0144461c7619f78b2034d000b70a69b",
+    "tipologia_PE.json": "d094f0b9bf2e19c022b41cc1ac18c1872f3fa7f39a8f83f4c37aebc5cd529dd1",
+    "tipologia_AL.json": "4762a3b5718f043f7a9f381b08058ded4b81811cda526aa3f1bd9eee2093487e",
+    "tipologia_SE.json": "581b5d59ab744a602d67fda67fd04ea626850a7fe21b8804ce3da7dc7a56724f",
+    "tipologia_BA.json": "d50744b989394d653c27657f0ef0d5c9540a37d2ad830936382682910027637a",
+    "tipologia_MG.json": "3453839cde0a4f76877497dcc544a42036ce75e80d2ca69edfa2ff4fba0dcd14",
+    "tipologia_ES.json": "168e6a3ded2178406d04480476d20ac6016be8f19333db66e52309e1bd1a588b",
+    "tipologia_RJ.json": "9433753840c38e05da86273e1d7f5a67cd25156e85d9649fb0bac8894e046246",
+    "tipologia_SP.json": "1a2103bfdc9b19a53fe489d45a2fbc4f6959b4abc1f60903c438fcc533f43505",
+    "tipologia_PR.json": "2b25902711b7918c2799683a287c05cb452f0f7c48713ebaa149c9ef58cd8d60",
+    "tipologia_SC.json": "81ce5fbf4b29776d6aba29b2958ff2fda49419d7c36d2163d12f56ea86e73aa1",
+    "tipologia_RS.json": "4980e8afd326297205a754ba37b91ce38c21ea4b3208d08fd4c8267fdd7e99d9",
+    "tipologia_MS.json": "c1e32959fb8583687af68fe693694083c39cd0f435b40c88ed2a5ad3fc890201",
+    "tipologia_MT.json": "0384bbf8a163912cfa2eeaf74e3f8ac8b8a9553c6420869e0a7ce5dd0a25eadf",
+    "tipologia_GO.json": "85912fce21fb485f569875bf7262628fae8d213dc512fe5b25796b6e6b329715",
+    "tipologia_DF.json": "ecba26a375e7c6f9e93d99c7716d21cd7c3221a358d5f7f49236585294d845f0"
+  }
+}

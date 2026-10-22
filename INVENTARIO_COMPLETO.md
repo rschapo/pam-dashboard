@@ -47,7 +47,8 @@ abaixo, `<brutos>` é essa pasta. Em `data/` ficam os processados e os manifesto
 | `data/pam_mun/*.json` | 🌾 Agrícola, cultura escolhida | 22 MB em 81 arquivos (maior 1,6 MB) | uma cultura por arquivo, por município e ano, baixada quando a cultura é escolhida |
 | `data/pam_grupos.json` | 🌾 Agrícola: densidades prontas e cultura dominante | 1,4 MB | 5.523 municípios · PAM 2025 e PEVS 2025 · 14 grupos · 10 categorias |
 | `data/contas_chave.json` | Camada de contas-chave (todas as abas) | 0,25 MB | 3.837 municípios · Receita CNPJ 2026-10 e ANP 09/2026 · só contagens de pessoa jurídica |
-| `data/produtores_mun.json` | 👨‍🌾 Produtores | 0,66 MB | 5.424 municípios · Receita CNPJ 2026-10 · só contagens por atividade e tipo |
+| `data/censo_estab_mun.json` | 👨‍🌾 Produtores (fonte padrão) | 0,43 MB | 5.563 municípios · Censo Agropecuário 2017 (SIDRA 6778) · estabelecimentos por atividade e por agricultura familiar |
+| `data/produtores_mun.json` | 👨‍🌾 Produtores (segunda fonte) | 0,66 MB | 5.424 municípios · Receita CNPJ 2026-10 · só contagens por atividade e tipo |
 
 **O dashboard tem 9 abas de tema** (🌾 Agrícola, 🐄 Pecuária, 🌲 Silvicultura,
 📊 Economia, 🗺️ Uso do Solo, 🚜 Tratores, 💰 Crédito, 🌳 CAR, 👨‍🌾 Produtores) e a camada

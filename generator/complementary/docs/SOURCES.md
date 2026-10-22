@@ -15,6 +15,7 @@ Detalhes operacionais em `config/sources.yaml` (campos de rastreabilidade da se�
 | SNCR | INCRA | gov.br/incra; acervofundiario.incra.gov.br | CSV/SHP por UF | manual, por UF |
 | CAR | SICAR / Serviço Florestal Brasileiro | car.gov.br; consultapublica.car.gov.br | SHP por UF/mun. | manual, com termos de uso |
 | Uso e cobertura | MapBiomas | brasil.mapbiomas.org/estatisticas | XLSX / GeoTIFF (GEE) | manual, complementar |
+| Produtores: estabelecimentos por atividade e tipologia | IBGE, Censo Agropecuário 2017 | SIDRA 6778, resposta bruta com os símbolos (`download_censo_estabelecimentos.py`, 22/10/2026) | JSON | automático |
 | Contas-chave e produtores rurais | Receita Federal, Dados Abertos CNPJ | arquivos.receitafederal.gov.br (base local `cnpj_<período>.duckdb` da pasta Dados Receita Federal; em uso, 2026-10, aberturas até 11/10/2026) | CSV → DuckDB | automático (scripts da pasta Dados Receita Federal) |
 | Usinas (validação) | ANP, Painel Dinâmico de Produtores de Etanol | gov.br/anp/.../arquivos-etanol/pb-da-etanol.zip (baixado em 21/10/2026, sha256 30f9150a722e1f21e7d4aa7d38be6fcb9950ece87bca5531b29154d9122c9010; último mês 09/2026) | ZIP/CSV | automático (`download_anp_etanol.py`) |
 

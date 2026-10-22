@@ -59,8 +59,11 @@ let cred_mun;
 let CAR = null, carLoaded = false, carLoading = false;
 let car_mun, car_razoes = {};
 
-// PRODUTORES (Receita, CNPJ) — só contagens de cadastros por município e atividade
-let PROD = null, prodLoaded = false, prodLoading = false;
+// PRODUTORES — duas fontes, só contagens por município: o Censo Agropecuário 2017
+// (estabelecimentos, todas as UFs; abre o domínio) e a Receita (cadastros CNPJ, baixados
+// quando a fonte é escolhida)
+let CENSO = null, prodLoaded = false, prodLoading = false;
+let PROD = null, receitaPendente = null;
 let prod_mun;
 
 // Partes que a PAM também publica no total (café Arábica e Canephora, dentro do Café
@@ -101,8 +104,9 @@ let state = {
   metricaMaq: 'trat',
   metricaCred: 'total',
   metricaCar: 'imov',
-  // Produtores abrem em pessoa jurídica: o produtor pessoa física só tem CNPJ em SP (e em AL)
-  metricaProd: 'n', prodAtiv: '', prodTipo: 'PJ',
+  // Produtores abrem no Censo 2017, comparável entre estados; na Receita, em pessoa
+  // jurídica, porque o produtor pessoa física só tem CNPJ em SP (e em AL)
+  metricaProd: 'n', prodFonte: 'censo', prodAtiv: '', prodTipo: '',
   pronta: '', contas: '',
   ufSel: '', microSel: '', munSel: '', anoIdx: 0
 };
@@ -420,11 +424,14 @@ const RAZOES_ECON = {
   pct: { num: 'agro', den: '_vab', fator: 100, pareado: true },
 };
 
-// Produtores: cadastros por mil ha de área colhida (PAM, último ano) e por km² (área
-// do IBGE). Em estado e microrregião, soma dos cadastros ÷ soma das áreas.
+// Produtores: por mil ha de área colhida (PAM, último ano), por km² (área do IBGE) e a
+// parte dos estabelecimentos (ou cadastros) do município. Em estado e microrregião, soma
+// sobre soma. Pareado: município sem a contagem (fora do Censo, que é de 2017) sai também
+// do denominador.
 const RAZOES_PROD = {
-  mil_ha: { num: 'n', den: '_ac', fator: 1000 },
-  km2:    { num: 'n', den: '_km2', fator: 1 },
+  mil_ha: { num: 'n', den: '_ac', fator: 1000, pareado: true },
+  km2:    { num: 'n', den: '_km2', fator: 1, pareado: true },
+  pct:    { num: 'n', den: '_tot', fator: 100, pareado: true },
 };
 
 function baseDominioSimples() {
@@ -627,10 +634,15 @@ function metLabel() {
     if (M === 'area') return `Área financiada (ha, ${ano})`;
   }
   if (state.domain === 'produtores') {
-    const per = PROD?.periodo_rfb ? 'Receita ' + PROD.periodo_rfb : 'Receita';
-    const filtro = [PROD?.atividades?.[state.prodAtiv], PROD?.tipos?.[state.prodTipo]].filter(Boolean).join(' · ');
-    const rot = { n: 'Cadastros ativos', n24: 'Cadastros abertos nos últimos 24 meses',
-                  mil_ha: 'Cadastros por mil ha colhidos', km2: 'Cadastros por km²' }[M] || M;
+    const censo = state.prodFonte === 'censo';
+    const per = censo ? 'Censo Agro 2017' : PROD?.periodo_rfb ? 'Receita ' + PROD.periodo_rfb : 'Receita';
+    const src = censo ? CENSO : PROD;
+    const filtro = [src?.atividades?.[state.prodAtiv], (censo ? src?.tipologias : src?.tipos)?.[state.prodTipo]]
+      .filter(Boolean).join(' · ');
+    const nome = censo ? 'Estabelecimentos' : 'Cadastros ativos';
+    const rot = { n: nome, n24: 'Cadastros abertos nos últimos 24 meses',
+                  mil_ha: `${nome} por mil ha colhidos`, km2: `${nome} por km²`,
+                  pct: `Parte dos ${censo ? 'estabelecimentos' : 'cadastros'} (%)` }[M] || M;
     return `${rot}${filtro ? ' — ' + filtro : ''} (${per})`;
   }
   if (M === 'dens' || M === 'voc' || M === 'dom') {
@@ -654,8 +666,9 @@ function fmt(v, m) {
     if (m === 'voc') return v.toLocaleString('pt-BR', { maximumFractionDigits: v < 1 && v > 0 ? 2 : 1 }) + '%';
     return v.toLocaleString('pt-BR', { maximumFractionDigits: LEITURAS.casas([v]) }) + ' ha/km²';
   }
-  if (state.domain === 'produtores' && (m === 'mil_ha' || m === 'km2')) {
+  if (state.domain === 'produtores' && (m === 'mil_ha' || m === 'km2' || m === 'pct')) {
     if (v == null || !isFinite(v)) return '—';
+    if (m === 'pct') return v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%';
     return v.toLocaleString('pt-BR', { maximumFractionDigits: LEITURAS.casas([v]) });
   }
   if (!v || v === 0) return '—';
@@ -1862,42 +1875,79 @@ function renderResumoDominante() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// PRODUTORES (Receita) — domínio de contagens anônimas
+// PRODUTORES — domínio de contagens anônimas (Censo 2017 ou Receita)
 // ═══════════════════════════════════════════════════════════
-// Base derivada dos filtros (atividade e tipo): {cod: {n, n24, _ac, _km2}}, com todos os
+// Base derivada da fonte e dos filtros: {cod: {n, n24, _tot, _ac, _km2}}, com todos os
 // municípios, para que estado e microrregião somem também o território de quem não tem
-// cadastro. _ac é a área colhida do último ano do PAM; _km2, a área do IBGE.
+// estabelecimento. _tot é o total do município na fonte; _ac, a área colhida do último
+// ano do PAM; _km2, a área do IBGE. No Censo, município que não existia em 2017 e célula
+// sob sigilo ficam sem n (null), nunca zero.
 function baseProdutores() {
   const base = {}, ai = N_ANOS - 1, at = state.prodAtiv, tp = state.prodTipo;
+  const censo = state.prodFonte === 'censo';
+  const ia = censo && at ? Object.keys(CENSO?.atividades || {}).indexOf(at) : -1;
+  const it = censo && tp ? Object.keys(CENSO?.tipologias || {}).indexOf(tp) : -1;
   for (const id of Object.keys(mun_info)) {
-    let n = 0, n24 = 0;
+    const den = { _ac: mun_data[id]?.a?.[ai] || 0, _km2: (terr_ha[id] || 0) / LEITURAS.HA_POR_KM2 };
+    if (censo) {
+      const r = CENSO?.mun?.[id];
+      base[id] = { ...den, _tot: r?.t ?? null,
+                   n: !r ? null : ia >= 0 ? r.a[ia] : it >= 0 ? r.f[it] : r.t };
+      continue;
+    }
+    let n = 0, n24 = 0, tot = 0;
     for (const [k, [a, b]] of Object.entries(PROD?.mun?.[id] || {})) {
+      tot += a;
       const [ka, kt] = k.split('|');
       if ((at && ka !== at) || (tp && kt !== tp)) continue;
       n += a; n24 += b;
     }
-    base[id] = { n, n24, _ac: mun_data[id]?.a?.[ai] || 0, _km2: (terr_ha[id] || 0) / LEITURAS.HA_POR_KM2 };
+    base[id] = { ...den, n, n24, _tot: tot };
   }
   return base;
 }
 function montarFiltrosProdutores() {
+  const censo = state.prodFonte === 'censo', src = censo ? CENSO : PROD;
   const opc = (sel, todos, o, v) => {
     const el = document.getElementById(sel); if (!el) return;
     el.innerHTML = `<option value="">${todos}</option>` +
       Object.entries(o || {}).map(([k, r]) => `<option value="${k}">${escHTML(r)}</option>`).join('');
     el.value = v;
   };
-  opc('f-prod-ativ', 'Todas as atividades', PROD?.atividades, state.prodAtiv);
-  opc('f-prod-tipo', 'Todos os tipos', PROD?.tipos, state.prodTipo);
-  const nota = document.getElementById('prod-nota');
-  if (nota && PROD) nota.textContent = `Receita Federal, CNPJ ${PROD.periodo_rfb}: cadastros ativos com CNAE principal ` +
-    'da agropecuária e da produção florestal. Só contagens por município: nenhum nome, CNPJ ou endereço. ' +
-    'Retrato de um período, sem série.';
+  opc('f-prod-ativ', 'Todas as atividades', src?.atividades, state.prodAtiv);
+  opc('f-prod-tipo', censo ? 'Todas as tipologias' : 'Todos os tipos', censo ? src?.tipologias : src?.tipos, state.prodTipo);
+  const txt = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+  txt('f-prod-ativ-rot', censo ? 'Atividade predominante' : 'Atividade (CNAE principal)');
+  txt('f-prod-tipo-rot', censo ? 'Tipologia: agricultura familiar' : 'Tipo de cadastro');
+  txt('prod-filtro-nota', censo ? 'O IBGE tabula atividade e tipologia em separado: escolher uma volta a outra para "todas".' : '');
+  const opN = document.querySelector('#f-metrica-prod option[value="n"]');
+  if (opN) opN.textContent = censo ? 'Estabelecimentos' : 'Cadastros ativos';
+  // "Abertos nos últimos 24 meses" só existe na Receita
+  const op24 = document.querySelector('#f-metrica-prod option[value="n24"]');
+  if (op24) op24.disabled = censo;
+  if (censo && state.metricaProd === 'n24') { state.metricaProd = 'n'; document.getElementById('f-metrica-prod').value = 'n'; }
+  txt('prod-nota', censo
+    ? 'IBGE, Censo Agropecuário 2017: todos os estabelecimentos agropecuários recenseados, com CPF ou CNPJ. Comparável entre estados; retrato de 2017.'
+    : `Receita Federal, CNPJ ${PROD?.periodo_rfb || ''}: cadastros ativos com CNAE principal da agropecuária e da ` +
+      'produção florestal. Só contagens por município: nenhum nome, CNPJ ou endereço. Retrato de um período, sem série.');
 }
 function aplicarFiltroProdutores() {
   prod_mun = baseProdutores();
   _aggCache.clear();
   refreshAll();
+}
+function carregarReceita() {
+  if (PROD) return Promise.resolve(PROD);
+  receitaPendente ||= carregarJSON('produtores_mun.json')
+    .then(d => (PROD = d))
+    .catch(e => { console.error('Erro ao carregar produtores_mun.json', e); receitaPendente = null; return null; });
+  return receitaPendente;
+}
+function trocarFonteProdutores(fonte) {
+  state.prodFonte = fonte; state.prodAtiv = '';
+  state.prodTipo = fonte === 'receita' ? 'PJ' : '';
+  (fonte === 'receita' ? carregarReceita() : Promise.resolve())
+    .then(() => { montarFiltrosProdutores(); aplicarFiltroProdutores(); });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -2136,8 +2186,8 @@ const DOMINIOS_SIMPLES = {
     pendente: () => carLoading, guardar: p => carLoading = p,
   },
   produtores: {
-    arquivo: 'produtores_mun.json', rotulo: 'produtores rurais',
-    aplicar: d => { PROD = d; montarFiltrosProdutores(); prod_mun = baseProdutores(); },
+    arquivo: 'censo_estab_mun.json', rotulo: 'produtores rurais',
+    aplicar: d => { CENSO = d; montarFiltrosProdutores(); prod_mun = baseProdutores(); },
     pronto: () => prodLoaded, marcar: v => prodLoaded = v,
     pendente: () => prodLoading, guardar: p => prodLoading = p,
   },
@@ -2156,6 +2206,12 @@ function pfPorUF() {
   return uf;
 }
 function avisoProdutores() {
+  if (state.prodFonte === 'censo') {
+    const t = 'Censo Agropecuário 2017: todos os estabelecimentos agropecuários recenseados nas 27 UFs, com CPF ou CNPJ. ' +
+      'É a base para comparar estados e municípios. Retrato de 2017; a atividade é a predominante de cada estabelecimento.';
+    document.querySelectorAll('.prod-aviso').forEach(el => { el.textContent = t; });
+    return;
+  }
   if (!PROD) return;
   const pf = Object.entries(pfPorUF()).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
   const ondePF = pf.map(([u, n]) => `${u} (${numBR(n)})`).join(' e ');
@@ -2547,7 +2603,7 @@ function anoDaFonte(M) {
   if (state.domain === 'terra') return TERRA?.ano;
   if (state.domain === 'maquinas') return MAQ?.ano;
   if (state.domain === 'credito') return CRED?.ano;
-  if (state.domain === 'produtores') return PROD?.periodo_rfb;
+  if (state.domain === 'produtores') return state.prodFonte === 'censo' ? CENSO?.ano : PROD?.periodo_rfb;
   return null;
 }
 
@@ -2693,11 +2749,17 @@ function bindEvents() {
   document.getElementById('f-metrica-prod')?.addEventListener('change', e => {
     state.metricaProd = e.target.value; refreshAll();
   });
+  document.getElementById('f-prod-fonte')?.addEventListener('change', e => trocarFonteProdutores(e.target.value));
+  // No Censo, atividade e tipologia não se cruzam: escolher uma zera a outra.
   document.getElementById('f-prod-ativ')?.addEventListener('change', e => {
-    state.prodAtiv = e.target.value; aplicarFiltroProdutores();
+    state.prodAtiv = e.target.value;
+    if (state.prodFonte === 'censo' && state.prodAtiv) { state.prodTipo = ''; document.getElementById('f-prod-tipo').value = ''; }
+    aplicarFiltroProdutores();
   });
   document.getElementById('f-prod-tipo')?.addEventListener('change', e => {
-    state.prodTipo = e.target.value; aplicarFiltroProdutores();
+    state.prodTipo = e.target.value;
+    if (state.prodFonte === 'censo' && state.prodTipo) { state.prodAtiv = ''; document.getElementById('f-prod-ativ').value = ''; }
+    aplicarFiltroProdutores();
   });
   document.getElementById('f-metrica-pec').addEventListener('change', e => {
     state.metricaPec = e.target.value; refreshAll();

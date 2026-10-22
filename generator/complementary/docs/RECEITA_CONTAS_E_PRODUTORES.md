@@ -56,7 +56,7 @@ Estabelecimentos **ativos** (situação 02), **CNAE principal**, 27 UFs, **só n
 | Setor (chave no painel) | Regra |
 |---|---|
 | Usina com autorização da ANP (`usina_anp`) | CNAE 1071-6/00 (açúcar em bruto), 1072-4/01 (açúcar refinado) ou 1931-4/00 (álcool), ou qualquer CNAE se o CNPJ completo for uma planta com capacidade autorizada de etanol na ANP |
-| CNAE de usina sem autorização (`usina_conf`) | CNAE de usina sem planta da ANP no CNPJ: confirmar (pode ser só de açúcar, escritório, refinaria, comercializadora, ou em recuperação judicial) |
+| CNAE de usina sem autorização (`usina_conf`) | CNAE de usina sem planta da ANP no CNPJ, com capital social ≥ R$ 1 mi: confirmar (pode ser só de açúcar, escritório, refinaria, comercializadora, ou em recuperação judicial). Abaixo de R$ 1 mi fica fora desde 22/10/2026: no RS, 98 dos 109 eram fabricantes de melado, açúcar mascavo e álcool artesanal |
 | Unidade agrícola de grupo sucroenergético (`usina_agricola`) | CNAE 0113-0/00 (cana) de um CNPJ raiz que tem usina: mostra onde o grupo opera, não é usina a mais |
 | Sucos (`sucos`) | CNAE 1033-3/01 com capital social ≥ R$ 1 mi |
 | Pós-colheita (`pos_colheita`) | CNAE 0163-6/00 |

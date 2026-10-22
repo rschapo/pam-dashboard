@@ -27,7 +27,8 @@ def test_so_natureza_empresarial_entra_e_a_exclusao_e_contada():
         ("44444444000101", "0163600", "2240", "10.000,00"),      # sociedade simples limitada
     ]))
     assert s == {"11111111000101": "usina", "44444444000101": "pos_colheita"}
-    assert excl == {"excluidos_produtor_rural_pf": 1, "excluidos_outras_naturezas": 1}
+    assert excl == {"excluidos_produtor_rural_pf": 1, "excluidos_outras_naturezas": 1,
+                    "excluidos_usina_sem_anp_capital_menor_1mi": 0}
 
 
 def test_capital_minimo_vale_para_sucos_e_eucalipto_mas_nao_para_celulose():
@@ -44,8 +45,8 @@ def test_capital_minimo_vale_para_sucos_e_eucalipto_mas_nao_para_celulose():
 
 def test_unidade_agricola_so_com_raiz_de_usina():
     s, _, _ = _classes(_base([
-        ("55555555000101", "1071600", "2062", "1,00"),
-        ("55555555000282", "0113000", "2062", "1,00"),   # fazenda do mesmo grupo
+        ("55555555000101", "1071600", "2062", "3.000.000,00"),
+        ("55555555000282", "0113000", "2062", "3.000.000,00"),   # fazenda do mesmo grupo
         ("66666666000101", "0113000", "2062", "1,00"),   # fazenda de quem não tem usina: fora
     ]))
     assert s == {"55555555000101": "usina", "55555555000282": "usina_agricola"}
@@ -54,7 +55,7 @@ def test_unidade_agricola_so_com_raiz_de_usina():
 def test_planta_da_anp_com_outro_cnae_entra_e_usina_sem_anp_fica_para_confirmar():
     _, cls, _ = _classes(_base([
         ("77777777000101", "0113000", "2062", "1,00"),   # ANP, registrada como fazenda de cana
-        ("88888888000101", "1931400", "2062", "1,00"),   # CNAE de álcool sem autorização
+        ("88888888000101", "1931400", "2062", "1.500.000,00"),   # CNAE de álcool sem autorização
         ("99999999000101", "1072401", "2062", "1,00"),   # CNAE de açúcar com autorização
     ]), anp={"77777777000101", "99999999000101"})
     r = cls.set_index("cnpj")
@@ -62,6 +63,21 @@ def test_planta_da_anp_com_outro_cnae_entra_e_usina_sem_anp_fica_para_confirmar(
     assert r.loc["88888888000101", "confirmar"]
     assert not r.loc["99999999000101", "confirmar"]
     assert pc.setor_painel(cls).tolist() == ["usina_anp", "usina_conf", "usina_anp"]
+
+
+def test_usina_sem_anp_so_fica_para_confirmar_com_capital_de_1_mi():
+    """Abaixo de R$ 1 mi, CNAE de açúcar ou álcool sem a ANP é, quase sempre, fabricante de
+    melado, açúcar mascavo ou álcool artesanal: fica fora, e a fazenda dele não vira unidade
+    agrícola de grupo. Com autorização da ANP, o capital não importa."""
+    s, _, excl = _classes(_base([
+        ("30000000000101", "1071600", "2062", "10.000,00"),      # açúcar mascavo: fora
+        ("30000000000282", "0113000", "2062", "10.000,00"),      # a fazenda dele: fora também
+        ("31000000000101", "1931400", "2062", None),             # capital ausente: fora
+        ("32000000000101", "1071600", "2062", "1.000.000,00"),   # no limite: confirmar
+        ("33000000000101", "1931400", "2062", "5.000,00"),       # pequena, mas autorizada na ANP
+    ]), anp={"33000000000101"})
+    assert s == {"32000000000101": "usina", "33000000000101": "usina"}
+    assert excl["excluidos_usina_sem_anp_capital_menor_1mi"] == 2
 
 
 def test_cooperativa_pela_natureza_2143_so_nas_divisoes_01_10_46():
@@ -77,7 +93,7 @@ def test_agregado_soma_capacidade_so_das_plantas_anp():
     _, cls, _ = _classes(_base([
         ("20000000000101", "1071600", "2062", "1,00"),
         ("20000000000282", "1071600", "2062", "1,00"),
-        ("21000000000101", "1931400", "2062", "1,00"),
+        ("21000000000101", "1931400", "2062", "1.000.000,00"),
     ]), anp={"20000000000101", "20000000000282"})
     cls["cod_municipio"] = "3550308"
     ag = pc.agregar(cls, {"20000000000101": 500.0, "20000000000282": 250.0}).set_index("setor")

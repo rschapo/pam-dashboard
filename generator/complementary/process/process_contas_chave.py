@@ -9,7 +9,10 @@ como usina e deixa de fora a planta registrada com CNAE agrícola. Por isso:
   - a usina é cruzada, pelo CNPJ completo, com a capacidade autorizada de etanol da
     ANP: a planta autorizada que a Receita registra com outro CNAE entra como usina, e o
     estabelecimento com CNAE de usina sem autorização fica "confirmar" (pode ser só de
-    açúcar, escritório, refinaria, ou estar em recuperação judicial);
+    açúcar, escritório, refinaria, ou estar em recuperação judicial) desde que a empresa
+    tenha capital social ≥ R$ 1 mi: abaixo disso são, quase sempre, pequenos fabricantes de
+    melado, açúcar mascavo e álcool artesanal (no RS, 98 dos 109 "confirmar" em 10/2026,
+    capital mediano de R$ 10 mil), e ficam fora;
   - a fazenda (0113-0/00) de um CNPJ raiz que tem usina é "unidade agrícola de grupo
     sucroenergético": mostra onde o grupo opera, não é uma usina a mais;
   - sucos e eucalipto só com capital social ≥ R$ 1 mi (o porte "05 — Demais" da Receita
@@ -48,7 +51,7 @@ PUBLIC_DATA = Path(__file__).resolve().parents[3] / "public" / "data"
 
 SETORES = {   # chave do painel: (rótulo, cor do círculo)
     "usina_anp":      ("Usina de açúcar e etanol com autorização da ANP", "#3E7D1E"),
-    "usina_conf":     ("CNAE de usina sem autorização de etanol da ANP (confirmar)", "#A5C882"),
+    "usina_conf":     ("CNAE de usina sem autorização de etanol da ANP, capital ≥ R$ 1 mi (confirmar)", "#A5C882"),
     "usina_agricola": ("Unidade agrícola de grupo sucroenergético", "#9CCB6A"),
     "sucos":          ("Indústria de suco (capital ≥ R$ 1 mi)", "#F28C28"),
     "pos_colheita":   ("Pós-colheita / packing", "#C2185B"),
@@ -64,7 +67,8 @@ CAPITAL_GRANDE = 1_000_000
 CAUTELAS = [
     "A Receita não classifica 'usina': o recorte usa o CNAE principal do estabelecimento ativo. "
     "Usina sem autorização de etanol na ANP fica marcada para confirmar (pode ser só de açúcar, "
-    "escritório, refinaria ou estar em recuperação judicial).",
+    "escritório, refinaria ou estar em recuperação judicial), e só quando a empresa tem capital social "
+    "≥ R$ 1 mi: as menores são, quase sempre, fabricantes de melado, açúcar mascavo e álcool artesanal.",
     "Unidade agrícola de grupo = fazenda (CNAE 0113-0/00) de um CNPJ raiz que tem usina: mostra onde o "
     "grupo opera, não é uma usina a mais.",
     "Sucos e eucalipto: só empresas com capital social ≥ R$ 1 mi; as pequenas são muitas e não são contas-chave.",
@@ -133,7 +137,10 @@ def classificar(base: pd.DataFrame, anp_cnpjs: set[str]) -> tuple[pd.DataFrame, 
     b["anp"] = b["cnpj"].isin(anp_cnpjs)
     cnae = b["cnae_principal"].astype(str)
     s = pd.Series(pd.NA, index=b.index, dtype="object")
-    s[cnae.isin(CNAE_USINA) | b["anp"]] = "usina"
+    # CNAE de usina sem autorização da ANP só conta com capital ≥ R$ 1 mi (ver o cabeçalho)
+    pequena = cnae.isin(CNAE_USINA) & ~b["anp"] & ~grande
+    excl["excluidos_usina_sem_anp_capital_menor_1mi"] = int(pequena.sum())
+    s[(cnae.isin(CNAE_USINA) & ~pequena) | b["anp"]] = "usina"
     raizes_usina = set(b.loc[s == "usina", "cnpj_basico"])
     s[s.isna() & (cnae == "0113000") & b["cnpj_basico"].isin(raizes_usina)] = "usina_agricola"
     s[s.isna() & (cnae == "1033301") & grande] = "sucos"

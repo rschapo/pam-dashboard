@@ -185,24 +185,34 @@
     </div>
 
     <div class="filter-block dom-produtores">
-      <label>Métrica</label>
-      <select id="f-metrica-prod">
-        <option value="n" selected>Cadastros ativos</option>
-        <option value="n24">Abertos nos últimos 24 meses</option>
-        <option value="mil_ha">Cadastros por mil ha colhidos</option>
-        <option value="km2">Cadastros por km²</option>
+      <label for="f-prod-fonte">Fonte</label>
+      <select id="f-prod-fonte">
+        <option value="censo" selected>Censo Agropecuário 2017 (estabelecimentos)</option>
+        <option value="receita">Receita Federal (cadastros CNPJ)</option>
       </select>
-      <div class="filter-note" id="prod-nota">Receita Federal, CNPJ: só contagens por município</div>
     </div>
 
     <div class="filter-block dom-produtores">
-      <label for="f-prod-ativ">Atividade (CNAE principal)</label>
+      <label>Métrica</label>
+      <select id="f-metrica-prod">
+        <option value="n" selected>Estabelecimentos</option>
+        <option value="pct">Parte dos estabelecimentos (%)</option>
+        <option value="n24">Abertos nos últimos 24 meses</option>
+        <option value="mil_ha">Por mil ha colhidos</option>
+        <option value="km2">Por km²</option>
+      </select>
+      <div class="filter-note" id="prod-nota">Só contagens por município</div>
+    </div>
+
+    <div class="filter-block dom-produtores">
+      <label for="f-prod-ativ" id="f-prod-ativ-rot">Atividade</label>
       <select id="f-prod-ativ"><option value="">Todas as atividades</option></select>
     </div>
 
     <div class="filter-block dom-produtores">
-      <label for="f-prod-tipo">Tipo de cadastro</label>
+      <label for="f-prod-tipo" id="f-prod-tipo-rot">Tipo</label>
       <select id="f-prod-tipo"><option value="">Todos</option></select>
+      <div class="filter-note" id="prod-filtro-nota"></div>
     </div>
 
     <div class="filter-block serie-temporal">
@@ -289,7 +299,7 @@
       <select id="f-contas">
         <option value="" selected>Desligada</option>
         <option value="usina_anp">Usinas com autorização ANP</option>
-        <option value="usina_conf">CNAE de usina sem ANP (confirmar)</option>
+        <option value="usina_conf">CNAE de usina sem ANP, capital ≥ R$ 1 mi (confirmar)</option>
         <option value="usina_agricola">Unidades agrícolas de grupo sucroenergético</option>
         <option value="sucos">Indústrias de suco</option>
         <option value="pos_colheita">Pós-colheita / packing</option>

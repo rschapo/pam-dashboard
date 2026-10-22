@@ -272,3 +272,13 @@ Só agregado.
 supressão), comparacao_censo_uf {UF: {cadastros, censo2017, razao}}, mun {cod: {"atividade|tipo":
 [ativos, novos_24m]}}}`. Só códigos IBGE e números; combinações > 0. Método e regra de dados
 pessoais: `RECEITA_CONTAS_E_PRODUTORES.md`.
+
+### censo_estab_mun.json (novo, `export_censo_estabelecimentos.py`)
+Estabelecimentos agropecuários do Censo Agropecuário 2017 por município (SIDRA 6778, lida
+da resposta bruta com o símbolo de cada célula: `-` = 0; `X`, `..` e `...` = null).
+`{ano, atividades {chave: rótulo}, tipologias {chave: rótulo}, celulas_sigilo, cautelas, mun:
+{cod: {t: total, a: [9 atividades], f: [7 tipologias]}}}`, vetores na ordem das chaves.
+Atividades: temp, horti, perm, sementes, pecuaria, flo_plantada, flo_nativa, pesca,
+aquicultura (a predominante do estabelecimento). Tipologias: familiar, nao_familiar,
+pronaf_b, pronaf_v, nao_pronafiano, pronamp, nao_pronamp. Atividade e tipologia são
+tabulações separadas e não se cruzam. A soma municipal é o total oficial (5.073.324).

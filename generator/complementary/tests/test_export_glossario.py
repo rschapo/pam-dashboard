@@ -93,7 +93,7 @@ def test_sem_os_json_do_painel_o_glossario_sai_sem_listas(tmp_path, monkeypatch)
 
     g = eg.build_glossario()
 
-    assert len(g["fontes"]) == 15 and g["fontes"][0]["periodo"] == "—"
+    assert len(g["fontes"]) == 16 and g["fontes"][0]["periodo"] == "—"
     assert all("baixado_em" not in f for f in g["fontes"])
     assert g["culturas"]["temporarias"] == [] and g["pevs"] == {"anos": [], "tipos": {}, "notas": {}}
 

@@ -122,6 +122,9 @@ def fontes(pkg, ppm, pevs, econ, terra, maq, cred, perfil, prod=None, contas=Non
         {"aba": "Agrícola", "base": "Áreas Territoriais", "instituicao": "IBGE",
          "origem": "área de cada município, denominador da densidade (ha/km²)",
          "periodo": "2025", "baixado_em": _baixado_em("raw_ibge_areas")},
+        {"aba": "Produtores", "base": "Censo Agropecuário: estabelecimentos por atividade e tipologia",
+         "instituicao": "IBGE", "origem": "SIDRA 6778 (número de estabelecimentos agropecuários)",
+         "periodo": "2017", "baixado_em": _baixado_em("raw_censo_estabelecimentos_6778")},
         {"aba": "Produtores", "base": "Dados Abertos CNPJ", "instituicao": "Receita Federal",
          "origem": "estabelecimentos ativos com CNAE principal das divisões 01 e 02, só contados por município",
          "periodo": f"base de {prod.get('periodo_rfb', '—')}"
