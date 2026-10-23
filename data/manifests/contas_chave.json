@@ -1,7 +1,7 @@
 {
   "dataset": "contas_chave",
   "source": "Receita Federal CNPJ 2026-10; ANP 09/2026",
-  "extraction_date": "2026-10-22",
+  "extraction_date": "2026-10-23",
   "reference_date": "2026-10",
   "source_files": [
     "pb-da-etanol_2026-10-21.zip"
@@ -13,8 +13,8 @@
     }
   ],
   "script_version": "0.1.0",
-  "row_count": 19895,
-  "municipality_count": 3750,
+  "row_count": 20208,
+  "municipality_count": 3756,
   "rejected_rows": 0,
   "warnings": [
     "sem ponto: 5101837"
@@ -22,21 +22,21 @@
   "output_files": [
     {
       "file": "contas_chave_municipio.parquet",
-      "sha256": "30440c2eecb6abc0b456a733eae99b1072573d2fe67105b3c0ef2a634f6fa295",
-      "bytes": 40857
+      "sha256": "6198894f8bfe55fadabb80e1ebaf63f21a738d2593e20b13e350c75420e83ad0",
+      "bytes": 41242
     },
     {
       "file": "contas_chave_municipio.csv",
-      "sha256": "0329690e1d98492829d08e6f3667d7c59bd25ff68e2bf49797aa3f54b003c985",
-      "bytes": 203438
+      "sha256": "08252cc05cd313341663c1c6217ed09d8cc5146f8cee4b59548498131112a34b",
+      "bytes": 205972
     },
     {
       "file": "contas_chave.json",
-      "sha256": "8ebe426ff01f328f0a5f4805e9a0132062cc8fac321d858fd380a2e220a90f61",
-      "bytes": 241591
+      "sha256": "e33299605732766880d3ddd4647177e4355d9e2a922d633f77553b319bd9209c",
+      "bytes": 243213
     }
   ],
-  "generated_at": "2026-10-22T09:48:18-04:00",
+  "generated_at": "2026-10-23T17:51:10-04:00",
   "validacao": {
     "periodo_rfb": "2026-10",
     "mes_anp": "09/2026",
@@ -46,29 +46,30 @@
     "anp_ativas_na_receita": 367,
     "anp_inativas_na_receita": 3,
     "anp_nao_encontradas_na_receita": 0,
-    "receita_cnae_de_usina": 760,
+    "receita_cnae_de_usina": 969,
     "receita_cnae_de_usina_e_anp": 350,
     "anp_com_outro_cnae_na_receita": 17,
-    "receita_cnae_de_usina_sem_anp_confirmar": 410,
-    "usinas_em_recuperacao_judicial": 95,
-    "grupos_sucroenergeticos_raiz": 462,
-    "unidades_agricolas_de_grupo": 2056,
+    "receita_cnae_de_usina_sem_anp_confirmar": 619,
+    "confirmar_com_capital_nao_informado": 209,
+    "usinas_em_recuperacao_judicial": 173,
+    "grupos_sucroenergeticos_raiz": 547,
+    "unidades_agricolas_de_grupo": 2166,
     "excluidos_produtor_rural_pf": 152231,
     "excluidos_outras_naturezas": 102,
-    "excluidos_usina_sem_anp_capital_menor_1mi": 964,
-    "sem_municipio_ibge": 19,
+    "excluidos_usina_sem_anp_pequena": 755,
+    "sem_municipio_ibge": 23,
     "municipios_rfb_sem_par": [
       "EXTERIOR (EX)"
     ]
   },
   "totais": {
     "usina_anp": 367,
-    "usina_conf": 410,
-    "usina_agricola": 2056,
+    "usina_conf": 615,
+    "usina_agricola": 2166,
     "sucos": 172,
     "pos_colheita": 1958,
     "cafe": 3147,
     "florestal": 2306,
-    "cooperativa": 9460
+    "cooperativa": 9454
   }
 }

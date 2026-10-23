@@ -82,6 +82,15 @@ colhida (PAM) com área plantada (PEVS), e isso está na legenda e no glossário
   estabelecimentos saem. As unidades agrícolas de grupo caem de 2.169 para 2.056, porque a
   fazenda só conta quando a raiz tem usina, e 16 cooperativas pequenas com CNAE de açúcar
   passam a contar como cooperativa.
+- **23/10/2026: capital 0,00 é capital não informado** (decisão do usuário, repassada pela
+  sessão do painel do concessionário de SP). Usina sem ANP com capital zero (ou vazio) e
+  porte "Demais" volta para "a confirmar"; só sai quem tem capital informado abaixo de
+  R$ 1 mi, ou capital não informado e porte ME/EPP. Em SP, 43 dos 87 que a regra anterior
+  derrubava tinham capital zero e porte Demais, muitas sociedades anônimas com USINA,
+  DESTILARIA ou AÇÚCAR na razão social: provavelmente usinas reais (só de açúcar, que não
+  pedem autorização de etanol à ANP). "A confirmar": Brasil 410 → 615 no painel (619
+  estabelecimentos; 209 com capital não informado), SP 106 → 149, RS 11 → 14. Unidades
+  agrícolas de grupo: 2.056 → 2.166 (SP 1.721).
 
 ### Receita: contas-chave e produtores (CNPJ 2026-10, ANP 09/2026)
 

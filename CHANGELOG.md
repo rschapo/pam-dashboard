@@ -1,5 +1,12 @@
 # CHANGELOG — PAM-dashboard
 
+## 2026-10-23 · branch `contas-capital-nao-informado` (não publicado)
+
+- Contas-chave: capital social 0,00 na Receita passa a ser capital não informado. Usina
+  sem autorização da ANP com capital zero e porte "Demais" volta para "a confirmar"; só
+  sai quem tem capital informado abaixo de R$ 1 mi ou é ME/EPP. "A confirmar": Brasil
+  410 → 615, SP 106 → 149, RS 11 → 14.
+
 ## 2026-10-22 · branch `produtores-censo-2017` (não publicado)
 
 - Produtores: nova fonte, o Censo Agropecuário 2017 (estabelecimentos por atividade

@@ -8,8 +8,8 @@ import process_contas_chave as pc
 
 
 def _base(linhas):
-    cols = ["cnpj", "cnae_principal", "natureza_juridica", "capital_social"]
-    df = pd.DataFrame(linhas, columns=cols)
+    cols = ["cnpj", "cnae_principal", "natureza_juridica", "capital_social", "porte"]
+    df = pd.DataFrame([l if len(l) == 5 else (*l, "05") for l in linhas], columns=cols)   # porte Demais
     df["cnpj_basico"] = df["cnpj"].str[:8]
     return df
 
@@ -28,7 +28,7 @@ def test_so_natureza_empresarial_entra_e_a_exclusao_e_contada():
     ]))
     assert s == {"11111111000101": "usina", "44444444000101": "pos_colheita"}
     assert excl == {"excluidos_produtor_rural_pf": 1, "excluidos_outras_naturezas": 1,
-                    "excluidos_usina_sem_anp_capital_menor_1mi": 0}
+                    "excluidos_usina_sem_anp_pequena": 0}
 
 
 def test_capital_minimo_vale_para_sucos_e_eucalipto_mas_nao_para_celulose():
@@ -65,19 +65,29 @@ def test_planta_da_anp_com_outro_cnae_entra_e_usina_sem_anp_fica_para_confirmar(
     assert pc.setor_painel(cls).tolist() == ["usina_anp", "usina_conf", "usina_anp"]
 
 
-def test_usina_sem_anp_so_fica_para_confirmar_com_capital_de_1_mi():
-    """Abaixo de R$ 1 mi, CNAE de açúcar ou álcool sem a ANP é, quase sempre, fabricante de
-    melado, açúcar mascavo ou álcool artesanal: fica fora, e a fazenda dele não vira unidade
-    agrícola de grupo. Com autorização da ANP, o capital não importa."""
-    s, _, excl = _classes(_base([
-        ("30000000000101", "1071600", "2062", "10.000,00"),      # açúcar mascavo: fora
-        ("30000000000282", "0113000", "2062", "10.000,00"),      # a fazenda dele: fora também
-        ("31000000000101", "1931400", "2062", None),             # capital ausente: fora
-        ("32000000000101", "1071600", "2062", "1.000.000,00"),   # no limite: confirmar
-        ("33000000000101", "1931400", "2062", "5.000,00"),       # pequena, mas autorizada na ANP
+def test_usina_sem_anp_fica_para_confirmar_com_1_mi_ou_capital_nao_informado_e_porte_demais():
+    """Com capital INFORMADO abaixo de R$ 1 mi, CNAE de açúcar ou álcool sem a ANP é, quase
+    sempre, fabricante de melado, açúcar mascavo ou álcool artesanal: fica fora, e a fazenda
+    dele não vira unidade agrícola de grupo. Capital 0,00 é campo não preenchido: com porte
+    Demais fica para confirmar; com porte ME ou EPP, sai. Com autorização da ANP, o capital
+    não importa (decisão do usuário, 23/10/2026)."""
+    s, cls, excl = _classes(_base([
+        ("30000000000101", "1071600", "2062", "10.000,00"),          # açúcar mascavo: fora
+        ("30000000000282", "0113000", "2062", "10.000,00"),          # a fazenda dele: fora também
+        ("31000000000101", "1931400", "2054", "0,00", "05"),         # S.A. sem capital, Demais: confirmar
+        ("31000000000282", "0113000", "2054", "0,00", "05"),         # a fazenda dela: unidade agrícola
+        ("34000000000101", "1071600", "2062", None, "05"),           # capital vazio, Demais: confirmar
+        ("35000000000101", "1071600", "2062", "0,00", "01"),         # sem capital, ME: fora
+        ("36000000000101", "1931400", "2062", "0,00", "03"),         # sem capital, EPP: fora
+        ("32000000000101", "1071600", "2062", "1.000.000,00"),       # no limite: confirmar
+        ("33000000000101", "1931400", "2062", "5.000,00"),           # pequena, mas autorizada na ANP
     ]), anp={"33000000000101"})
-    assert s == {"32000000000101": "usina", "33000000000101": "usina"}
-    assert excl["excluidos_usina_sem_anp_capital_menor_1mi"] == 2
+    assert s == {"31000000000101": "usina", "31000000000282": "usina_agricola", "34000000000101": "usina",
+                 "32000000000101": "usina", "33000000000101": "usina"}
+    assert excl["excluidos_usina_sem_anp_pequena"] == 3
+    r = cls.set_index("cnpj")
+    assert r.loc["31000000000101", "confirmar"] and r.loc["31000000000101", "capital_nao_informado"]
+    assert not r.loc["32000000000101", "capital_nao_informado"]
 
 
 def test_cooperativa_pela_natureza_2143_so_nas_divisoes_01_10_46():

@@ -9,10 +9,14 @@ como usina e deixa de fora a planta registrada com CNAE agrícola. Por isso:
   - a usina é cruzada, pelo CNPJ completo, com a capacidade autorizada de etanol da
     ANP: a planta autorizada que a Receita registra com outro CNAE entra como usina, e o
     estabelecimento com CNAE de usina sem autorização fica "confirmar" (pode ser só de
-    açúcar, escritório, refinaria, ou estar em recuperação judicial) desde que a empresa
-    tenha capital social ≥ R$ 1 mi: abaixo disso são, quase sempre, pequenos fabricantes de
-    melado, açúcar mascavo e álcool artesanal (no RS, 98 dos 109 "confirmar" em 10/2026,
-    capital mediano de R$ 10 mil), e ficam fora;
+    açúcar, escritório, refinaria, ou estar em recuperação judicial) quando a empresa tem
+    capital social ≥ R$ 1 mi OU capital não informado (0,00 ou vazio na Receita) e porte
+    "05 — Demais". Sai quem tem capital informado abaixo de R$ 1 mi (no RS, quase todos
+    fabricantes de melado, açúcar mascavo e álcool artesanal, capital mediano de R$ 10 mil)
+    e quem tem capital não informado com porte ME ou EPP. Capital 0,00 é campo não
+    preenchido, e não capital pequeno: em SP, 43 usinas sem ANP com capital zero e porte
+    Demais, muitas sociedades anônimas com USINA, DESTILARIA ou AÇÚCAR na razão social
+    (decisão do usuário, 23/10/2026);
   - a fazenda (0113-0/00) de um CNPJ raiz que tem usina é "unidade agrícola de grupo
     sucroenergético": mostra onde o grupo opera, não é uma usina a mais;
   - sucos e eucalipto só com capital social ≥ R$ 1 mi (o porte "05 — Demais" da Receita
@@ -51,7 +55,7 @@ PUBLIC_DATA = Path(__file__).resolve().parents[3] / "public" / "data"
 
 SETORES = {   # chave do painel: (rótulo, cor do círculo)
     "usina_anp":      ("Usina de açúcar e etanol com autorização da ANP", "#3E7D1E"),
-    "usina_conf":     ("CNAE de usina sem autorização de etanol da ANP, capital ≥ R$ 1 mi (confirmar)", "#A5C882"),
+    "usina_conf":     ("CNAE de usina sem autorização de etanol da ANP, capital ≥ R$ 1 mi ou não informado (confirmar)", "#A5C882"),
     "usina_agricola": ("Unidade agrícola de grupo sucroenergético", "#9CCB6A"),
     "sucos":          ("Indústria de suco (capital ≥ R$ 1 mi)", "#F28C28"),
     "pos_colheita":   ("Pós-colheita / packing", "#C2185B"),
@@ -67,8 +71,9 @@ CAPITAL_GRANDE = 1_000_000
 CAUTELAS = [
     "A Receita não classifica 'usina': o recorte usa o CNAE principal do estabelecimento ativo. "
     "Usina sem autorização de etanol na ANP fica marcada para confirmar (pode ser só de açúcar, "
-    "escritório, refinaria ou estar em recuperação judicial), e só quando a empresa tem capital social "
-    "≥ R$ 1 mi: as menores são, quase sempre, fabricantes de melado, açúcar mascavo e álcool artesanal.",
+    "escritório, refinaria ou estar em recuperação judicial), quando a empresa tem capital social ≥ R$ 1 mi "
+    "ou capital não informado (0,00) com porte Demais. Com capital informado abaixo de R$ 1 mi, ou sem capital "
+    "e porte ME/EPP, fica fora: são, quase sempre, fabricantes de melado, açúcar mascavo e álcool artesanal.",
     "Unidade agrícola de grupo = fazenda (CNAE 0113-0/00) de um CNPJ raiz que tem usina: mostra onde o "
     "grupo opera, não é uma usina a mais.",
     "Sucos e eucalipto: só empresas com capital social ≥ R$ 1 mi; as pequenas são muitas e não são contas-chave.",
@@ -137,9 +142,13 @@ def classificar(base: pd.DataFrame, anp_cnpjs: set[str]) -> tuple[pd.DataFrame, 
     b["anp"] = b["cnpj"].isin(anp_cnpjs)
     cnae = b["cnae_principal"].astype(str)
     s = pd.Series(pd.NA, index=b.index, dtype="object")
-    # CNAE de usina sem autorização da ANP só conta com capital ≥ R$ 1 mi (ver o cabeçalho)
-    pequena = cnae.isin(CNAE_USINA) & ~b["anp"] & ~grande
-    excl["excluidos_usina_sem_anp_capital_menor_1mi"] = int(pequena.sum())
+    # CNAE de usina sem autorização da ANP: fica com capital ≥ R$ 1 mi ou com capital não
+    # informado (0,00 ou vazio) e porte que não seja ME/EPP; sai o resto (ver o cabeçalho)
+    nao_informado = b["capital"].isna() | (b["capital"] == 0)
+    porte = b["porte"].astype(str) if "porte" in b else pd.Series("", index=b.index)
+    b["capital_nao_informado"] = nao_informado
+    pequena = cnae.isin(CNAE_USINA) & ~b["anp"] & ~(grande | (nao_informado & ~porte.isin(["01", "03"])))
+    excl["excluidos_usina_sem_anp_pequena"] = int(pequena.sum())
     s[(cnae.isin(CNAE_USINA) & ~pequena) | b["anp"]] = "usina"
     raizes_usina = set(b.loc[s == "usina", "cnpj_basico"])
     s[s.isna() & (cnae == "0113000") & b["cnpj_basico"].isin(raizes_usina)] = "usina_agricola"
@@ -281,6 +290,7 @@ def main():
         "receita_cnae_de_usina_e_anp": int(len(rfb_ind & anp_set)),
         "anp_com_outro_cnae_na_receita": int(len((anp_set & base_set) - rfb_ind)),
         "receita_cnae_de_usina_sem_anp_confirmar": int(len(rfb_ind - anp_set)),
+        "confirmar_com_capital_nao_informado": int((u["confirmar"] & u["capital_nao_informado"]).sum()),
         "usinas_em_recuperacao_judicial": int((u["alerta"] == "em recuperação judicial").sum()),
         "grupos_sucroenergeticos_raiz": int(u["cnpj_basico"].nunique()),
         "unidades_agricolas_de_grupo": int((cls["setor"] == "usina_agricola").sum()),
@@ -293,6 +303,7 @@ def main():
     cache = rc.pf_cache_dir()
     det_cols = ["setor", "cnpj", "cnpj_basico", "matriz_filial", "razao_social", "nome_fantasia",
                 "cnae_principal", "cnae_principal_desc", "porte", "natureza_juridica", "capital",
+                "capital_nao_informado",
                 "data_inicio", "uf", "municipio_rfb", "cod_municipio", "anp", "cap_etanol_m3d",
                 "confirmar", "alerta"]
     det = cls[det_cols].sort_values(["setor", "cod_municipio", "razao_social"])
